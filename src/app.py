@@ -1,10 +1,11 @@
-from flask import redirect, render_template, request, jsonify, flash
-from db_helper import reset_db
-from repositories.todo_repository import get_todos, create_todo, set_done
+from flask import flash, jsonify, redirect, render_template, request
+
 from config import app, test_env
-from util import validate_todo
+from db_helper import create_book, reset_db
 from models import Book
-from db_helper import create_book
+from repositories.todo_repository import create_todo, get_todos, set_done
+from util import validate_todo
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -20,18 +21,20 @@ def index():
             return redirect("/")
         else:
             create_book(title, author, year, publisher, address)
+            flash("Book added successfully!")
             return redirect("/")
 
         return redirect("/")
 
     return render_template("index.html")
 
+
 # testausta varten oleva reitti
 if test_env:
     @app.route("/reset_db")
     def reset_database():
         reset_db()
-        return jsonify({ 'message': "db reset" })
+        return jsonify({'message': "db reset"})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5001)
