@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Saved Citations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .citation {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Saved Citations</h1>
+
+    {% if books %}
+        {% for book in books %}
+            <div class="citation">
+                {{ book.author }} ({{ book.year }}).
+                <strong>{{ book.title }}</strong>.
+                {{ book.publisher }}
+                {% if book.address %}, {{ book.address }}{% endif %}.
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No saved citations yet.</p>
+    {% endif %}
+
+</body>
+</html>
