@@ -3,33 +3,27 @@ from db_helper import reset_db
 from repositories.todo_repository import get_todos, create_todo, set_done
 from config import app, test_env
 from util import validate_todo
+from models import Book
+from db_helper import create_book
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    todos = get_todos()
-    unfinished = len([todo for todo in todos if not todo.done])
-    return render_template("index.html", todos=todos, unfinished=unfinished) 
+    if request.method == "POST":
+        title = request.form.get("title")
+        author = request.form.get("author")
+        year = request.form.get("year")
+        publisher = request.form.get("publisher")
+        address = request.form.get("address")
 
-@app.route("/new_todo")
-def new():
-    return render_template("new_todo.html")
+        if not title or not author:
+            flash("Title and author are required!")
+        else:
+            create_book(title, author, year, publisher, address)
+            flash("Book added!")
 
-@app.route("/create_todo", methods=["POST"])
-def todo_creation():
-    content = request.form.get("content")
-
-    try:
-        validate_todo(content)
-        create_todo(content)
         return redirect("/")
-    except Exception as error:
-        flash(str(error))
-        return  redirect("/new_todo")
 
-@app.route("/toggle_todo/<todo_id>", methods=["POST"])
-def toggle_todo(todo_id):
-    set_done(todo_id)
-    return redirect("/")
+    return render_template("index.html")  # ei books-muuttujaa
 
 # testausta varten oleva reitti
 if test_env:
@@ -37,3 +31,6 @@ if test_env:
     def reset_database():
         reset_db()
         return jsonify({ 'message': "db reset" })
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5001)

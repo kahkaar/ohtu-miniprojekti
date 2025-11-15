@@ -1,6 +1,7 @@
 from config import db, app
 from sqlalchemy import text
 import os
+from models import Book
 
 def reset_db():
   print(f"Clearing contents from table todos")
@@ -43,6 +44,21 @@ def setup_db():
   sql = text(schema_sql)
   db.session.execute(sql)
   db.session.commit()
+
+def create_book(title, author, year=None, publisher=None, address=None):
+    # Luodaan uusi Book-olio
+    new_book = Book(
+        title=title,
+        author=author,
+        year=year,
+        publisher=publisher,
+        address=address
+    )
+    # Lisätään se sessioon
+    db.session.add(new_book)
+    # Tallennetaan tietokantaan
+    db.session.commit()
+
 
 if __name__ == "__main__":
     with app.app_context():

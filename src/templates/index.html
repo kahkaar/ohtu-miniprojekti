@@ -1,34 +1,17 @@
 {% extends "layout.html" %}
 
-{% block title %}
-Todo app
-{% endblock %}
+{% block title %}Book Sources{% endblock %}
 
 {% block body %}
+<h1>Add a new book</h1>
 
-<h2>Todo app</h2>
-
-<div>
-  things still unfinished: {{ unfinished }}
-</div>
-
-<ul>
-  {% for todo in todos %}
-    <li style="display: flex">
-      <div>
-        {{ todo }} 
-      </div>
-      {% if not todo.done %}
-        <form action="/toggle_todo/{{ todo.id }}" method="post" style="margin-left: 10px;">
-          <button type="submit">mark as done</button>
-        </form>
-      {% endif %}
-    </li>
-  {% endfor %}
-</ul>
-
-<div>
-  <a href="/new_todo">Create new todo</a>
-</div>
+<form method="post">
+    <label>Title: <input type="text" name="title"></label><br>
+    <label>Author: <input type="text" name="author"></label><br>
+    <label>Year: <input type="number" name="year"></label><br>
+    <label>Publisher: <input type="text" name="publisher"></label><br>
+    <label>Address: <input type="text" name="address"></label><br>
+    <button type="submit">Add Book</button>
+</form>
 
 {% endblock %}
