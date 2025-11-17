@@ -2,7 +2,6 @@ import os
 
 from sqlalchemy import text
 
-from entities.book import Book
 from config import app, db
 
 
@@ -48,19 +47,6 @@ def setup_db():
 
     sql = text(schema_sql)
     db.session.execute(sql)
-    db.session.commit()
-
-
-def create_book(title, author, year=None, publisher=None, address=None):
-    """Creates a new book entry in the database"""
-    new_book = Book(
-        title=title,
-        author=author,
-        year=year,
-        publisher=publisher,
-        address=address
-    )
-    db.session.add(new_book)
     db.session.commit()
 
 
