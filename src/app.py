@@ -2,10 +2,7 @@ from flask import flash, jsonify, redirect, render_template, request
 
 from config import app, test_env
 from db_helper import create_book, reset_db
-from models import Book
 from repositories.book_repository import get_books
-from repositories.todo_repository import create_todo, get_todos, set_done
-from util import validate_todo
 
 
 @app.route("/", methods=["GET", "POST"])
