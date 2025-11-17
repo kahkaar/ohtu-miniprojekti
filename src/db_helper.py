@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy import text
 
-from entites.book import Book
+from entities.book import Book
 from config import app, db
 
 
