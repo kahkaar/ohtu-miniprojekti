@@ -1,13 +1,16 @@
 from flask import flash, jsonify, redirect, render_template, request
 
 from config import app, test_env
-from db_helper import create_book, reset_db
+from db_helper import reset_db
+from repositories.book_repository import create_book
 from repositories.book_repository import get_books
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     """Handles the main page for viewing and adding books"""
+    if request.method == "GET":
+        return render_template("index.html")
     if request.method == "POST":
         title = request.form.get("title")
         author = request.form.get("author")
@@ -20,8 +23,6 @@ def index():
         create_book(title, author, year, publisher, address)
         flash("Book added successfully!")
         return redirect("/")
-
-    return render_template("index.html")
 
 
 # testausta varten oleva reitti
