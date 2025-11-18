@@ -29,3 +29,11 @@ Open And Configure Browser
 
 Reset Database
     Go To  ${RESET_URL}
+
+Go To Home Page
+    Go To  ${HOME_URL}
+    Title Should Be  Add a new book
+
+Go To View Page
+    Go To  ${VIEW_URL}
+    Title Should Be  Saved Citations
