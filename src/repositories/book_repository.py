@@ -11,6 +11,7 @@ def get_books():
     books = result.fetchall()
     return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
 
+
 def create_book(title, author, year, publisher, address):
     """Creates a new book entry in the database"""
     sql = text("""INSERT INTO book (title, author, year, publisher, address)
