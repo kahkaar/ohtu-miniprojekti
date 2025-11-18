@@ -11,6 +11,17 @@ def get_books():
     books = result.fetchall()
     return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
 
+def get_book(id):
+    """Fetches a single book by its ID"""
+    sql = text("""
+        SELECT id, title, author, year, publisher, address
+        FROM book WHERE id = :id
+    """)
+    result = db.session.execute(sql, {"id": id}).fetchone()
+    if result is None:
+        return None
+    return Book(result[0], result[1], result[2], result[3], result[4], result[5])
+
 
 def create_book(title, author, year, publisher, address):
     """Creates a new book entry in the database"""
