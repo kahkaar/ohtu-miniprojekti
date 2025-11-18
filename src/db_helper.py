@@ -6,9 +6,11 @@ from config import app, db
 
 
 def reset_db():
-    print("Clearing contents from table todos")
-    sql = text("DELETE FROM todos")
-    db.session.execute(sql)
+    print("Clearing contents from all tables")
+    table_list = tables()
+    for table in table_list:
+        sql = text(f"DELETE FROM {table}")
+        db.session.execute(sql)
     db.session.commit()
 
 
