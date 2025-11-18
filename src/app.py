@@ -2,8 +2,7 @@ from flask import flash, jsonify, redirect, render_template, request
 
 from config import app, test_env
 from db_helper import reset_db
-from repositories.book_repository import create_book
-from repositories.book_repository import get_books
+from repositories.book_repository import create_book, get_books
 
 
 @app.route("/", methods=["GET", "POST"])
