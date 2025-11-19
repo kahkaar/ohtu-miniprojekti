@@ -50,6 +50,26 @@ def setup_db():
     sql = text(schema_sql)
     db.session.execute(sql)
     db.session.commit()
+    
+def update_book(id, title, author, year, publisher, address):
+    sql = text("""
+        UPDATE book
+        SET title = :title,
+            author = :author,
+            year = :year,
+            publisher = :publisher,
+            address = :address
+        WHERE id = :id
+    """)
+    db.session.execute(sql, {
+        "id": id,
+        "title": title,
+        "author": author,
+        "year": year,
+        "publisher": publisher,
+        "address": address
+    })
+    db.session.commit()
 
 
 if __name__ == "__main__":
