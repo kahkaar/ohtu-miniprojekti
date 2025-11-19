@@ -40,3 +40,10 @@ poetry run python src/db_helper.py
 ```
 poetry run python src/index.py
 ```
+
+## Definition of done
+- The feature is implemented
+- Unit tests are passing
+- Robot tests are passing
+- No linting errors
+- Pull request created, rewieved and merged into main branch
