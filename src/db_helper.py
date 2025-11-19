@@ -7,16 +7,18 @@ from config import app, db
 
 
 def reset_db():
-    print("Clearing contents from table book")
-    sql = text("DELETE FROM book")
-    try:
-        db.session.execute(sql)
-        db.session.commit()
-    except ProgrammingError:
-        # Table doesn't exist yet; rollback and create schema
-        db.session.rollback()
-        print("Table 'book' does not exist; creating database schema")
+    print("Clearing contents from all tables")
+    table_list = tables()
+
+    if not table_list:
+        print("No tables found in database; creating database schema")
         setup_db()
+        return
+
+    for table in table_list:
+        sql = text(f"DELETE FROM {table}")
+        db.session.execute(sql)
+    db.session.commit()
 
 
 def tables():

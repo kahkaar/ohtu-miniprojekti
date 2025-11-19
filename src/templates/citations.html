@@ -28,6 +28,7 @@
                 <strong>{{ book.title }}</strong>.
                 {{ book.publisher }}
                 {% if book.address %}, {{ book.address }}{% endif %}.
+                <a href="/edit/{{ book.id }}">Edit</a>
             </div>
         {% endfor %}
     {% else %}
