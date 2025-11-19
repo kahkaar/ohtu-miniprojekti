@@ -1,15 +1,22 @@
 import os
 
 from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 
 from config import app, db
 
 
 def reset_db():
-    print("Clearing contents from table todos")
-    sql = text("DELETE FROM todos")
-    db.session.execute(sql)
-    db.session.commit()
+    print("Clearing contents from table book")
+    sql = text("DELETE FROM book")
+    try:
+        db.session.execute(sql)
+        db.session.commit()
+    except ProgrammingError:
+        # Table doesn't exist yet; rollback and create schema
+        db.session.rollback()
+        print("Table 'book' does not exist; creating database schema")
+        setup_db()
 
 
 def tables():

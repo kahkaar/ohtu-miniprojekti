@@ -35,5 +35,4 @@ if test_env:
 @app.route("/citations")
 def citations():
     books = get_books()
-    print(get_books()[0])
     return render_template("citations.html", books=books)
