@@ -11,6 +11,7 @@ def get_books():
     books = result.fetchall()
     return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
 
+
 def get_book(id):
     """Fetches a single book by its ID"""
     sql = text("""
@@ -28,6 +29,27 @@ def create_book(title, author, year, publisher, address):
     sql = text("""INSERT INTO book (title, author, year, publisher, address)
           VALUES (:title, :author, :year, :publisher, :address)""")
     db.session.execute(sql, {
+        "title": title,
+        "author": author,
+        "year": year,
+        "publisher": publisher,
+        "address": address
+    })
+    db.session.commit()
+
+
+def update_book(id, title, author, year, publisher, address):
+    sql = text("""
+        UPDATE book
+        SET title = :title,
+            author = :author,
+            year = :year,
+            publisher = :publisher,
+            address = :address
+        WHERE id = :id
+    """)
+    db.session.execute(sql, {
+        "id": id,
         "title": title,
         "author": author,
         "year": year,
