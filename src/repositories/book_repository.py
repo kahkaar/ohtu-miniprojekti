@@ -13,7 +13,7 @@ def get_books():
 
 
 def get_book(id):
-    """Fetches a single book by its ID"""
+    """Fetches a single book by its ID from the database"""
     sql = text("""
         SELECT id, title, author, year, publisher, address
         FROM book WHERE id = :id
