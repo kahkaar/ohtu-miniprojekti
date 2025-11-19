@@ -46,4 +46,4 @@ poetry run python src/index.py
 - Unit tests are passing
 - Robot tests are passing
 - No linting errors
-- Pull request created, rewieved and merged into main branch
+- Pull request created, reviewed and merged into main branch
