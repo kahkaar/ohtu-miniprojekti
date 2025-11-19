@@ -7,9 +7,9 @@ env:
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
       - name: Install dependencies
-        run: poetry install        
+        run: poetry install
       - name: Run unit tests
         run: poetry run pytest src/tests
       - name: Setup chromedriver
