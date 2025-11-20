@@ -43,7 +43,7 @@ poetry run python src/index.py
 
 ## Definition of done
 - The feature is implemented
-- Unit tests are passing
-- Robot tests are passing
+- Unit tests are implemented and passing
+- Robot tests are implemented and passing
 - No linting errors
 - Pull request created, reviewed and merged into main branch
