@@ -104,3 +104,17 @@ class TestBook(unittest.TestCase):
         resp = self.client.get("/citations")
         body = resp.get_data(as_text=True)
         self.assertIn("No saved citations yet.", body)
+
+    def test_book_str_method(self):
+        from entities.book import Book
+
+        book = Book(
+            id=1,
+            title="Sample Title",
+            author="Sample Author",
+            year=2021,
+            publisher="Sample Publisher",
+            address="Sample Address",
+        )
+        expected_str = "Sample Title by Sample Author, 2021, Sample Publisher, Sample Address"
+        self.assertEqual(str(book), expected_str)
