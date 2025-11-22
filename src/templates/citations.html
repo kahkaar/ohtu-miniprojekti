@@ -29,11 +29,21 @@
                 {{ book.publisher }}
                 {% if book.address %}, {{ book.address }}{% endif %}.
                 <a href="/edit/{{ book.id }}">Edit</a>
+                <button onclick="confirmDelete({{ book.id }})">Delete</button>
+
             </div>
         {% endfor %}
     {% else %}
         <p>No saved citations yet.</p>
     {% endif %}
+
+    <script>
+        function confirmDelete(bookId) {
+            if (confirm("Are you sure you want to delete this citation?")) {
+                window.location.href = "/delete/" + bookId;
+            }
+        }
+    </script>
 
 </body>
 </html>
