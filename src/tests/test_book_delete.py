@@ -1,7 +1,6 @@
 
 import os
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import db_helper
