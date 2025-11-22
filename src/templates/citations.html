@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
+            margin: 25px;
         }
         h1 {
             margin-bottom: 20px;
@@ -19,21 +19,19 @@
 </head>
 <body>
 
-    <h1>Saved Citations</h1>
+    <h1 style="font-size:25px; font-weight:normal; display:inline; margin:0;">Saved Citations</h1>
     <p>Enter new citations <a href="/" style="font-size:18px;">here</a></p>
 
 
     {% if books %}
         {% for book in books %}
-            <div class="citation">
-                {{ book.author }} ({{ book.year }}).
-                <strong>{{ book.title }}</strong>.
-                {{ book.publisher }}
-                {% if book.address %}, {{ book.address }}{% endif %}.
-                <a href="/edit/{{ book.id }}">Edit</a>
-                <button onclick="confirmDelete({{ book.id }})">Delete</button>
-
-            </div>
+            <div class="citation" id="book-{{ book.id }}">
+            {{ book.author }} ({{ book.year }}).
+            <strong>{{ book.title }}</strong>.
+            {{ book.publisher }}
+            {% if book.address %}, {{ book.address }}{% endif %}.
+            <a href="/citations/delete/{{ book.id }}">Delete</a>
+        </div>
         {% endfor %}
     {% else %}
         <p>No saved citations yet.</p>
