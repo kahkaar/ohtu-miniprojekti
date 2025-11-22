@@ -49,7 +49,7 @@ def setup_db():
     print("Creating database")
 
     # Read schema from schema.sql file
-    schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
+    schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
     with open(schema_path, 'r') as f:
         schema_sql = f.read().strip()
 
@@ -57,7 +57,30 @@ def setup_db():
     db.session.execute(sql)
     db.session.commit()
 
+    tables_in_db = tables()
+    print(f"Created database from schema: {', '.join(tables_in_db)}")
+
+
+def init_db():
+    """Initialize the database with initial data.
+    """
+
+    print("Initializing database")
+
+    schema_path = os.path.join(os.path.dirname(
+        __file__), "sql", "initial_data.sql")
+
+    with open(schema_path, "r") as f:
+        initial_data_sql = f.read().strip()
+
+    sql = text(initial_data_sql)
+    db.session.execute(sql)
+    db.session.commit()
+
+    print("Initialized database with initial data")
+
 
 if __name__ == "__main__":
     with app.app_context():
         setup_db()
+        init_db()

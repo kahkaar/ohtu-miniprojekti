@@ -9,6 +9,8 @@ def get_books():
         "SELECT id, title, author, year, publisher, address FROM book")
     result = db.session.execute(query)
     books = result.fetchall()
+    if books is None:
+        return []
     return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
 
 
@@ -56,4 +58,10 @@ def update_book(id, title, author, year, publisher, address):
         "publisher": publisher,
         "address": address
     })
+    db.session.commit()
+
+def delete_book(book_id):
+    """Deletes a book entry from the database by its ID"""
+    sql = text("DELETE FROM book WHERE id = :book_id")
+    db.session.execute(sql, {"book_id": book_id})
     db.session.commit()
