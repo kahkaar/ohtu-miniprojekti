@@ -118,3 +118,12 @@ class TestBook(unittest.TestCase):
         )
         expected_str = "Sample Title by Sample Author, 2021, Sample Publisher, Sample Address"
         self.assertEqual(str(book), expected_str)
+
+@patch("app.delete_book")
+    def test_delete_citation_calls_delete_and_redirects(self, mock_delete_book):
+        response = self.client.get("/citations/delete/1", follow_redirects=False)
+
+        mock_delete_book.assert_called_once_with(1)
+
+        self.assertEqual(response.status_code, 302)
+        
