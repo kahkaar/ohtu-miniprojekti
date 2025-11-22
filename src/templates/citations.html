@@ -30,7 +30,7 @@
             <strong>{{ book.title }}</strong>.
             {{ book.publisher }}
             {% if book.address %}, {{ book.address }}{% endif %}.
-            <a href="/citations/delete/{{ book.id }}">Delete</a>
+            <button onclick="confirmDelete({{ book.id }})">Delete</button>
         </div>
         {% endfor %}
     {% else %}
@@ -40,10 +40,10 @@
     <script>
         function confirmDelete(bookId) {
             if (confirm("Are you sure you want to delete this citation?")) {
-                window.location.href = "/delete/" + bookId;
+                window.location.href = "/citations/delete/" + bookId;
             }
         }
     </script>
-
+    
 </body>
 </html>
