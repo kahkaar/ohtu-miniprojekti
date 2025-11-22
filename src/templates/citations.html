@@ -32,7 +32,9 @@
             {{ book.publisher }}
             {% if book.address %}, {{ book.address }}{% endif %}.
             <a href="/edit/{{ book.id }}">Edit</a>
-            <button onclick="confirmDelete({{ book.id }})">Delete</button>
+            <form id="delete-form-{{ book.id }}" action="/citations/delete/{{ book.id }}" method="POST" style="display:inline;">
+                <button type="button" onclick="confirmDelete({{ book.id }})">Delete</button>
+            </form>
         </div>
         {% endfor %}
     {% else %}
@@ -42,7 +44,7 @@
     <script>
         function confirmDelete(bookId) {
             if (confirm("Are you sure you want to delete this citation?")) {
-                window.location.href = "/citations/delete/" + bookId;
+                document.getElementById("delete-form-" + bookId).submit();
             }
         }
     </script>

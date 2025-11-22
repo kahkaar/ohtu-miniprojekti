@@ -59,7 +59,7 @@ def edit_book(id):
     return redirect("/citations")
 
 
-@app.route("/citations/delete/<int:book_id>")
+@app.route("/citations/delete/<int:book_id>", methods=["POST"])
 def delete_citation(book_id):
     """Deletes a book citation by its ID"""
     delete_book(book_id)
