@@ -19,6 +19,11 @@ After Editing A Book It Is Shown In The List
     Find Edited Book
     Confirm No Example Book Is In The List
 
+After Deleting A Book It Is No Longer In The List
+    Add Example Book
+    Delete Book
+    Confirm No Example Book Is In The List
+
 *** Keywords ***
 Add Example Book
     Go To Home Page
@@ -65,3 +70,8 @@ Confirm No Example Book Is In The List
     Page Should Not Contain  2020
     Page Should Not Contain  Example Publisher
     Page Should Not Contain  123 Example St
+
+Delete Book
+    Go To View Page
+    Click Button  Delete
+    Handle Alert  action=ACCEPT
