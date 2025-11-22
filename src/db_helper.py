@@ -49,7 +49,7 @@ def setup_db():
     print("Creating database")
 
     # Read schema from schema.sql file
-    schema_path = os.path.join(os.path.dirname(__file__), "sql", "schema.sql")
+    schema_path = os.path.join(os.path.dirname(__file__), "src", "schema.sql")
     with open(schema_path, 'r') as f:
         schema_sql = f.read().strip()
 
