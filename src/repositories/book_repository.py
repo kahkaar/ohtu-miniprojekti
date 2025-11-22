@@ -9,6 +9,8 @@ def get_books():
         "SELECT id, title, author, year, publisher, address FROM book")
     result = db.session.execute(query)
     books = result.fetchall()
+    if books is None:
+        return []
     return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
 
 
