@@ -1,53 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Saved Citations</title> 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 25px;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .citation {
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-    </style>
-</head>
-<body>
+{% extends "layout.html" %}
 
-    <h1 style="font-size:25px; font-weight:normal; display:inline; margin:0;">Saved Citations</h1>
-    <br>
-    Enter new citations <a href="/" style="font-size:18px;">here</a>
-    <br><br>
+{% block title %}Saved Citations{% endblock %}
 
-    {% if books %}
-        {% for book in books %}
-            <div class="citation" id="book-{{ book.id }}">
-            {{ book.author }} ({{ book.year }}).
-            <strong>{{ book.title }}</strong>.
-            {{ book.publisher }}
-            {% if book.address %}, {{ book.address }}{% endif %}.
-            <a href="/edit/{{ book.id }}">Edit</a>
-            <form id="delete-form-{{ book.id }}" action="/citations/delete/{{ book.id }}" method="POST" style="display:inline;">
-                <button type="button" onclick="confirmDelete({{ book.id }})">Delete</button>
-            </form>
-        </div>
-        {% endfor %}
-    {% else %}
-        <p>No saved citations yet.</p>
-    {% endif %}
+{% block body %}
+<h1>Saved Citations</h1>
+<p>Enter new citations <a href="/" style="font-size:18px;">here</a></p>
 
-    <script>
-        function confirmDelete(bookId) {
-            if (confirm("Are you sure you want to delete this citation?")) {
-                document.getElementById("delete-form-" + bookId).submit();
-            }
-        }
-    </script>
+{% if books %}
+  {% for book in books %}
+    <div class="citation" id="book-{{ book.id }}">
+    {{ book.author }} ({{ book.year }}).
+    <strong>{{ book.title }}</strong>.
+    {{ book.publisher }}
+    {% if book.address %}, {{ book.address }}{% endif %}.
+    <a href="/edit/{{ book.id }}">Edit</a>
+    <form id="delete-form-{{ book.id }}" action="/citations/delete/{{ book.id }}" method="POST" style="display:inline;">
+      <button type="button" onclick="confirmDelete({{ book.id }})">Delete</button>
+    </form>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>No saved citations yet.</p>
+{% endif %}
 
-</body>
-</html>
+<script>
+  function confirmDelete(bookId) {
+    if (confirm("Are you sure you want to delete this citation?")) {
+      document.getElementById("delete-form-" + bookId).submit();
+    }
+  }
+</script>
+{% endblock %}
