@@ -48,7 +48,7 @@ class TestEdit(unittest.TestCase):
         mock_get_book.return_value = None
         resp = self.client.get("/edit/999")
         self.assertEqual(resp.status_code, 404)
-    
+
     @patch("app.update_book")
     def test_edit_post_updates_book_and_redirects(self, mock_update_book):
         """POST /edit/<id> updates the book and redirects to /citations."""
@@ -59,11 +59,33 @@ class TestEdit(unittest.TestCase):
                 "author": "New Author",
                 "year": "2023",
                 "publisher": "New Publisher",
-                "address": "New Address",},
+                "address": "New Address", },
             follow_redirects=False,)
 
         mock_update_book.assert_called_once_with(
             1, "New Title", "New Author", "2023", "New Publisher", "New Address")
+
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(resp.headers["Location"].endswith("/citations"))
+
+    @patch("app.update_book")
+    def test_edit_post_nonexistent_calls_update_and_redirects(self, mock_update_book):
+        """POST /edit/<id> for a non-existent id should still call update and redirect."""
+        resp = self.client.post(
+            "/edit/999",
+            data={
+                "title": "New Title",
+                "author": "New Author",
+                "year": "2023",
+                "publisher": "New Publisher",
+                "address": "New Address",
+            },
+            follow_redirects=False,
+        )
+
+        mock_update_book.assert_called_once_with(
+            999, "New Title", "New Author", "2023", "New Publisher", "New Address"
+        )
 
         self.assertEqual(resp.status_code, 302)
         self.assertTrue(resp.headers["Location"].endswith("/citations"))
