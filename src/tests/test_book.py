@@ -23,7 +23,7 @@ class TestBook(unittest.TestCase):
     def test_citations_page_shows_books(self, mock_get_books):
         # Arrange: stub get_books to return a single book-like object
         book = SimpleNamespace(
-            id = 1,
+            id=1,
             author="Jane Doe",
             year=2020,
             title="Example Book",
