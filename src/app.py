@@ -57,13 +57,21 @@ def edit_page(book_id):
 
 @app.route("/edit/<int:book_id>", methods=["POST"])
 def edit_book(book_id):
+    title = request.form.get("title")
+    author = request.form.get("author")
+    year = request.form.get("year")
+    publisher = request.form.get("publisher")
+    address = request.form.get("address")
+
+    if not title or not author:
+        return redirect(f"/edit/{book_id}")
     update_book(
         book_id,
-        request.form["title"],
-        request.form["author"],
-        request.form["year"],
-        request.form["publisher"],
-        request.form["address"]
+        title,
+        author,
+        year,
+        publisher,
+        address
     )
     return redirect("/citations")
 
