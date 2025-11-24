@@ -3,6 +3,16 @@ class UserInputError(Exception):
 
 
 def make_bibtex(book):
+    """
+    Generate a BibTeX entry for a given book object.
+
+    Args:
+        book: An object representing a book, expected to have attributes
+            id, author, title, year, publisher, and address.
+
+    Returns:
+        str: A string containing the BibTeX entry for the book.
+    """
     tex = f"@book{{{book.id},\n"
     if book.author:
         tex += f"  author = {{{book.author}}},\n"
