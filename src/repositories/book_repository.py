@@ -6,12 +6,26 @@ from config import db
 from entities.book import Book
 
 
-def get_books():
-    query = text(
-        "SELECT id, title, author, year, publisher, address FROM book")
-    result = db.session.execute(query)
+def get_books(title=None, author=None, year=None):
+    query = "SELECT id, title, author, year, publisher, address FROM book WHERE 1=1"
+    params = {}
+
+    if title:
+        query += " AND LOWER(title) LIKE :title"
+        params["title"] = f"%{title.lower()}%"
+
+    if author:
+        query += " AND LOWER(author) LIKE :author"
+        params["author"] = f"%{author.lower()}%"
+
+    if year:
+        query += " AND year = :year"
+        params["year"] = year
+
+    result = db.session.execute(text(query), params)
     books = result.fetchall()
-    return [Book(book[0], book[1], book[2], book[3], book[4], book[5]) for book in books]
+
+    return [Book(b[0], b[1], b[2], b[3], b[4], b[5]) for b in books]
 
 
 def get_book(book_id):
