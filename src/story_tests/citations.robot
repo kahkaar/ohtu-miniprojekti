@@ -25,16 +25,6 @@ After Deleting A Book It Is No Longer In The List
     Confirm No Example Book Is In The List
 
 *** Keywords ***
-Add Example Book
-    Go To Home Page
-    Input Text  title  Example Book
-    Input Text  author  John Doe
-    Input Text  year  2020
-    Input Text  publisher  Example Publisher
-    Input Text  address  123 Example St
-    Click Button  Add Book
-    Wait Until Page Contains  Book added successfully!
-
 Find Example book
     Go To View Page
     Page Should Contain  John Doe

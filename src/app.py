@@ -2,6 +2,7 @@ from flask import abort, flash, jsonify, redirect, render_template, request
 
 from config import app, test_env
 from db_helper import reset_db
+from util import make_bibtex
 from repositories.book_repository import (
     create_book,
     delete_book,
@@ -74,6 +75,16 @@ def edit_book(book_id):
         address
     )
     return redirect("/citations")
+
+
+@app.route("/bibtex/<int:book_id>", methods=["GET"])
+def view_bibtex(book_id):
+    """Renders the bibtex view for a specific book by its ID"""
+    book = get_book(book_id)
+    if not book:
+        abort(404)
+    bibtex = make_bibtex(book)
+    return render_template("bibtex.html", bibtex=bibtex)
 
 
 @app.route("/citations/delete/<int:book_id>", methods=["GET", "POST"])

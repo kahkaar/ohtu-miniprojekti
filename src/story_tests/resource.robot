@@ -37,3 +37,18 @@ Go To Home Page
 Go To View Page
     Go To  ${VIEW_URL}
     Title Should Be  Saved Citations
+
+Go To Bibtex Page
+    Go To View Page
+    Click Button  View BibTeX
+    Title Should Be  Citation in bibtex format
+
+Add Example Book
+    Go To Home Page
+    Input Text  title  Example Book
+    Input Text  author  John Doe
+    Input Text  year  2020
+    Input Text  publisher  Example Publisher
+    Input Text  address  123 Example St
+    Click Button  Add Book
+    Wait Until Page Contains  Book added successfully!
