@@ -46,7 +46,7 @@ def setup_db():
     """
     print("Creating database")
 
-    # Drop existing tables. schema.sql should have drop table if exists aswell.
+    # Drop existing tables. schema.sql should have drop table if exists as well.
     tables_in_db = tables()
     if tables_in_db:
         print(f"Tables exist, dropping: {", ".join(tables_in_db)}")
