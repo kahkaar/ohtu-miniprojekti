@@ -1,3 +1,5 @@
+# pylint: disable=R0913,R0917,R0903
+
 class Book:
     def __init__(self, book_id, title, author, year, publisher, address):
         self.id = book_id

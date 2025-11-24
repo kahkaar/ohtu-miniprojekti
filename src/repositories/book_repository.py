@@ -1,3 +1,5 @@
+# pylint: disable=R0917
+
 from sqlalchemy import text
 
 from config import db
