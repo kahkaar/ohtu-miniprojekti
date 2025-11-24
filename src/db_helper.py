@@ -6,10 +6,24 @@ from config import app, db
 
 
 def reset_db():
-    print("Clearing contents from table todos")
-    sql = text("DELETE FROM todos")
-    db.session.execute(sql)
+    """Clears all contents from all tables in the database.
+    Used mainly for unit tests.
+    """
+    print("Clearing contents from all tables")
+
+    tables_in_db = tables()
+    if not tables_in_db:
+        print("No tables found; creating schema and initializing data")
+        setup_db()
+        init_db()
+        return
+
+    for table in tables_in_db:
+        sql = text(f"DELETE FROM {table} CASCADE")
+        db.session.execute(sql)
     db.session.commit()
+
+    print("Cleared database contents. Tables: " + ", ".join(tables_in_db))
 
 
 def tables():
@@ -30,26 +44,58 @@ def setup_db():
       Creating the database
       If database tables already exist, those are dropped before the creation
     """
+    print("Creating database")
+
+    # Drop existing tables. schema.sql should have drop table if exists as well.
     tables_in_db = tables()
-    if len(tables_in_db) > 0:
-        print(f"Tables exist, dropping: {', '.join(tables_in_db)}")
+    if tables_in_db:
+        print(f"Tables exist, dropping: {", ".join(tables_in_db)}")
         for table in tables_in_db:
-            sql = text(f"DROP TABLE {table}")
+            sql = text(f"DROP TABLE IF EXISTS {table} CASCADE")
             db.session.execute(sql)
         db.session.commit()
 
-    print("Creating database")
-
     # Read schema from schema.sql file
-    schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
-    with open(schema_path, 'r') as f:
+    schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
+
+    if not os.path.exists(schema_path):
+        print(f"No schema file found, cannot create database: {schema_path}")
+        return
+
+    with open(schema_path, "r", encoding="utf-8") as f:
         schema_sql = f.read().strip()
 
     sql = text(schema_sql)
     db.session.execute(sql)
     db.session.commit()
 
+    tables_in_db = tables()
+    print("Created database from schema: " + ", ".join(tables_in_db))
+
+
+def init_db():
+    """Initialize the database with initial data.
+    """
+    print("Initializing database")
+
+    schema_path = os.path.join(os.path.dirname(
+        __file__), "sql", "initial_data.sql")
+
+    if not os.path.exists(schema_path):
+        print("No initial data file found, skipping initialization")
+        return
+
+    with open(schema_path, "r", encoding="utf-8") as f:
+        initial_data_sql = f.read().strip()
+
+    sql = text(initial_data_sql)
+    db.session.execute(sql)
+    db.session.commit()
+
+    print("Initialized database with initial data")
+
 
 if __name__ == "__main__":
     with app.app_context():
         setup_db()
+        init_db()

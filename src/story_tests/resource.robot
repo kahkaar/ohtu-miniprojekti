@@ -3,8 +3,9 @@ Library  SeleniumLibrary
 
 *** Variables ***
 ${SERVER}     localhost:5001
-${DELAY}      0.5 seconds
+${DELAY}      0.2 seconds
 ${HOME_URL}   http://${SERVER}
+${VIEW_URL}   http://${SERVER}/citations
 ${RESET_URL}  http://${SERVER}/reset_db
 ${BROWSER}    chrome
 ${HEADLESS}   false
@@ -26,6 +27,13 @@ Open And Configure Browser
     END
     Open Browser  browser=${BROWSER}  options=${options}
 
-Reset Todos
+Reset Database
     Go To  ${RESET_URL}
 
+Go To Home Page
+    Go To  ${HOME_URL}
+    Title Should Be  Add a new book
+
+Go To View Page
+    Go To  ${VIEW_URL}
+    Title Should Be  Saved Citations

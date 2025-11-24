@@ -5,20 +5,20 @@
 
 - [Product Backlog](https://helsinkifi-my.sharepoint.com/:x:/g/personal/aaronkah_ad_helsinki_fi/IQATnYMBAMCEQ57iHxkj_qhWAaD1NGwKU3RmEI25Eqsbi7s?e=A2Yyww)
 
-## Installation instructions
+## Installation Instructions
 
 - Clone the repository
-```console
+```bash
 git clone https://github.com/kahkaar/ohtu-miniprojekti
 ```
 
 - Cd to the directory
-```console
+```bash
 cd ohtu-miniprojekti
 ```
 
 - Install dependencies
-```console
+```bash
 poetry install
 ```
 
@@ -32,11 +32,27 @@ SECRET_KEY=satunnainen_merkkijono
 ```
 
 - Initialize database
-```
+```bash
 poetry run python src/db_helper.py
 ```
 
 - Start the application
-```
+```bash
 poetry run python src/index.py
 ```
+
+
+### Development Instructions
+
+- Install pre-commit hook
+```bash
+pre-commit install
+```
+
+
+## Definition of done
+- The feature is implemented
+- Unit tests are implemented and passing
+- Robot tests are implemented and passing
+- No linting errors
+- Pull request created, reviewed and merged into main branch
