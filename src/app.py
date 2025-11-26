@@ -1,8 +1,15 @@
-from flask import flash, jsonify, redirect, render_template, request, abort
+from flask import abort, flash, jsonify, redirect, render_template, request
 
 from config import app, test_env
 from db_helper import reset_db
-from repositories.book_repository import create_book, get_books, get_book, update_book
+from util import make_bibtex
+from repositories.book_repository import (
+    create_book,
+    delete_book,
+    get_book,
+    get_books,
+    update_book,
+)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -23,6 +30,9 @@ def index():
         flash("Book added successfully!")
         return redirect("/")
 
+    # Here to not make pylance complain
+    abort(405)
+
 
 # testausta varten oleva reitti
 if test_env:
@@ -37,21 +47,48 @@ def citations():
     books = get_books()
     return render_template("citations.html", books=books)
 
-@app.route("/edit/<int:id>", methods=["GET"])
-def edit_page(id):
-    book = get_book(id)
+
+@app.route("/edit/<int:book_id>", methods=["GET"])
+def edit_page(book_id):
+    book = get_book(book_id)
     if not book:
         abort(404)
     return render_template("edit.html", book=book)
 
-@app.route("/edit/<int:id>", methods=["POST"])
-def edit_book(id):
+
+@app.route("/edit/<int:book_id>", methods=["POST"])
+def edit_book(book_id):
+    title = request.form.get("title")
+    author = request.form.get("author")
+    year = request.form.get("year")
+    publisher = request.form.get("publisher")
+    address = request.form.get("address")
+
+    if not title or not author:
+        return redirect(f"/edit/{book_id}")
     update_book(
-        id,
-        request.form["title"],
-        request.form["author"],
-        request.form["year"],
-        request.form["publisher"],
-        request.form["address"]
+        book_id,
+        title,
+        author,
+        year,
+        publisher,
+        address
     )
+    return redirect("/citations")
+
+
+@app.route("/bibtex/<int:book_id>", methods=["GET"])
+def view_bibtex(book_id):
+    """Renders the bibtex view for a specific book by its ID"""
+    book = get_book(book_id)
+    if not book:
+        abort(404)
+    bibtex = make_bibtex(book)
+    return render_template("bibtex.html", bibtex=bibtex)
+
+
+@app.route("/citations/delete/<int:book_id>", methods=["GET", "POST"])
+def delete_citation(book_id):
+    """Deletes a book citation by its ID (supports GET for tests and POST from forms)"""
+    delete_book(book_id)
     return redirect("/citations")

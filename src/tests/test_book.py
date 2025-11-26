@@ -23,6 +23,7 @@ class TestBook(unittest.TestCase):
     def test_citations_page_shows_books(self, mock_get_books):
         # Arrange: stub get_books to return a single book-like object
         book = SimpleNamespace(
+            id=1,
             author="Jane Doe",
             year=2020,
             title="Example Book",
@@ -104,3 +105,17 @@ class TestBook(unittest.TestCase):
         resp = self.client.get("/citations")
         body = resp.get_data(as_text=True)
         self.assertIn("No saved citations yet.", body)
+
+    def test_book_str_method(self):
+        from entities.book import Book
+
+        book = Book(
+            book_id=1,
+            title="Sample Title",
+            author="Sample Author",
+            year=2021,
+            publisher="Sample Publisher",
+            address="Sample Address",
+        )
+        expected_str = "Sample Title by Sample Author, 2021, Sample Publisher, Sample Address"
+        self.assertEqual(str(book), expected_str)

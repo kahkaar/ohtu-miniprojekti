@@ -3,15 +3,18 @@
 {% block title %}Add a new book{% endblock %}
 
 {% block body %}
+
 <h1>Add a new book</h1>
 
+<p>or see saved citations <a href="/citations" style="font-size:18px;">here</a></p>
+
 <form method="post">
-    <label>Title: <input type="text" name="title"></label><br>
-    <label>Author: <input type="text" name="author"></label><br>
-    <label>Year: <input type="number" name="year"></label><br>
-    <label>Publisher: <input type="text" name="publisher"></label><br>
-    <label>Address: <input type="text" name="address"></label><br>
-    <button type="submit">Add Book</button>
+  <label>Title: <input type="text" name="title"></label><br>
+  <label>Author: <input type="text" name="author"></label><br>
+  <label>Year: <input type="number" name="year"></label><br>
+  <label>Publisher: <input type="text" name="publisher"></label><br>
+  <label>Address: <input type="text" name="address"></label><br>
+  <button type="submit">Add Book</button>
 </form>
 
 {% endblock %}
