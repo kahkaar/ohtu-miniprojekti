@@ -1,5 +1,5 @@
 from flask import abort, flash, jsonify, redirect, render_template, request
-
+from repositories.citation_repository import search_citations
 from config import app, test_env
 from db_helper import reset_db
 from util import make_bibtex
@@ -10,6 +10,7 @@ from repositories.book_repository import (
     get_books,
     update_book,
 )
+
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -92,3 +93,17 @@ def delete_citation(book_id):
     """Deletes a book citation by its ID (supports GET for tests and POST from forms)"""
     delete_book(book_id)
     return redirect("/citations")
+
+@app.route("/citations/search")
+def citations_search():
+    q = request.args.get("q")
+    citation_key = request.args.get("citation_key")
+    entry_type = request.args.get("entry_type")
+
+    citations = search_citations(
+        q=q,
+        citation_key=citation_key,
+        entry_type=entry_type
+    )
+
+    return render_template("search.html", citations=citations)
