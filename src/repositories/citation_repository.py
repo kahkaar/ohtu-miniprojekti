@@ -118,7 +118,12 @@ def create_citation(entry_type_id, citation_key, fields):
     db.session.commit()
 
 
-def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=None):
+def update_citation(
+        citation_id,
+        entry_type_id=None,
+        citation_key=None,
+        fields=None
+):
     """Updates an existing citation entry in the database."""
 
     values = []
@@ -180,44 +185,57 @@ def search_citations(queries=None):
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
     """
-
     if not queries:
         return []
+
+    def _to_int(v):
+        if v is None or v == "":
+            return None
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    year_from = _to_int(queries.get("year_from"))
+    year_to = _to_int(queries.get("year_to"))
 
     filters = []
     params = {}
 
-    if queries["q"]:
+    if queries.get("q"):
         filters.append("c.fields::text ILIKE :q")
-        params["q"] = f"%{queries["q"]}%"
+        params["q"] = f"%{queries.get('q')}%"
 
-    if queries["citation_key"]:
+    if queries.get("citation_key"):
         filters.append("c.citation_key ILIKE :citation_key")
-        params["citation_key"] = f"%{queries["citation_key"]}%"
+        params["citation_key"] = f"%{queries.get('citation_key')}%"
 
-    if queries["entry_type"]:
+    if queries.get("entry_type"):
         filters.append("et.name = :entry_type")
-        params["entry_type"] = queries["entry_type"]
+        params["entry_type"] = queries.get('entry_type')
 
-    if queries["author"]:
+    if queries.get("author"):
         filters.append("c.fields->>'author' ILIKE :author")
-        params["author"] = f"%{queries["author"]}%"
+        params["author"] = f"%{queries.get('author')}%"
 
-    if queries["year_from"]:
+    if year_from:
         filters.append("(c.fields->>'year')::int >= :year_from")
-        params["year_from"] = int(queries["year_from"])
+        params["year_from"] = year_from
 
-    if queries["year_to"]:
+    if year_to:
         filters.append("(c.fields->>'year')::int <= :year_to")
-        params["year_to"] = int(queries["year_to"])
+        params["year_to"] = year_to
 
-    if filters:
-        base_sql += f" WHERE {" AND ".join(filters)}"
+    base_sql += " WHERE " + " AND ".join(filters)
 
-    if queries["sort_by"] == "year":
-        base_sql += f" ORDER BY (c.fields->>'year')::int {queries["direction"]}"
-    elif queries["sort_by"] == "citation_key":
-        base_sql += f" ORDER BY c.citation_key {queries["direction"]}"
+    if queries.get("sort_by") == "year":
+        base_sql += f" ORDER BY (c.fields->>'year')::int {
+            ('DESC' if queries.get('direction', 'ASC').upper() == 'DESC' else 'ASC')
+        }"
+    elif queries.get("sort_by") == "citation_key":
+        base_sql += f" ORDER BY c.citation_key {
+            ('DESC' if queries.get('direction', 'ASC').upper() == 'DESC' else 'ASC')
+        }"
     else:
         base_sql += " ORDER BY c.id ASC"
 

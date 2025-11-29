@@ -58,6 +58,65 @@ class TestUtil(unittest.TestCase):
             self.assertIsNone(util.get_session("a"))
             self.assertIsNone(util.get_session("b"))
 
+    def test_parse_search_queries_from_util(self):
+        args = {
+            "q": "  spaced out  ",
+            "citation_key": " AbC123 ",
+            "author": " John Doe ",
+            "year_from": "1990",
+            "year_to": "1999",
+            "sort_by": "citation_key",
+            "direction": "Down",
+        }
+
+        parsed = util.parse_search_queries(args)
+
+        self.assertEqual(parsed["q"], "spaced out")
+        self.assertEqual(parsed["citation_key"], "abc123")
+        self.assertEqual(parsed["author"], "john doe")
+        self.assertEqual(parsed["year_from"], 1990)
+        self.assertEqual(parsed["year_to"], 1999)
+        self.assertEqual(parsed["sort_by"], "citation_key")
+
+        self.assertIn(parsed["direction"], ("ASC", "DESC"))
+
+    def test_parse_search_queries_edge_cases(self):
+        parsed = util.parse_search_queries({})
+        self.assertIsNone(parsed["sort_by"])
+        self.assertEqual(parsed["direction"], "ASC")
+
+        parsed = util.parse_search_queries({"year_from": "abc", "year_to": ""})
+        self.assertIsNone(parsed["year_from"])
+        self.assertIsNone(parsed["year_to"])
+
+    def test_parse_search_queries_int_years_and_variants(self):
+        args = {"year_from": 2015, "year_to": 2020,
+                "sort_by": "Year", "direction": "desc"}
+        parsed = util.parse_search_queries(args)
+        self.assertEqual(parsed["year_from"], 2015)
+        self.assertEqual(parsed["year_to"], 2020)
+        self.assertEqual(parsed["sort_by"], "year")
+        self.assertEqual(parsed["direction"], "DESC")
+
+    def test_parse_search_queries_invalid_direction_and_blank_fields(self):
+        args = {"direction": "down", "citation_key": "   ",
+                "author": None, "q": "\n  "}
+        parsed = util.parse_search_queries(args)
+        self.assertEqual(parsed["direction"], "ASC")
+        self.assertEqual(parsed["citation_key"], "")
+        self.assertEqual(parsed["author"], "")
+        self.assertEqual(parsed["q"], "")
+
+    def test_parse_search_queries_handles_str_exception_in_year(self):
+        class BadStr:
+            def __str__(self):
+                raise TypeError("bad to-string")
+
+        parsed = util.parse_search_queries(
+            {"year_from": BadStr(), "year_to": BadStr()})
+        self.assertIsNone(parsed["year_from"])
+        self.assertIsNone(parsed["year_to"])
+
 
 if __name__ == "__main__":
     unittest.main()

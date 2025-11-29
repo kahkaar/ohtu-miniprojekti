@@ -81,7 +81,11 @@ def parse_search_queries(args):
             return None
 
     def _str_lower(name):
-        return sanitize(args.get(name, "")).lower()
+        v = args.get(name, "")
+        if v is None:
+            v = ""
+        s = sanitize(v)
+        return s.lower() if isinstance(s, str) else ""
 
     allowed_sort_by = {"year", "citation_key"}
 
@@ -93,8 +97,11 @@ def parse_search_queries(args):
     if direction not in ("ASC", "DESC"):
         direction = "ASC"
 
+    q_val = args.get("q", "")
+    q_sanitized = sanitize(q_val) if q_val is not None else ""
+
     return {
-        "q": sanitize(args.get("q", "")),
+        "q": q_sanitized or "",
         "citation_key": _str_lower("citation_key"),
         "entry_type": _str_lower("entry_type"),
         "author": _str_lower("author"),
