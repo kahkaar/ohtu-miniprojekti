@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import text
 
 from config import db
@@ -5,18 +7,26 @@ from entities.citation import Citation
 
 
 def _to_citation(row):
-    # pylint: disable=W0511
-    # TODO: Move this to utils/equivalent module.
+    """Converts a database row to a Citation object."""
+    if not row:
+        return None
+
+    fields = row.fields or ""
+    if isinstance(fields, str):
+        try:
+            fields = json.loads(fields)
+        except json.JSONDecodeError:
+            fields = {}
+
     return Citation(
         row.id,
         row.entry_type,
         row.citation_key,
-        row.fields
+        fields
     )
 
 
 def get_citations(page=None, per_page=None):
-    # N.B. This probably should have a default per_page value...
     """Fetches citations from the database.
 
     Optional paging:
@@ -26,10 +36,13 @@ def get_citations(page=None, per_page=None):
     If both `page` and `per_page` are provided, the query uses LIMIT/OFFSET
     to return only that page. If omitted, all citations are returned.
     """
-
+    # N.B. This method should probably have a default per_page value...
     base_sql = (
         """
-        SELECT c.id, et.name AS entry_type, c.citation_key, c.fields
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key, c.fields
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         ORDER BY c.id
@@ -60,10 +73,14 @@ def get_citation(citation_id):
 
     sql = text(
         """
-        SELECT c.id, et.name AS entry_type, c.citation_key, c.fields
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key, c.fields
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         WHERE c.id = :citation_id
+        ORDER BY et.name
         """
     )
 
@@ -89,10 +106,12 @@ def create_citation(entry_type_id, citation_key, fields):
         """
     )
 
+    serialized = json.dumps(fields or {})
+
     params = {
         "entry_type_id": entry_type_id,
         "citation_key": citation_key,
-        "fields": fields,
+        "fields": serialized,
     }
 
     db.session.execute(sql, params)
@@ -114,8 +133,9 @@ def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=N
         params["citation_key"] = citation_key
 
     if fields:
+        serialized = json.dumps(fields or {})
         values.append("fields = :fields")
-        params["fields"] = fields
+        params["fields"] = serialized
 
     # Nothing to update; returning.
     # Should this return a value or raise?
@@ -125,7 +145,7 @@ def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=N
     base_sql = (
         f"""
         UPDATE citations
-        SET {', '.join(values)}
+        SET {", ".join(values)}
         WHERE id = :citation_id
         """
     )

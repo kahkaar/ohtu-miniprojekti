@@ -1,6 +1,9 @@
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+
+from attr import fields
 
 import repositories.citation_repository as repo
 
@@ -89,7 +92,11 @@ class TestCitationRepository(unittest.TestCase):
         self.assertIn("INSERT INTO citations", str(sql))
         self.assertEqual(params["entry_type_id"], entry_type_id)
         self.assertEqual(params["citation_key"], citation_key)
-        self.assertEqual(params["fields"], fields)
+
+        actual_fields = params["fields"]
+        if isinstance(actual_fields, str):
+            actual_fields = json.loads(actual_fields)
+        self.assertEqual(actual_fields, fields)
 
     @patch("repositories.citation_repository.db")
     def test_create_citation_commits(self, mock_db):
@@ -180,7 +187,11 @@ class TestCitationRepository(unittest.TestCase):
         self.assertEqual(params["citation_id"], citation_id)
         self.assertEqual(params["entry_type_id"], entry_type_id)
         self.assertEqual(params["citation_key"], citation_key)
-        self.assertEqual(params["fields"], fields)
+
+        actual_fields = params["fields"]
+        if isinstance(actual_fields, str):
+            actual_fields = json.loads(actual_fields)
+        self.assertEqual(actual_fields, fields)
 
     @patch("repositories.citation_repository.db")
     def test_update_citation_noop_does_not_execute_or_commit(self, mock_db):
@@ -225,6 +236,22 @@ class TestCitationRepository(unittest.TestCase):
         repo.update_citation(20, entry_type_id=0, citation_key="", fields={})
         mock_db.session.execute.assert_not_called()
         mock_db.session.commit.assert_not_called()
+
+    def test_to_citation_object_handles_none(self):
+        citation = repo._to_citation(None)
+        self.assertIsNone(citation)
+
+    def test_to_citation_object_handles_empty_fields(self):
+        row = SimpleNamespace(
+            id=3, entry_type="misc", citation_key="k3", fields=None)
+        citation = repo._to_citation(row)
+        self.assertIsNotNone(citation)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not citation:
+            self.fail("Citation should not be None")
+
+        self.assertEqual(citation.fields, {})
 
 
 if __name__ == "__main__":
