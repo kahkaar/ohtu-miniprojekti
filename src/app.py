@@ -1,17 +1,17 @@
 from flask import abort, flash, jsonify, redirect, render_template, request
-from repositories.citation_repository import search_citations
+
 from config import app, test_env
 from db_helper import reset_db
 from util import make_bibtex
+
+from repositories.citation_repository import search_citations, get_entry_types
 from repositories.book_repository import (
     create_book,
     delete_book,
     get_book,
     get_books,
-    update_book,
+    update_book
 )
-
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -44,7 +44,7 @@ if test_env:
 
 
 @app.route("/citations")
-def citations():
+def list_citations():
     books = get_books()
     return render_template("citations.html", books=books)
 
@@ -94,16 +94,33 @@ def delete_citation(book_id):
     delete_book(book_id)
     return redirect("/citations")
 
+
 @app.route("/citations/search")
 def citations_search():
     q = request.args.get("q")
     citation_key = request.args.get("citation_key")
     entry_type = request.args.get("entry_type")
+    author = request.args.get("author")
+    year_from = request.args.get("year_from")
+    year_to = request.args.get("year_to")
+    sort_by = request.args.get("sort_by")
+    direction = request.args.get("direction", "asc")
 
     citations = search_citations(
         q=q,
         citation_key=citation_key,
-        entry_type=entry_type
+        entry_type=entry_type,
+        author=author,
+        year_from=year_from,
+        year_to=year_to,
+        sort_by=sort_by,
+        direction=direction
     )
 
-    return render_template("search.html", citations=citations)
+    entry_types = get_entry_types()
+
+    return render_template(
+        "search.html",
+        citations=citations,
+        entry_types=entry_types
+    )
