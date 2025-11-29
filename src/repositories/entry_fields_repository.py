@@ -12,7 +12,7 @@ def get_entry_fields(entry_type_id):
         FROM default_entry_fields def
         JOIN default_fields df ON def.default_field_id = df.id
         WHERE def.entry_type_id = :entry_type_id
-        ORDER BY df.id
+        ORDER BY df.name
         """
     )
 
@@ -23,4 +23,4 @@ def get_entry_fields(entry_type_id):
     if not result:
         return []
 
-    return sorted([r.name for r in result])
+    return [r.name for r in result]

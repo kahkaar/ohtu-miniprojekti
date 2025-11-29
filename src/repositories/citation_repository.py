@@ -226,7 +226,8 @@ def search_citations(queries=None):
         filters.append("(c.fields->>'year')::int <= :year_to")
         params["year_to"] = year_to
 
-    base_sql += " WHERE " + " AND ".join(filters)
+    if filters:
+        base_sql += " WHERE " + " AND ".join(filters)
 
     if queries.get("sort_by") == "year":
         base_sql += f" ORDER BY (c.fields->>'year')::int {
