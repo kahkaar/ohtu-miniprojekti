@@ -12,7 +12,7 @@ def sanitize(value):
 
 
 def validate(value):
-    """Validates user input; raises UserInputError if invalid."""
+    """Validates that the input value is a non-empty string."""
     if not isinstance(value, str) or not value.strip():
         return None
     return value
