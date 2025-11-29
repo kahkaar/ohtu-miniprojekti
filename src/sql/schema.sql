@@ -16,7 +16,7 @@ CREATE TABLE entry_types (
 CREATE TABLE citations (
   id SERIAL PRIMARY KEY,
   entry_type_id INTEGER REFERENCES entry_types(id),
-  citation_key TEXT NOT NULL UNIQUE,
+  citation_key TEXT NOT NULL,
   fields JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE default_entry_fields (
 );
 
 
--- Indecies to improve query performance
+-- Indices to improve query performance
 -- GIN index for fast jsonb containment queries on citation fields
 CREATE INDEX IF NOT EXISTS citations_fields_gin ON citations USING GIN (fields);
 

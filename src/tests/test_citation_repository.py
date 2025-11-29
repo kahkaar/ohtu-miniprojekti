@@ -1,3 +1,4 @@
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -22,6 +23,11 @@ class TestCitationRepository(unittest.TestCase):
         citations = repo.get_citations()
 
         self.assertEqual(len(citations), 2)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not citations[0]:
+            self.fail("Citations should not be None")
+
         self.assertEqual(citations[0].id, 1)
         self.assertEqual(citations[0].entry_type, "book")
         self.assertEqual(citations[0].citation_key, "k1")
@@ -53,6 +59,11 @@ class TestCitationRepository(unittest.TestCase):
 
         citations = repo.get_citations(page=2, per_page=1)
         self.assertEqual(len(citations), 1)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not citations[0]:
+            self.fail("Citations should not be None")
+
         self.assertEqual(citations[0].id, 2)
 
     @patch("repositories.citation_repository.db")
@@ -89,7 +100,11 @@ class TestCitationRepository(unittest.TestCase):
         self.assertIn("INSERT INTO citations", str(sql))
         self.assertEqual(params["entry_type_id"], entry_type_id)
         self.assertEqual(params["citation_key"], citation_key)
-        self.assertEqual(params["fields"], fields)
+
+        actual_fields = params["fields"]
+        if isinstance(actual_fields, str):
+            actual_fields = json.loads(actual_fields)
+        self.assertEqual(actual_fields, fields)
 
     @patch("repositories.citation_repository.db")
     def test_create_citation_commits(self, mock_db):
@@ -180,7 +195,11 @@ class TestCitationRepository(unittest.TestCase):
         self.assertEqual(params["citation_id"], citation_id)
         self.assertEqual(params["entry_type_id"], entry_type_id)
         self.assertEqual(params["citation_key"], citation_key)
-        self.assertEqual(params["fields"], fields)
+
+        actual_fields = params["fields"]
+        if isinstance(actual_fields, str):
+            actual_fields = json.loads(actual_fields)
+        self.assertEqual(actual_fields, fields)
 
     @patch("repositories.citation_repository.db")
     def test_update_citation_noop_does_not_execute_or_commit(self, mock_db):
@@ -225,6 +244,139 @@ class TestCitationRepository(unittest.TestCase):
         repo.update_citation(20, entry_type_id=0, citation_key="", fields={})
         mock_db.session.execute.assert_not_called()
         mock_db.session.commit.assert_not_called()
+
+    def test_to_citation_object_handles_none(self):
+        citation = repo._to_citation(None)
+        self.assertIsNone(citation)
+
+    def test_to_citation_object_handles_empty_fields(self):
+        row = SimpleNamespace(
+            id=3, entry_type="misc", citation_key="k3", fields=None)
+        citation = repo._to_citation(row)
+        self.assertIsNotNone(citation)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not citation:
+            self.fail("Citation should not be None")
+
+        self.assertEqual(citation.fields, {})
+
+    @patch("repositories.citation_repository.db")
+    def test_search_citations_returns_empty_when_no_queries(self, mock_db):
+        result = repo.search_citations(None)
+        self.assertEqual(result, [])
+
+    @patch("repositories.citation_repository.db")
+    def test_search_citations_builds_filters_and_params(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {
+            "q": "alpha",
+            "citation_key": "ck",
+            "entry_type": "book",
+            "author": "Bob",
+            "year_from": "2000",
+            "year_to": "2005",
+            "sort_by": "year",
+            "direction": "DESC",
+        }
+
+        out = repo.search_citations(queries)
+        self.assertEqual(out, [])
+
+        mock_db.session.execute.assert_called_once()
+        args, kwargs = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+
+        self.assertEqual(params["q"], "%alpha%")
+        self.assertEqual(params["citation_key"], "%ck%")
+        self.assertEqual(params["entry_type"], "book")
+        self.assertEqual(params["author"], "%Bob%")
+        self.assertEqual(params["year_from"], 2000)
+        self.assertEqual(params["year_to"], 2005)
+
+        sql_str = str(sql)
+        self.assertIn("WHERE", sql_str)
+        self.assertIn("(c.fields->>'year')::int", sql_str)
+        self.assertIn("ORDER BY (c.fields->>'year')::int DESC", sql_str)
+
+    @patch("repositories.citation_repository.db")
+    def test_search_citations_handles_nonint_years(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {"q": "x", "year_from": "notint",
+                   "sort_by": "citation_key", "direction": "asc"}
+        repo.search_citations(queries)
+
+        mock_db.session.execute.assert_called_once()
+        args, kwargs = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+
+        self.assertNotIn("year_from", params)
+        self.assertEqual(params.get("q"), "%x%")
+        self.assertIn("ORDER BY c.citation_key ASC", str(sql))
+
+    @patch("repositories.citation_repository.db")
+    def test_search_citations_handles_missing_q_param(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {"year_from": "2001", "sort_by": "year", "direction": "desc"}
+        repo.search_citations(queries)
+
+        mock_db.session.execute.assert_called_once()
+        args, kwargs = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+
+        self.assertNotIn("q", params)
+        self.assertEqual(params.get("year_from"), 2001)
+        self.assertIn("ORDER BY (c.fields->>'year')::int DESC", str(sql))
+
+    @patch("repositories.citation_repository.db")
+    def test_search_sort_by_citation_key(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {"year_from": "2001",
+                   "sort_by": "citation_key", "direction": "desc"}
+        repo.search_citations(queries)
+
+        mock_db.session.execute.assert_called_once()
+        args, kwargs = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+
+        self.assertNotIn("q", params)
+        self.assertEqual(params.get("year_from"), 2001)
+        self.assertIn("ORDER BY c.citation_key DESC", str(sql))
+
+    @patch("repositories.citation_repository.db")
+    def test_search_invalid_sort_by(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {"year_from": "2001",
+                   "sort_by": "invalid_field", "direction": "desc"}
+        repo.search_citations(queries)
+
+        mock_db.session.execute.assert_called_once()
+        args, kwargs = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+
+        self.assertNotIn("q", params)
+        self.assertEqual(params.get("year_from"), 2001)
+        self.assertIn("ORDER BY c.id ASC", str(sql))
 
 
 if __name__ == "__main__":

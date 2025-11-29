@@ -1,20 +1,43 @@
 {% extends "layout.html" %}
 
-{% block title %}Add a new book{% endblock %}
+{% block title %}Add a new Citation{% endblock %}
 
 {% block body %}
+<h1>Add a new Citation</h1>
+<p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
 
-<h1>Add a new book</h1>
-
-<p>or see saved citations <a href="/citations" style="font-size:18px;">here</a></p>
-
+<h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
 <form method="post">
-  <label>Title: <input type="text" name="title"></label><br>
-  <label>Author: <input type="text" name="author"></label><br>
-  <label>Year: <input type="number" name="year"></label><br>
-  <label>Publisher: <input type="text" name="publisher"></label><br>
-  <label>Address: <input type="text" name="address"></label><br>
-  <button type="submit">Add Book</button>
+  <label>Entry type:
+    <select name="entry_type" required>
+      <option value="" disabled selected>Select type</option>
+      {% for et in entry_types or [] %}
+      {% if et.id == session.get("entry_type", {}).get("id") %}
+      <option value="{{ et.id }}" selected>{{ et.name }}</option>
+      {% else %}
+      <option value="{{ et.id }}">{{ et.name }}</option>
+      {% endif %}
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Select</button>
 </form>
+<br>
 
+{% if session.get("entry_type") %}
+<form method="post">
+  <h2>Selected entry type: <b>{{ session.get("entry_type").get("name") }}</b></h2>
+  <h3>Fill in the details:</h3>
+  <label>Citation key:
+    <input type="text" name="citation_key" required>
+    <br>
+    {% for f in fields %}
+    <label>{{ f.replace("_", " ").capitalize() }}:
+      <input type="text" name="{{ f }}">
+    </label>
+    <br>
+    {% endfor %}
+    <button type="submit">Add Citation</button>
+</form>
+{% endif %}
 {% endblock %}

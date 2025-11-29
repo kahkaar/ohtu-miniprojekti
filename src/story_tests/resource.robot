@@ -6,9 +6,9 @@ ${SERVER}     localhost:5001
 ${DELAY}      0.2 seconds
 ${HOME_URL}   http://${SERVER}
 ${VIEW_URL}   http://${SERVER}/citations
-${RESET_URL}  http://${SERVER}/reset_db
+${RESET_URL}  http://${SERVER}/test_env/reset_db
 ${BROWSER}    chrome
-${HEADLESS}   false
+${HEADLESS}   true
 
 *** Keywords ***
 Open And Configure Browser
@@ -32,23 +32,39 @@ Reset Database
 
 Go To Home Page
     Go To  ${HOME_URL}
-    Title Should Be  Add a new book
+    Title Should Be  Add a new Citation
 
-Go To View Page
+Go To Citations Page
     Go To  ${VIEW_URL}
     Title Should Be  Saved Citations
 
-Go To Bibtex Page
-    Go To View Page
+Go To BibTeX Page
+    Go To Citations Page
     Click Button  View BibTeX
-    Title Should Be  Citation in bibtex format
+    Title Should Be  Citation in BibTeX format
 
-Add Example Book
+Add Example Article Citation
     Go To Home Page
-    Input Text  title  Example Book
+    Select From List By Label  entry_type  article
+    Click Button  Select
+    Wait Until Page Contains  Selected entry type 'article'
+    Input Text  citation_key  doe1998
+    Input Text  author  Jane Doe
+    Input Text  journaltitle  Example Journal Title
+    Input Text  title  An Example Article
+    Input Text  year  1998
+    Click Button  Add Citation
+    Wait Until Page Contains  A new citation was added successfully!
+
+Add Example Book Citation
+    Go To Home Page
+    Select From List By Label  entry_type  book
+    Click Button  Select
+    Wait Until Page Contains  Selected entry type 'book'
+    Input Text  citation_key  doe2020
     Input Text  author  John Doe
-    Input Text  year  2020
     Input Text  publisher  Example Publisher
-    Input Text  address  123 Example St
-    Click Button  Add Book
-    Wait Until Page Contains  Book added successfully!
+    Input Text  title  Example Book
+    Input Text  year  2020
+    Click Button  Add Citation
+    Wait Until Page Contains  A new citation was added successfully!
