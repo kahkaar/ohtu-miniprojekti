@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import text
 
 from config import db
@@ -5,18 +7,26 @@ from entities.citation import Citation
 
 
 def _to_citation(row):
-    # pylint: disable=W0511
-    # TODO: Move this to utils/equivalent module.
+    """Converts a database row to a Citation object."""
+    if not row:
+        return None
+
+    fields = row.fields or ""
+    if isinstance(fields, str):
+        try:
+            fields = json.loads(fields)
+        except json.JSONDecodeError:
+            fields = {}
+
     return Citation(
         row.id,
         row.entry_type,
         row.citation_key,
-        row.fields
+        fields
     )
 
 
 def get_citations(page=None, per_page=None):
-    # N.B. This probably should have a default per_page value...
     """Fetches citations from the database.
 
     Optional paging:
@@ -26,10 +36,13 @@ def get_citations(page=None, per_page=None):
     If both `page` and `per_page` are provided, the query uses LIMIT/OFFSET
     to return only that page. If omitted, all citations are returned.
     """
-
+    # N.B. This method should probably have a default per_page value...
     base_sql = (
         """
-        SELECT c.id, et.name AS entry_type, c.citation_key, c.fields
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key, c.fields
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         ORDER BY c.id
@@ -60,10 +73,14 @@ def get_citation(citation_id):
 
     sql = text(
         """
-        SELECT c.id, et.name AS entry_type, c.citation_key, c.fields
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key, c.fields
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         WHERE c.id = :citation_id
+        ORDER BY et.name
         """
     )
 
@@ -89,17 +106,24 @@ def create_citation(entry_type_id, citation_key, fields):
         """
     )
 
+    serialized = json.dumps(fields or {})
+
     params = {
         "entry_type_id": entry_type_id,
         "citation_key": citation_key,
-        "fields": fields,
+        "fields": serialized,
     }
 
     db.session.execute(sql, params)
     db.session.commit()
 
 
-def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=None):
+def update_citation(
+        citation_id,
+        entry_type_id=None,
+        citation_key=None,
+        fields=None
+):
     """Updates an existing citation entry in the database."""
 
     values = []
@@ -114,8 +138,9 @@ def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=N
         params["citation_key"] = citation_key
 
     if fields:
+        serialized = json.dumps(fields or {})
         values.append("fields = :fields")
-        params["fields"] = fields
+        params["fields"] = serialized
 
     # Nothing to update; returning.
     # Should this return a value or raise?
@@ -125,7 +150,7 @@ def update_citation(citation_id, entry_type_id=None, citation_key=None, fields=N
     base_sql = (
         f"""
         UPDATE citations
-        SET {', '.join(values)}
+        SET {", ".join(values)}
         WHERE id = :citation_id
         """
     )
@@ -148,3 +173,79 @@ def delete_citation(citation_id):
 
     db.session.execute(sql, {"citation_id": citation_id})
     db.session.commit()
+
+
+def search_citations(queries=None):
+    print("=== SEARCH FUNCTION RUNNING ===")
+    if queries is None:
+        queries = {}
+    base_sql = """
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key,
+            c.fields
+        FROM citations c
+        JOIN entry_types et ON c.entry_type_id = et.id
+    """
+
+    def _to_int(v):
+        if v is None or v == "":
+            return None
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    year_from = _to_int(queries.get("year_from"))
+    year_to = _to_int(queries.get("year_to"))
+
+    filters = []
+    params = {}
+
+    if queries.get("q"):
+        filters.append("c.fields::text ILIKE :q")
+        params["q"] = f"%{queries.get('q')}%"
+
+    if queries.get("citation_key"):
+        filters.append("c.citation_key ILIKE :citation_key")
+        params["citation_key"] = f"%{queries.get('citation_key')}%"
+
+    if queries.get("entry_type"):
+        filters.append("et.name = :entry_type")
+        params["entry_type"] = queries.get('entry_type')
+
+    if queries.get("author"):
+        filters.append("c.fields->>'author' ILIKE :author")
+        params["author"] = f"%{queries.get('author')}%"
+
+    if year_from:
+        filters.append("(c.fields->>'year')::int >= :year_from")
+        params["year_from"] = year_from
+
+    if year_to:
+        filters.append("(c.fields->>'year')::int <= :year_to")
+        params["year_to"] = year_to
+
+    if filters:
+        base_sql += " WHERE " + " AND ".join(filters)
+
+    allowed_sort_by = {"year", "citation_key"}
+    allowed_direction = {"ASC", "DESC"}
+    sort_by = (queries.get("sort_by") or "").lower()
+    direction = (queries.get("direction") or "ASC").upper()
+
+    sort_by = sort_by if sort_by in allowed_sort_by else None
+    direction = direction if direction in allowed_direction else "ASC"
+
+    if sort_by == "year":
+        base_sql += f" ORDER BY (c.fields->>'year')::int {direction}"
+    elif sort_by == "citation_key":
+        base_sql += f" ORDER BY c.citation_key {direction}"
+    else:
+        base_sql += " ORDER BY c.id ASC"
+
+    sql = text(base_sql)
+
+    result = db.session.execute(sql, params).fetchall()
+    return [_to_citation(r) for r in result]

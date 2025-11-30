@@ -1,5 +1,5 @@
 BEGIN;
--- Initialisation script for the citations schema
+-- Initialization script for the citations schema
 -- Inserts supported entry types and supported fields from the reference guide.
 -- Idempotent: running multiple times won't create duplicates (uses ON CONFLICT DO NOTHING).
 

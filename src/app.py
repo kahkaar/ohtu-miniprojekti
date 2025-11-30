@@ -1,94 +1,76 @@
-from flask import abort, flash, jsonify, redirect, render_template, request
+from flask import redirect, request, url_for
 
+import routes.bibtex
+import routes.citations
+import routes.delete
+import routes.edit
+import routes.main
+import routes.search
+import routes.testing_env
 from config import app, test_env
-from db_helper import reset_db
-from util import make_bibtex
-from repositories.book_repository import (
-    create_book,
-    delete_book,
-    get_book,
-    get_books,
-    update_book,
-)
+
+if test_env:
+    @app.route("/test_env/reset_db")
+    def reset_database():
+        return routes.testing_env.reset_database()
+
+    @app.route("/test_env/db_tables")
+    def db_tables():
+        return routes.testing_env.db_tables()
+
+    @app.route("/test_env/session")
+    def session_data():
+        return routes.testing_env.session_data()
+
+    @app.route("/test_env/citations")
+    def json_citations():
+        return routes.testing_env.json_citations()
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    """Handles the main page for viewing and adding books"""
-    if request.method == "GET":
-        return render_template("index.html")
+    """Renders the index page and handles new citation submissions."""
     if request.method == "POST":
-        title = request.form.get("title")
-        author = request.form.get("author")
-        year = request.form.get("year")
-        publisher = request.form.get("publisher")
-        address = request.form.get("address")
-
-        if not title or not author:
-            return redirect("/")
-        create_book(title, author, year, publisher, address)
-        flash("Book added successfully!")
-        return redirect("/")
-
-    # Here to not make pylance complain
-    abort(405)
+        return routes.main.post()
+    return routes.main.get()
 
 
-# testausta varten oleva reitti
-if test_env:
-    @app.route("/reset_db")
-    def reset_database():
-        reset_db()
-        return jsonify({'message': "db reset"})
+@app.route("/citations", methods=["GET"])
+def citations_view():
+    """Renders the citations page showing all saved citations."""
+    return routes.citations.get()
 
 
-@app.route("/citations")
-def citations():
-    books = get_books()
-    return render_template("citations.html", books=books)
+@app.route("/edit/<int:citation_id>", methods=["GET", "POST"])
+def edit_citation(citation_id):
+    """Renders the edit page for a specific citation by its ID"""
+    if request.method == "POST":
+        return routes.edit.post(citation_id)
+    return routes.edit.get(citation_id)
 
 
-@app.route("/edit/<int:book_id>", methods=["GET"])
-def edit_page(book_id):
-    book = get_book(book_id)
-    if not book:
-        abort(404)
-    return render_template("edit.html", book=book)
+@app.route("/delete/<int:citation_id>", methods=["POST"])
+def delete_citation(citation_id):
+    """Deletes a citation by its ID"""
+    return routes.delete.post(citation_id)
 
 
-@app.route("/edit/<int:book_id>", methods=["POST"])
-def edit_book(book_id):
-    title = request.form.get("title")
-    author = request.form.get("author")
-    year = request.form.get("year")
-    publisher = request.form.get("publisher")
-    address = request.form.get("address")
-
-    if not title or not author:
-        return redirect(f"/edit/{book_id}")
-    update_book(
-        book_id,
-        title,
-        author,
-        year,
-        publisher,
-        address
-    )
-    return redirect("/citations")
+@app.route("/bibtex/<int:citation_id>", methods=["GET"])
+def show_bibtex(citation_id):
+    """Renders the bibtex page for a specific citation by its ID"""
+    return routes.bibtex.get(citation_id)
 
 
-@app.route("/bibtex/<int:book_id>", methods=["GET"])
-def view_bibtex(book_id):
-    """Renders the bibtex view for a specific book by its ID"""
-    book = get_book(book_id)
-    if not book:
-        abort(404)
-    bibtex = make_bibtex(book)
-    return render_template("bibtex.html", bibtex=bibtex)
+@app.route("/search", methods=["GET"])
+@app.route("/citations/search", methods=["GET"])
+def citations_search():
+    """Renders the search page and handles search queries."""
+    return routes.search.get()
 
 
-@app.route("/citations/delete/<int:book_id>", methods=["GET", "POST"])
-def delete_citation(book_id):
-    """Deletes a book citation by its ID (supports GET for tests and POST from forms)"""
-    delete_book(book_id)
-    return redirect("/citations")
+@app.route("/edit")
+@app.route("/delete")
+@app.route("/bibtex")
+def redirect_to_citations():
+    """Redirects to the citations page if no citation ID is provided."""
+    return redirect(url_for("citations_view"))

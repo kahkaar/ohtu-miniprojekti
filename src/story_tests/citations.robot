@@ -6,62 +6,57 @@ Test Setup       Reset Database
 
 *** Test Cases ***
 At Start There Are No Citations
-    Go To View Page
+    Go To Citations Page
     Page Should Contain  No saved citations yet.
 
 After Adding A Book Citation It Is Shown In The List
-    Add Example Book
-    Find Example Book
+    Add Example Book Citation
+    Go To Citations Page
+    Find Example Book Citation
 
-After Editing A Book It Is Shown In The List
-    Add Example Book
-    Edit Book
-    Find Edited Book
-    Confirm No Example Book Is In The List
+After Editing A Book Citation It Is Shown In The List
+    Add Example Book Citation
+    Go To Citations Page
+    Edit Book Citation
+    Go To Citations Page
+    Find Edited Book Citation
+    Confirm No Example Book Citation Is In The List
 
-After Deleting A Book It Is No Longer In The List
-    Add Example Book
-    Delete Book
-    Confirm No Example Book Is In The List
+After Deleting A Book Citation It Is No Longer In The List
+    Add Example Book Citation
+    Go To Citations Page
+    Delete Citation
+    Go To Citations Page
+    Confirm No Example Book Citation Is In The List
 
 *** Keywords ***
-Find Example book
-    Go To View Page
-    Page Should Contain  John Doe
-    Page Should Contain  Example Book
-    Page Should Contain  2020
-    Page Should Contain  Example Publisher
-    Page Should Contain  123 Example St
+Find Example Book Citation
+    Go To Citations Page
+    Page Should Contain  John Doe (2020). Example Book. Example Publisher.
     Page Should Not Contain  No saved citations yet.
 
-Edit Book
-    Go To View Page
+Edit Book Citation
+    Go To Citations Page
     Click Button  Edit
-    Input Text  title  Updated Book Title
-    Input Text  author  Jane Smith
-    Input Text  year  2021
-    Input Text  publisher  Updated Publisher
-    Input Text  address  456 Updated St
+    Input Text  citation_key  doe2019
+    Input Text  author  John Doe
+    Input Text  publisher  Example Publisher
+    Input Text  title  Changed Example Book
+    Input Text  year  2019
     Click Button  Save Changes
     Title Should Be  Saved Citations
+    Wait Until Page Contains  Citation updated successfully.
 
-Find Edited Book
-    Go To View Page
-    Page Should Contain  Jane Smith
-    Page Should Contain  Updated Book Title
-    Page Should Contain  2021
-    Page Should Contain  Updated Publisher
-    Page Should Contain  456 Updated St
+Find Edited Book Citation
+    Go To Citations Page
+    Page Should Contain  John Doe (2019). Changed Example Book. Example Publisher.
 
-Confirm No Example Book Is In The List
-    Go To View Page
-    Page Should Not Contain  John Doe
-    Page Should Not Contain  Example Book
-    Page Should Not Contain  2020
-    Page Should Not Contain  Example Publisher
-    Page Should Not Contain  123 Example St
+Confirm No Example Book Citation Is In The List
+    Go To Citations Page
+    Page Should Not Contain  John Doe (2020). Example Book. Example Publisher.
 
-Delete Book
-    Go To View Page
+Delete Citation
+    Go To Citations Page
     Click Button  Delete
     Handle Alert  action=ACCEPT
+    Wait Until Page Contains  Citation deleted successfully.
