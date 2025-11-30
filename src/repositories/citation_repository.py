@@ -176,7 +176,6 @@ def delete_citation(citation_id):
 
 
 def search_citations(queries=None):
-    print("=== SEARCH FUNCTION RUNNING ===")
     if queries is None:
         queries = {}
     base_sql = """

@@ -4,6 +4,8 @@
 
 {% block body %}
 <h1>Saved Citations</h1>
+
+<p>Search citations <a href="{{ url_for('citations_search') }}" style="font-size:18px;">here</a></p>
 <p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
 
 {% if citations %}
