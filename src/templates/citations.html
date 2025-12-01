@@ -15,11 +15,11 @@
 
 <!-- Button to Expand/Collapse Advanced Filters -->
 <button type="button" id="toggleFilters" style="margin-bottom:10px;">
-    ▼ More filters
+    {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
 </button>
 
 <!-- Advanced filters -->
-<div id="advancedFilters" style="display:none; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
+<div id="advancedFilters" style="display: {{ 'block' if advanced_open else 'none' }}; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
     <form method="GET" action="{{ url_for('citations_view') }}">
 
         <label>Entry type:</label>
@@ -37,7 +37,7 @@
         <label>Citation key:</label>
         <input type="text" name="citation_key" value="{{ request.args.get('citation_key','') }}"><br><br>
 
-        <label>Author contains:</label>
+        <label>Author:</label>
         <input type="text" name="author" value="{{ request.args.get('author','') }}"><br><br>
 
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -58,6 +58,8 @@
     </form>
 </div>
 
+
+<!-- Script for showing and hiding advanced filters on the citations page -->
 <script>
 document.getElementById("toggleFilters").addEventListener("click", function() {
     const box = document.getElementById("advancedFilters");
