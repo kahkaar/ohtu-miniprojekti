@@ -13,11 +13,12 @@
     <button type="submit">Search</button>
 </form>
 
-<!-- Expand/Collapse Advanced Filters -->
+<!-- Button to Expand/Collapse Advanced Filters -->
 <button type="button" id="toggleFilters" style="margin-bottom:10px;">
     ▼ More filters
 </button>
 
+<!-- Advanced filters -->
 <div id="advancedFilters" style="display:none; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
     <form method="GET" action="{{ url_for('citations_view') }}">
 

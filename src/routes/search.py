@@ -6,14 +6,11 @@ from util import parse_search_queries
 
 
 def get():
-    """Renders the search page and handles search queries."""
     queries = parse_search_queries(request.args) or {}
-
     citations = search_citations(queries)
     entry_types = get_entry_types()
 
     return render_template(
-        "search.html",
+        "citations.html",
         citations=citations,
-        entry_types=entry_types
-    )
+        entry_types=entry_types)
