@@ -14,7 +14,8 @@ def get():
     request.args.get("citation_key"),
     request.args.get("author"),
     request.args.get("year_from"),
-    request.args.get("year_to")])
+    request.args.get("year_to"),
+    request.args.get("advanced"),])
 
     return render_template(
         "citations.html",

@@ -18,7 +18,7 @@
     {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
 </button>
 
-<!-- Advanced filters -->
+<!-- Advanced filters (Toggle visibility) -->
 <div id="advancedFilters" style="display: {{ 'block' if advanced_open else 'none' }}; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
     <form method="GET" action="{{ url_for('citations_view') }}">
 
@@ -46,18 +46,18 @@
           <input type="number" name="year_from" min="0"
                 value="{{ request.args.get('year_from','') }}"
                 style="width: 100px;">
-
           <label>to</label>
-
           <input type="number" name="year_to" min="0"
                 value="{{ request.args.get('year_to','') }}"
                 style="width: 100px;">
       </div>
       <br><br>
         <button type="submit">Apply filters</button>
+        <a href="{{ url_for('citations_view', advanced='1') }}" style="margin-left:10px;">
+            <button type="button">Clear all</button>
+        </a>
     </form>
 </div>
-
 
 <!-- Script for showing and hiding advanced filters on the citations page -->
 <script>
@@ -75,8 +75,11 @@ document.getElementById("toggleFilters").addEventListener("click", function() {
 
 <p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
 
+
+<!-- Displays the citations-->
 {% if citations %}
 {% for c in citations %}
+
 <div class="citation" id="{{ c.id }}-{{c.citation_key}}">
   <p>@{{ c.entry_type }} — {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
   <br>
@@ -90,6 +93,7 @@ document.getElementById("toggleFilters").addEventListener("click", function() {
     <button type="submit">View BibTeX</button>
   </form>
 </div>
+
 {% endfor %}
 {% else %}
 <p>No saved citations yet.</p>
