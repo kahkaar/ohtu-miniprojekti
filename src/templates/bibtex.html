@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}Citation in BibTeX format{% endblock %}
+{% block body %}
+
+<h1>Citation in BibTeX format</h1>
+
+{% if citation %}
+<pre id="bibtex">{{ citation.to_bibtex() }}</pre>
+<button onclick="copy_to_clipboard('bibtex')">Copy to Clipboard</button>
+
+<script>
+  function copy_to_clipboard(elm_id) {
+    var text = document.getElementById(elm_id).innerHTML;
+    navigator.clipboard.writeText(text);
+  }
+</script>
+{% else %}
+<p>No citation found.</p>
+{% endif %}
+
+<form action="/citations" method="get" style="display:inline; margin-top:10px;">
+  <button type="submit">Back</button>
+</form>
+
+{% endblock %}

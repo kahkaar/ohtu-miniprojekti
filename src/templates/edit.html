@@ -4,25 +4,27 @@
 
 {% block body %}
 
+{% if citation %}
 <h1>Edit Citation</h1>
-
-<form method="POST" action="/edit/{{ book.id }}">
-  Title:<br>
-  <input type="text" name="title" value="{{ book.title }}"><br><br>
-
-  Author:<br>
-  <input type="text" name="author" value="{{ book.author }}"><br><br>
-
-  Year:<br>
-  <input type="text" name="year" value="{{ book.year }}"><br><br>
-
-  Publisher:<br>
-  <input type="text" name="publisher" value="{{ book.publisher }}"><br><br>
-
-  Address:<br>
-  <input type="text" name="address" value="{{ book.address }}"><br><br>
-
+<form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}">
+  <label>Citation key:
+    <input type="text" name="citation_key" value="{{ citation.citation_key }}" required>
+  </label>
+  <br>
+  {% for f, val in citation.fields|dictsort %}
+  <label>{{ f.replace("_", " ").capitalize() }}
+    <input type="text" name="{{ f }}" value="{{ val }}">
+  </label>
+  <br>
+  {% endfor %}
   <button type="submit">Save Changes</button>
+</form>
+{% else %}
+<p>Citation not found.</p>
+{% endif %}
+
+<form action="/citations" method="get" style="display:inline; margin-top:10px;">
+  <button type="submit">Back</button>
 </form>
 
 {% endblock %}
