@@ -23,7 +23,16 @@
     <form method="GET" action="{{ url_for('citations_view') }}">
 
         <label>Entry type:</label>
-        <input type="text" name="entry_type" value="{{ request.args.get('entry_type','') }}"><br><br>
+        <select name="entry_type">
+            <option value="">Any</option>
+            {% for et in entry_types %}
+                <option value="{{ et }}" 
+                    {% if request.args.get('entry_type') == et %}selected{% endif %}>
+                    {{ et }}
+                </option>
+            {% endfor %}
+        </select>
+        <br><br>
 
         <label>Citation key:</label>
         <input type="text" name="citation_key" value="{{ request.args.get('citation_key','') }}"><br><br>
