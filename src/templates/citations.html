@@ -5,13 +5,68 @@
 {% block body %}
 <h1>Saved Citations</h1>
 
-<p>Search citations <a href="{{ url_for('citations_search') }}" style="font-size:18px;">here</a></p>
+<!-- Simple Search (always visible) -->
+<form method="GET" action="{{ url_for('citations_view') }}" style="margin-bottom:10px;">
+    <input type="text" name="q" placeholder="Search citations..." 
+           value="{{ request.args.get('q','') }}"
+           style="padding:6px; width:250px;">
+    <button type="submit">Search</button>
+</form>
+
+<!-- Expand/Collapse Advanced Filters -->
+<button type="button" id="toggleFilters" style="margin-bottom:10px;">
+    ▼ More filters
+</button>
+
+<div id="advancedFilters" style="display:none; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
+    <form method="GET" action="{{ url_for('citations_view') }}">
+
+        <label>Entry type:</label>
+        <input type="text" name="entry_type" value="{{ request.args.get('entry_type','') }}"><br><br>
+
+        <label>Citation key:</label>
+        <input type="text" name="citation_key" value="{{ request.args.get('citation_key','') }}"><br><br>
+
+        <label>Author contains:</label>
+        <input type="text" name="author" value="{{ request.args.get('author','') }}"><br><br>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+
+          <label>Year from:</label>
+          <input type="number" name="year_from" min="0"
+                value="{{ request.args.get('year_from','') }}"
+                style="width: 100px;">
+
+          <label>to</label>
+
+          <input type="number" name="year_to" min="0"
+                value="{{ request.args.get('year_to','') }}"
+                style="width: 100px;">
+      </div>
+      <br><br>
+        <button type="submit">Apply filters</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("toggleFilters").addEventListener("click", function() {
+    const box = document.getElementById("advancedFilters");
+    if (box.style.display === "none") {
+        box.style.display = "block";
+        this.textContent = "▲ Hide filters";
+    } else {
+        box.style.display = "none";
+        this.textContent = "▼ More filters";
+    }
+});
+</script>
+
 <p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
 
 {% if citations %}
 {% for c in citations %}
 <div class="citation" id="{{ c.id }}-{{c.citation_key}}">
-  <p>@{{ c.entry_type }} &mdash; {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
+  <p>@{{ c.entry_type }} — {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
   <br>
   <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
     <button type="submit">Edit</button>
@@ -27,4 +82,5 @@
 {% else %}
 <p>No saved citations yet.</p>
 {% endif %}
+
 {% endblock %}
