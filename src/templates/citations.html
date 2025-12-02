@@ -22,8 +22,42 @@
   <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
     <button type="submit">View BibTeX</button>
   </form>
+  <input type="checkbox" id="{{ c.id }}">
 </div>
 {% endfor %}
+
+<h1>Export selected citations as .bib file</h1>
+<form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
+  <button type="button" onclick="export_bibtex()">Export</button>
+</form>
+
+<script>
+  function export_bibtex() {
+    const form = document.forms['exportform'];
+    const selectedIds = [];
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
+      selectedIds.push(checkbox.id);
+    });
+    if (selectedIds.length === 0) {
+      alert('Please select at least one citation to export.');
+      return;
+    }
+    while (form.lastChild) {
+      if (form.lastChild.name === 'citation_ids') {
+        form.removeChild(form.lastChild);
+      }
+      else {
+        break;
+      }
+    }
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'citation_ids';
+    input.value = selectedIds;
+    form.appendChild(input);
+    form.submit();
+  }
+</script>
 {% else %}
 <p>No saved citations yet.</p>
 {% endif %}

@@ -7,6 +7,7 @@ import routes.edit
 import routes.main
 import routes.search
 import routes.testing_env
+import routes.export_bibtex
 from config import app, test_env
 
 if test_env:
@@ -59,6 +60,12 @@ def delete_citation(citation_id):
 def show_bibtex(citation_id):
     """Renders the bibtex page for a specific citation by its ID"""
     return routes.bibtex.get(citation_id)
+
+
+@app.route("/export_bibtex", methods=["GET"])
+def export_bibtex():
+    """Exports selected citations as a .bib file"""
+    return routes.export_bibtex.get()
 
 
 @app.route("/search", methods=["GET"])
