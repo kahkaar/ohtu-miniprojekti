@@ -42,13 +42,8 @@
       alert('Please select at least one citation to export.');
       return;
     }
-    while (form.lastChild) {
-      if (form.lastChild.name === 'citation_ids') {
-        form.removeChild(form.lastChild);
-      }
-      else {
-        break;
-      }
+    while (form.lastChild && form.lastChild.name === 'citation_ids') {
+      form.removeChild(form.lastChild);
     }
     const input = document.createElement('input');
     input.type = 'hidden';
