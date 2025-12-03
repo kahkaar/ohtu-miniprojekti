@@ -10,7 +10,7 @@ def get():
         citations = [get_citation_by_id(citation_id) for citation_id in ids]
     else:
         keys_string = request.args.get('citation_keys', '')
-        keys = list(keys_string.split(','))
+        keys = keys_string.split(',')
         citations = [get_citation_by_key(key) for key in keys]
     bibtex = "\n\n".join(citation.to_bibtex() for citation in citations)
     bibtex += "\n"
