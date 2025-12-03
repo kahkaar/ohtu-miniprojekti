@@ -15,6 +15,6 @@ def get():
     bibtex = "\n\n".join(citation.to_bibtex() for citation in citations)
     bibtex += "\n"
 
-    response = Response(bibtex)
+    response = Response(bibtex, mimetype='application/x-bibtex')
     response.headers.set('Content-Disposition', 'attachment', filename='selected_citations.bib')
     return response
