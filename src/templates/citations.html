@@ -52,6 +52,20 @@
                 style="width: 100px;">
       </div>
       <br><br>
+            <label>Sort by:</label>
+            <select name="sort_by">
+                <option value="">None</option>
+                <option value="year" {% if request.args.get('sort_by') == 'year' %}selected{% endif %}>Year</option>
+                <option value="citation_key" {% if request.args.get('sort_by') == 'citation_key' %}selected{% endif %}>Citation Key</option>
+            </select>
+
+            <label>Order:</label>
+            <select name="direction">
+                <option value="ASC" {% if request.args.get('direction', '').upper() == 'ASC' %}selected{% endif %}>Ascending</option>
+                <option value="DESC" {% if request.args.get('direction', '').upper() == 'DESC' %}selected{% endif %}>Descending</option>
+            </select>
+
+            <br><br>
         <button type="submit">Apply filters</button>
         <a href="{{ url_for('citations_view', advanced='1') }}" style="margin-left:10px;">
             <button type="button">Clear all</button>

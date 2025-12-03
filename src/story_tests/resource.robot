@@ -6,7 +6,6 @@ ${SERVER}     localhost:5001
 ${DELAY}      0.2 seconds
 ${HOME_URL}   http://${SERVER}
 ${VIEW_URL}   http://${SERVER}/citations
-${SEARCH_URL}  http://${SERVER}/citations/search
 ${RESET_URL}  http://${SERVER}/test_env/reset_db
 ${BROWSER}    chrome
 ${HEADLESS}   true
@@ -69,8 +68,4 @@ Add Example Book Citation
     Input Text  year  2020
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!
-
-Go To Search Page
-    Go To  ${SEARCH_URL}
-    Title Should Be  Advanced Search
 
