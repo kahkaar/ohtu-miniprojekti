@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from config import db
 from entities.citation import Citation
@@ -144,9 +145,9 @@ def create_citation(entry_type_id, citation_key, fields):
         db.session.execute(sql, params)
         db.session.commit()
 
-    except Exception as exc:
-
-        raise ValueError(f"Citation key '{citation_key}' already exists.") from exc
+    except IntegrityError:
+        db.session.rollback()
+        raise ValueError(f"Citation key '{citation_key}' already exists.")# pylint: disable=W0707
 
 
 def update_citation(
