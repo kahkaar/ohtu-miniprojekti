@@ -16,5 +16,5 @@ def get():
     bibtex += "\n"
 
     response = Response(bibtex, mimetype='application/x-bibtex')
-    response.headers.set('Content-Disposition', 'attachment', filename='selected_citations.bib')
+    response.headers['Content-Disposition'] = 'attachment; filename=selected_citations.bib'
     return response
