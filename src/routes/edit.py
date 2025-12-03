@@ -2,19 +2,19 @@ from flask import flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 import util
-from repositories.citation_repository import get_citation, update_citation
+from repositories.citation_repository import get_citation_by_id, update_citation
 
 
 def get(citation_id):
     """Renders the edit page for a specific citation by its ID"""
-    citation = get_citation(citation_id)
+    citation = get_citation_by_id(citation_id)
     return render_template("edit.html", citation=citation)
 
 
 def post(citation_id):
     """Handles the submission of the edit citation form."""
     # pylint: disable=R0801
-    citation = get_citation(citation_id)
+    citation = get_citation_by_id(citation_id)
 
     if not citation:
         flash("Citation not found.", "error")

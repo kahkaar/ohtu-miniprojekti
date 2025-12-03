@@ -13,3 +13,11 @@
 - Continue: Kommunikaatio
 - More of: Edge case tests
 - Less of: Ei committaa testejä tuohoavia muutoksia
+
+# Sprint 3 retro:
+## Start, Stop, Continue, More of, Less of
+- Start: Käyttöliittymään panostaminen
+- Stop: Käyttäjän mukavuuden laiminlyönti
+- Continue: Kommunikaatio
+- More of: Robot testejä
+- Less of: Unit tests

@@ -81,7 +81,7 @@ class TestCitationRepository(unittest.TestCase):
         mock_result.fetchone.return_value = None
         mock_db.session.execute.return_value = mock_result
 
-        citation = repo.get_citation(123)
+        citation = repo.get_citation_by_id(123)
         self.assertIsNone(citation)
 
     @patch("repositories.citation_repository.db")
@@ -151,7 +151,7 @@ class TestCitationRepository(unittest.TestCase):
         mock_result.fetchone.return_value = mock_row
         mock_db.session.execute.return_value = mock_result
 
-        citation = repo.get_citation(42)
+        citation = repo.get_citation_by_id(42)
         self.assertIsNotNone(citation)
 
         # # UNNECESSARY. Here to satisfy type checker...
@@ -377,6 +377,53 @@ class TestCitationRepository(unittest.TestCase):
         self.assertNotIn("q", params)
         self.assertEqual(params.get("year_from"), 2001)
         self.assertIn("ORDER BY c.id ASC", str(sql))
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citation_by_id_and_key_return_same_citation(self, mock_db):
+        mock_row = SimpleNamespace(
+            id=10,
+            entry_type="book",
+            citation_key="ck-10",
+            fields={"title": "Some Title"},
+        )
+
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = mock_row
+        mock_db.session.execute.return_value = mock_result
+
+        by_id = repo.get_citation_by_id(10)
+        by_key = repo.get_citation_by_key("ck-10")
+
+        # Ensure both queries were executed with the correct parameters
+        self.assertEqual(mock_db.session.execute.call_count, 2)
+        first_call_args, first_call_kwargs = mock_db.session.execute.call_args_list[0]
+        second_call_args, second_call_kwargs = mock_db.session.execute.call_args_list[1]
+
+        first_params = first_call_args[1] if len(first_call_args) > 1 else first_call_kwargs.get("params", {})
+        second_params = second_call_args[1] if len(second_call_args) > 1 else second_call_kwargs.get("params", {})
+
+        self.assertEqual(first_params.get("citation_id"), 10)
+        self.assertNotIn("citation_key", first_params)
+
+        self.assertEqual(second_params.get("citation_key"), "ck-10")
+        self.assertNotIn("citation_id", second_params)
+
+        self.assertIsNotNone(by_id)
+        self.assertIsNotNone(by_key)
+
+        self.assertEqual(by_id.id, by_key.id)
+        self.assertEqual(by_id.entry_type, by_key.entry_type)
+        self.assertEqual(by_id.citation_key, by_key.citation_key)
+        self.assertEqual(by_id.fields, by_key.fields)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citation_by_key_returns_none_when_not_found(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = None
+        mock_db.session.execute.return_value = mock_result
+
+        citation = repo.get_citation_by_key("nonexistent-key")
+        self.assertIsNone(citation)
 
 
 if __name__ == "__main__":

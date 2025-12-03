@@ -68,7 +68,7 @@ def get_citations(page=None, per_page=None):
     return [_to_citation(c) for c in result]
 
 
-def get_citation(citation_id):
+def get_citation_by_id(citation_id):
     """Fetches a citation by its ID from the database"""
 
     sql = text(
@@ -86,6 +86,33 @@ def get_citation(citation_id):
 
     params = {
         "citation_id": citation_id,
+    }
+
+    result = db.session.execute(sql, params).fetchone()
+
+    if not result:
+        return None
+
+    return _to_citation(result)
+
+def get_citation_by_key(citation_key):
+    """Fetches a citation by its citation key from the database"""
+
+    sql = text(
+        """
+        SELECT
+            c.id,
+            et.name AS entry_type,
+            c.citation_key, c.fields
+        FROM citations c
+        JOIN entry_types et ON c.entry_type_id = et.id
+        WHERE c.citation_key = :citation_key
+        ORDER BY et.name
+        """
+    )
+
+    params = {
+        "citation_key": citation_key,
     }
 
     result = db.session.execute(sql, params).fetchone()
