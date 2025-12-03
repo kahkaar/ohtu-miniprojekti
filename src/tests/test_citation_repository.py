@@ -378,6 +378,39 @@ class TestCitationRepository(unittest.TestCase):
         self.assertEqual(params.get("year_from"), 2001)
         self.assertIn("ORDER BY c.id ASC", str(sql))
 
+    @patch("repositories.citation_repository.db")
+    def test_get_citation_by_id_and_key_return_same_citation(self, mock_db):
+        mock_row = SimpleNamespace(
+            id=10,
+            entry_type="book",
+            citation_key="ck-10",
+            fields={"title": "Some Title"},
+        )
+
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = mock_row
+        mock_db.session.execute.return_value = mock_result
+
+        by_id = repo.get_citation_by_id(10)
+        by_key = repo.get_citation_by_key("ck-10")
+
+        self.assertIsNotNone(by_id)
+        self.assertIsNotNone(by_key)
+
+        self.assertEqual(by_id.id, by_key.id)
+        self.assertEqual(by_id.entry_type, by_key.entry_type)
+        self.assertEqual(by_id.citation_key, by_key.citation_key)
+        self.assertEqual(by_id.fields, by_key.fields)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citation_by_key_returns_none_when_not_found(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = None
+        mock_db.session.execute.return_value = mock_result
+
+        citation = repo.get_citation_by_key("nonexistent-key")
+        self.assertIsNone(citation)
+
 
 if __name__ == "__main__":
     unittest.main()
