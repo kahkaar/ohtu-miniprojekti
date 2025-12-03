@@ -113,9 +113,13 @@ def create_citation(entry_type_id, citation_key, fields):
         "citation_key": citation_key,
         "fields": serialized,
     }
+    try:
+        db.session.execute(sql, params)
+        db.session.commit()
 
-    db.session.execute(sql, params)
-    db.session.commit()
+    except Exception as exc:
+
+        raise ValueError(f"Citation key '{citation_key}' already exists.") from exc
 
 
 def update_citation(
