@@ -35,19 +35,19 @@
         <br><br>
 
         <label>Citation key:</label>
-        <input type="text" name="citation_key" value="{{ request.args.get('citation_key','') }}"><br><br>
+        <input type="text" name="citation_key" maxlength="50" value="{{ request.args.get('citation_key','') }}"><br><br>
 
         <label>Author:</label>
-        <input type="text" name="author" value="{{ request.args.get('author','') }}"><br><br>
+        <input type="text" name="author" maxlength="50" value="{{ request.args.get('author','') }}"><br><br>
 
       <div style="display: flex; align-items: center; gap: 10px;">
 
           <label>Year from:</label>
-          <input type="number" name="year_from" min="0"
+          <input type="number" name="year_from" min="0" max="9999"
                 value="{{ request.args.get('year_from','') }}"
                 style="width: 100px;">
           <label>to</label>
-          <input type="number" name="year_to" min="0"
+          <input type="number" name="year_to" min="0" max="9999"
                 value="{{ request.args.get('year_to','') }}"
                 style="width: 100px;">
       </div>
