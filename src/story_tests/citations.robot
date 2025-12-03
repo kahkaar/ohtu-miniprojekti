@@ -29,6 +29,20 @@ After Deleting A Book Citation It Is No Longer In The List
     Go To Citations Page
     Confirm No Example Book Citation Is In The List
 
+Adding Duplicate Citation Key Shows Error
+    Add Example Book Citation
+    Go To Home Page
+    Select From List By Label  entry_type  book
+    Click Button  Select
+    Wait Until Page Contains  Selected entry type 'book'
+    Input Text  citation_key  doe2020
+    Input Text  author  John Doe
+    Input Text  publisher  Example Publisher
+    Input Text  title  Example Book
+    Input Text  year  2020
+    Click Button  Add Citation
+    Wait Until Page Contains  An error occurred while adding the citation: Citation key 'doe2020' already exists.
+
 *** Keywords ***
 Find Example Book Citation
     Go To Citations Page
