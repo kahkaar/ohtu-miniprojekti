@@ -394,6 +394,20 @@ class TestCitationRepository(unittest.TestCase):
         by_id = repo.get_citation_by_id(10)
         by_key = repo.get_citation_by_key("ck-10")
 
+        # Ensure both queries were executed with the correct parameters
+        self.assertEqual(mock_db.session.execute.call_count, 2)
+        first_call_args, first_call_kwargs = mock_db.session.execute.call_args_list[0]
+        second_call_args, second_call_kwargs = mock_db.session.execute.call_args_list[1]
+
+        first_params = first_call_args[1] if len(first_call_args) > 1 else first_call_kwargs.get("params", {})
+        second_params = second_call_args[1] if len(second_call_args) > 1 else second_call_kwargs.get("params", {})
+
+        self.assertEqual(first_params.get("citation_id"), 10)
+        self.assertNotIn("citation_key", first_params)
+
+        self.assertEqual(second_params.get("citation_key"), "ck-10")
+        self.assertNotIn("citation_id", second_params)
+
         self.assertIsNotNone(by_id)
         self.assertIsNotNone(by_key)
 
