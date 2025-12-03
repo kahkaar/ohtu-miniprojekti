@@ -12,7 +12,7 @@ Alert When No Citations Selected For BibTeX Export
     Click Button  Export
     Alert Should Be Present  Please select at least one citation to export.
 
-Exporting Works
+Exporting selected citations returns correct BibTeX file
     Add Example Article Citation
     Add Example Book Citation
     Go To Citations Page
