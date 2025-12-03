@@ -26,9 +26,9 @@
         <select name="entry_type">
             <option value="">Any</option>
             {% for et in entry_types %}
-                <option value="{{ et }}" 
-                    {% if request.args.get('entry_type') == et %}selected{% endif %}>
-                    {{ et }}
+                <option value="{{ et.name }}" 
+                    {% if request.args.get('entry_type') == et.name %}selected{% endif %}>
+                    {{ et.name }}
                 </option>
             {% endfor %}
         </select>
