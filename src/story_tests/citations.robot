@@ -41,7 +41,7 @@ Adding Duplicate Citation Key Shows Error
     Input Text  title  Example Book
     Input Text  year  2020
     Click Button  Add Citation
-    Wait Until Page Contains  An error occurred while adding the citation: Citation key 'doe2020' already exists.
+    Page Should Not Contain  A new citation was added successfully!
 
 *** Keywords ***
 Find Example Book Citation

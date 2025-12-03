@@ -10,7 +10,7 @@ ${VIEW_URL}   http://${SERVER}/citations
 ${SEARCH_URL}  http://${SERVER}/citations/search
 ${RESET_URL}  http://${SERVER}/test_env/reset_db
 ${BROWSER}    chrome
-${HEADLESS}   true
+${HEADLESS}   false
 
 *** Keywords ***
 Open And Configure Browser
