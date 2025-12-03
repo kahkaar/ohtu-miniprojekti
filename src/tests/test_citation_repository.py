@@ -81,7 +81,7 @@ class TestCitationRepository(unittest.TestCase):
         mock_result.fetchone.return_value = None
         mock_db.session.execute.return_value = mock_result
 
-        citation = repo.get_citation(123)
+        citation = repo.get_citation_by_id(123)
         self.assertIsNone(citation)
 
     @patch("repositories.citation_repository.db")
@@ -151,7 +151,7 @@ class TestCitationRepository(unittest.TestCase):
         mock_result.fetchone.return_value = mock_row
         mock_db.session.execute.return_value = mock_result
 
-        citation = repo.get_citation(42)
+        citation = repo.get_citation_by_id(42)
         self.assertIsNotNone(citation)
 
         # # UNNECESSARY. Here to satisfy type checker...

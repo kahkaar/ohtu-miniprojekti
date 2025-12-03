@@ -22,7 +22,7 @@
   <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
     <button type="submit">View BibTeX</button>
   </form>
-  <input type="checkbox" id="{{ c.id }}">
+  <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
 </div>
 {% endfor %}
 
