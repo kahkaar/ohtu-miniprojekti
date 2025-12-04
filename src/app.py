@@ -6,6 +6,7 @@ import routes.delete
 import routes.edit
 import routes.main
 import routes.search
+import routes.select_entry_type
 import routes.testing_env
 import routes.export_bibtex
 from config import app, test_env
@@ -34,6 +35,12 @@ def index():
     if request.method == "POST":
         return routes.main.post()
     return routes.main.get()
+
+
+@app.route("/select_entry_type", methods=["POST"])
+def select_entry_type():
+    """Handles the selection of an entry type."""
+    return routes.select_entry_type.post()
 
 
 @app.route("/citations", methods=["GET"])

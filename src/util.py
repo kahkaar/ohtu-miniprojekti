@@ -1,10 +1,13 @@
 from flask import session
 
+from entities.entry_type import EntryType
+from repositories.category_repository import get_or_create_category, get_or_create_tags
+
 
 def sanitize(value):
     """
     Sanitizes user input by stripping leading/trailing
-    whitespace and collapsing internal whitespace.
+    and collapsing internal whitespace.
     """
     if isinstance(value, str):
         return " ".join(value.strip().split())
@@ -28,18 +31,29 @@ def collapse_whitespace(value):
     return value
 
 
-def get_posted_fields(form):
+def collapse_to_hyphens(value):
+    """
+    Replaces spaces with hyphens.
+    Used for certain identifiers.
+    """
+    if isinstance(value, str):
+        return "-".join(value.strip().split())
+    return value
+
+
+def extract_fields(form):
     """Extracts and sanitizes posted fields from a form."""
-    posted_fields = {}
+    fields = {}
     for k, v in form.items():
+        # Citation key and entry type are handled separately.
         if k in ("citation_key", "entry_type"):
             continue
 
         sanitized_value = sanitize(v)
         if validate(sanitized_value):
-            posted_fields[k] = sanitized_value
+            fields[k] = sanitized_value
 
-    return posted_fields
+    return fields
 
 
 def set_session(key, value):
@@ -52,8 +66,15 @@ def get_session(key, default=None):
     return session.get(key, default)
 
 
+def parse_entry_type(entry_type_data):
+    """Parses entry type data from session into an EntryType object."""
+    if not entry_type_data:
+        return None
+    return EntryType(entry_type_data.get("id"), entry_type_data.get("name"))
+
+
 def clear_session(key=None):
-    """Clears a value from the session."""
+    """Clears a value from the session, or the entire session if no key is provided."""
     if not key:
         return session.clear()
     session.pop(key, None)
@@ -110,3 +131,44 @@ def parse_search_queries(args):
         "sort_by": sort_by,
         "direction": direction,
     }
+
+
+def extract_category(form):
+    """Extracts and creates the category from the request form data if needed."""
+    category = form.get("category")
+
+    # Category can have spaces, so just sanitize.
+    category = sanitize(category)
+    if not category:
+        return None
+
+    category = get_or_create_category(category)
+    return category
+
+
+def extract_tags(form):
+    """Extracts and creates the tags from the request form data if needed."""
+    tag_form_list = form.getlist("tags")
+    sanitized = []
+    for tag_name in tag_form_list:
+        # Tags can have spaces, so just sanitize.
+        tag = sanitize(tag_name)
+        if tag:
+            sanitized.append(tag)
+
+    tags = get_or_create_tags(sanitized)
+
+    return tags
+
+
+def extract_citation_key(form):
+    """Extracts the citation key from the request form data."""
+    citation_key = form.get("citation_key", "")
+
+    # Citation keys cannot have spaces, so sanitize and collapse to hyphens.
+    sanitized = sanitize(citation_key)
+    collapsed = collapse_to_hyphens(sanitized)
+    if not collapsed:
+        return None
+
+    return collapsed

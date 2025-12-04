@@ -7,7 +7,7 @@
 <p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
 
 <h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
-<form method="post">
+<form action="{{ url_for('select_entry_type') }}" method="post">
   <label>Entry type:
     <select name="entry_type" required>
       <option value="" disabled selected>Select type</option>

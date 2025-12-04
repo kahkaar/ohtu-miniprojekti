@@ -28,7 +28,7 @@ def post(citation_id):
         flash("Invalid citation key provided.", "error")
         return redirect(url_for("citations_view"))
 
-    posted_fields = util.get_posted_fields(request.form)
+    posted_fields = util.extract_fields(request.form)
     # Maybe add a check here to see if fields have actually changed.
 
     if not posted_fields:

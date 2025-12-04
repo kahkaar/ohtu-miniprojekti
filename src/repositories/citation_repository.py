@@ -4,6 +4,10 @@ from sqlalchemy import text
 
 from config import db
 from entities.citation import Citation
+from repositories.category_repository import (
+    assign_category_to_citation,
+    assign_tags_to_citation,
+)
 
 
 def _to_citation(row):
@@ -124,12 +128,22 @@ def get_citation_by_key(citation_key):
 
 
 def create_citation(entry_type_id, citation_key, fields):
-    """Creates a new citation entry in the database"""
+    """Creates a new citation entry in the database."""
 
     sql = text(
         """
-        INSERT INTO citations (entry_type_id, citation_key, fields)
-        VALUES (:entry_type_id, :citation_key, :fields)
+        WITH inserted AS (
+            INSERT INTO citations (entry_type_id, citation_key, fields)
+            VALUES (:entry_type_id, :citation_key, :fields)
+            RETURNING id, entry_type_id, citation_key, fields
+        )
+        SELECT
+            i.id,
+            et.name AS entry_type,
+            i.citation_key,
+            i.fields
+        FROM inserted i
+        JOIN entry_types et ON i.entry_type_id = et.id
         """
     )
 
@@ -141,8 +155,39 @@ def create_citation(entry_type_id, citation_key, fields):
         "fields": serialized,
     }
 
-    db.session.execute(sql, params)
+    result = db.session.execute(sql, params).fetchone()
     db.session.commit()
+
+    if not result:
+        return None
+
+    return _to_citation(result)
+
+
+def create_citation_with_metadata(
+        entry_type,
+        citation_key,
+        fields,
+        category=None,
+        tags=None
+):
+    """Creates a citation along with its associated category and tags."""
+    citation = create_citation(
+        entry_type_id=entry_type.id,
+        citation_key=citation_key,
+        fields=fields
+    )
+
+    if not citation:
+        raise ValueError("Failed to create citation.")
+
+    if category:
+        assign_category_to_citation(citation.id, category.id)
+
+    if tags and isinstance(tags, list):
+        assign_tags_to_citation(citation.id, tags)
+
+    return citation
 
 
 def update_citation(

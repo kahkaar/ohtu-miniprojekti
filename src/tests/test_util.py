@@ -34,7 +34,7 @@ class TestUtil(unittest.TestCase):
             "empty": "   ",
         }
 
-        posted = util.get_posted_fields(form)
+        posted = util.extract_fields(form)
 
         self.assertNotIn("citation_key", posted)
         self.assertNotIn("entry_type", posted)

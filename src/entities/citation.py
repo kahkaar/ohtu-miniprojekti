@@ -1,4 +1,6 @@
 class Citation:
+    """Represents a citation entity."""
+
     def __init__(self, citation_id, entry_type, citation_key, fields):
         self._id = citation_id
         self._entry_type = entry_type
