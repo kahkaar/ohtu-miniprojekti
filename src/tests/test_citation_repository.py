@@ -415,6 +415,43 @@ class TestCitationRepository(unittest.TestCase):
         citation = repo.get_citation_by_key("nonexistent-key")
         self.assertIsNone(citation)
 
+    @patch("repositories.citation_repository.db")
+    def test_create_citation_returns_none_when_db_returns_none(self, mock_db):
+        # Simulate DB returning no row after insert
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = None
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.create_citation(1, "k-none", {"a": "b"})
+        self.assertIsNone(out)
+
+    @patch("repositories.citation_repository.create_citation")
+    @patch("repositories.citation_repository.assign_tags_to_citation")
+    @patch("repositories.citation_repository.assign_category_to_citation")
+    def test_create_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_create):
+        # create_citation returns a citation-like object with id
+        mock_create.return_value = SimpleNamespace(id=99)
+
+        entry_type = SimpleNamespace(id=2)
+        category = SimpleNamespace(id=5)
+        tags = ["t1", "t2"]
+
+        out = repo.create_citation_with_metadata(
+            entry_type, "kmeta", {"x": 1}, category=category, tags=tags)
+
+        mock_create.assert_called_once()
+        mock_assign_category.assert_called_once_with(99, 5)
+        mock_assign_tags.assert_called_once_with(99, tags)
+        self.assertIsNotNone(out)
+
+    @patch("repositories.citation_repository.create_citation")
+    def test_create_citation_with_metadata_raises_when_create_fails(self, mock_create):
+        mock_create.return_value = None
+        entry_type = SimpleNamespace(id=2)
+
+        with self.assertRaises(ValueError):
+            repo.create_citation_with_metadata(entry_type, "kmeta", {})
+
 
 if __name__ == "__main__":
     unittest.main()

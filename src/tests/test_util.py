@@ -120,3 +120,108 @@ class TestUtil(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestUtilExtensions(unittest.TestCase):
+    def test_parse_entry_type_and_conversions(self):
+        self.assertIsNone(util.parse_entry_type(None))
+
+        parsed = util.parse_entry_type({"id": 7, "name": "misc"})
+        self.assertIsNotNone(parsed)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not parsed:
+            self.fail("Parsed EntryType should not be None")
+
+        self.assertEqual(parsed.id, 7)
+        self.assertEqual(parsed.name, "misc")
+
+    def test_extract_category_and_tags_and_key_variants(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            def getlist(self, k):
+                return self._items.get(k, [])
+
+        f = DummyForm({"category": "  Cat XX  ", "tags": [" One ", "", "Two"]})
+        self.assertEqual(util.extract_category(f), "Cat XX")
+        self.assertEqual(util.extract_tags(f), ["One", "Two"])
+
+        fk = DummyForm({"citation_key": " My Key  "})
+        self.assertEqual(util.extract_citation_key(fk), "My-Key")
+
+        fk2 = DummyForm({"citation_key": "   "})
+        self.assertIsNone(util.extract_citation_key(fk2))
+
+    def test_to_category_and_to_tag_and_to_citation_json_variants(self):
+        row_cat = type("R", (), {"id": 1, "name": "C1"})
+        cat = util.to_category(row_cat)
+        self.assertEqual(cat.id, 1)
+        self.assertEqual(cat.name, "C1")
+
+        row_tag = type("R", (), {"id": 2, "name": "T1"})
+        tag = util.to_tag(row_tag)
+        self.assertEqual(tag.id, 2)
+        self.assertEqual(tag.name, "T1")
+
+        row = type("R", (), {"id": 3, "entry_type": "book",
+                   "citation_key": "k3", "fields": {"a": 1}})
+        c = util.to_citation(row)
+
+        if not c:
+            self.fail("Citation should not be None")
+        self.assertEqual(c.fields, {"a": 1})
+
+        row2 = type("R", (), {"id": 4, "entry_type": "book",
+                    "citation_key": "k4", "fields": '{"a":2}'})
+        c2 = util.to_citation(row2)
+
+        if not c2:
+            self.fail("Citation should not be None")
+        self.assertEqual(c2.fields, {"a": 2})
+
+        row3 = type("R", (), {"id": 5, "entry_type": "book",
+                    "citation_key": "k5", "fields": 'not json'})
+        c3 = util.to_citation(row3)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not c3:
+            self.fail("Citation should not be None")
+        self.assertEqual(c3.fields, {})
+
+    def test_extract_category_edgecases(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+        self.assertIsNone(util.extract_category(DummyForm({})))
+
+        self.assertIsNone(util.extract_category(DummyForm({"category": ""})))
+        self.assertIsNone(util.extract_category(
+            DummyForm({"category": "   "})))
+
+        self.assertIsNone(util.extract_category(DummyForm({"category": 0})))
+
+        self.assertEqual(util.extract_category(
+            DummyForm({"category": "0"})), "0")
+
+    def test_collapse_and_hyphens_and_none_citation(self):
+        self.assertEqual(util.collapse_to_hyphens(" A B C "), "A-B-C")
+
+        self.assertEqual(util.collapse_to_hyphens(123), 123)
+
+    def test_to_citation_none(self):
+        self.assertIsNone(util.to_citation(None))
+
+    def test_to_entry_type_none_handling(self):
+        row = type("R", (), {"id": 9, "name": "custom"})
+        et = util.to_entry_type(row)
+        self.assertEqual(et.id, 9)
+        self.assertEqual(et.name, "custom")
