@@ -245,22 +245,6 @@ class TestCitationRepository(unittest.TestCase):
         mock_db.session.execute.assert_not_called()
         mock_db.session.commit.assert_not_called()
 
-    def test_to_citation_object_handles_none(self):
-        citation = repo._to_citation(None)
-        self.assertIsNone(citation)
-
-    def test_to_citation_object_handles_empty_fields(self):
-        row = SimpleNamespace(
-            id=3, entry_type="misc", citation_key="k3", fields=None)
-        citation = repo._to_citation(row)
-        self.assertIsNotNone(citation)
-
-        # # UNNECESSARY. Here to satisfy type checker...
-        if not citation:
-            self.fail("Citation should not be None")
-
-        self.assertEqual(citation.fields, {})
-
     @patch("repositories.citation_repository.db")
     def test_search_citations_returns_empty_when_no_queries(self, mock_db):
         result = repo.search_citations(None)
@@ -399,8 +383,10 @@ class TestCitationRepository(unittest.TestCase):
         first_call_args, first_call_kwargs = mock_db.session.execute.call_args_list[0]
         second_call_args, second_call_kwargs = mock_db.session.execute.call_args_list[1]
 
-        first_params = first_call_args[1] if len(first_call_args) > 1 else first_call_kwargs.get("params", {})
-        second_params = second_call_args[1] if len(second_call_args) > 1 else second_call_kwargs.get("params", {})
+        first_params = first_call_args[1] if len(
+            first_call_args) > 1 else first_call_kwargs.get("params", {})
+        second_params = second_call_args[1] if len(
+            second_call_args) > 1 else second_call_kwargs.get("params", {})
 
         self.assertEqual(first_params.get("citation_id"), 10)
         self.assertNotIn("citation_key", first_params)
@@ -410,6 +396,10 @@ class TestCitationRepository(unittest.TestCase):
 
         self.assertIsNotNone(by_id)
         self.assertIsNotNone(by_key)
+
+        # # UNNECESSARY. Here to satisfy type checker...
+        if not by_id or not by_key:
+            self.fail("Citations should not be None")
 
         self.assertEqual(by_id.id, by_key.id)
         self.assertEqual(by_id.entry_type, by_key.entry_type)

@@ -1,7 +1,10 @@
+import json
+
 from flask import session
 
+from entities.category import Category, Tag
+from entities.citation import Citation
 from entities.entry_type import EntryType
-from repositories.category_repository import get_or_create_category, get_or_create_tags
 
 
 def sanitize(value):
@@ -138,12 +141,11 @@ def extract_category(form):
     category = form.get("category")
 
     # Category can have spaces, so just sanitize.
-    category = sanitize(category)
-    if not category:
+    sanitized = sanitize(category)
+    if not sanitized:
         return None
 
-    category = get_or_create_category(category)
-    return category
+    return sanitized
 
 
 def extract_tags(form):
@@ -156,9 +158,7 @@ def extract_tags(form):
         if tag:
             sanitized.append(tag)
 
-    tags = get_or_create_tags(sanitized)
-
-    return tags
+    return sanitized
 
 
 def extract_citation_key(form):
@@ -172,3 +172,47 @@ def extract_citation_key(form):
         return None
 
     return collapsed
+
+
+def to_category(row):
+    """Converts a database row to a Category object."""
+    return Category(
+        category_id=row.id,
+        name=row.name,
+    )
+
+
+def to_tag(row):
+    """Converts a database row to a Tag object."""
+    return Tag(
+        tag_id=row.id,
+        name=row.name,
+    )
+
+
+def to_citation(row):
+    """Converts a database row to a Citation object."""
+    if not row:
+        return None
+
+    fields = row.fields or ""
+    if isinstance(fields, str):
+        try:
+            fields = json.loads(fields)
+        except json.JSONDecodeError:
+            fields = {}
+
+    return Citation(
+        row.id,
+        row.entry_type,
+        row.citation_key,
+        fields
+    )
+
+
+def to_entry_type(row):
+    """Converts a database row to an EntryType object."""
+    return EntryType(
+        entry_type_id=row.id,
+        name=row.name,
+    )

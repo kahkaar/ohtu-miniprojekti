@@ -1,21 +1,7 @@
 from sqlalchemy import text
 
 from config import db
-from entities.category import Category, Tag
-
-
-def _to_category(row):
-    return Category(
-        category_id=row.id,
-        name=row.name,
-    )
-
-
-def _to_tag(row):
-    return Tag(
-        tag_id=row.id,
-        name=row.name,
-    )
+from util import to_category, to_tag
 
 
 def get_categories():
@@ -34,7 +20,7 @@ def get_categories():
     if not result:
         return []
 
-    return [_to_category(row) for row in result]
+    return [to_category(row) for row in result]
 
 
 def get_tags():
@@ -53,7 +39,7 @@ def get_tags():
     if not result:
         return []
 
-    return [_to_tag(row) for row in result]
+    return [to_tag(row) for row in result]
 
 
 def get_category(category_id):
@@ -76,7 +62,7 @@ def get_category(category_id):
     if not result:
         return None
 
-    return _to_category(result)
+    return to_category(result)
 
 
 def get_tag(tag_id):
@@ -99,7 +85,7 @@ def get_tag(tag_id):
     if not result:
         return None
 
-    return _to_tag(result)
+    return to_tag(result)
 
 
 def create_category(name):
@@ -120,7 +106,7 @@ def create_category(name):
     result = db.session.execute(sql, params).fetchone()
     db.session.commit()
 
-    return _to_category(result)
+    return to_category(result)
 
 
 def create_tag(name):
@@ -141,7 +127,7 @@ def create_tag(name):
     result = db.session.execute(sql, params).fetchone()
     db.session.commit()
 
-    return _to_tag(result)
+    return to_tag(result)
 
 
 def create_tags(tag_names):
@@ -162,7 +148,7 @@ def create_tags(tag_names):
         }
 
         result = db.session.execute(sql, params).fetchone()
-        created_tags.append(_to_tag(result))
+        created_tags.append(to_tag(result))
 
     db.session.commit()
 
@@ -187,7 +173,7 @@ def get_or_create_category(name):
     result = db.session.execute(sql, params).fetchone()
 
     if result:
-        return _to_category(result)
+        return to_category(result)
 
     return create_category(name)
 
@@ -210,7 +196,7 @@ def get_or_create_tag(name):
     result = db.session.execute(sql, params).fetchone()
 
     if result:
-        return _to_tag(result)
+        return to_tag(result)
 
     return create_tag(name)
 
@@ -235,7 +221,7 @@ def get_or_create_tags(tag_names):
         result = db.session.execute(sql, params).fetchone()
 
         if result:
-            existing_tags[name] = _to_tag(result)
+            existing_tags[name] = to_tag(result)
 
     tags_to_create = [name for name in tag_names if name not in existing_tags]
 

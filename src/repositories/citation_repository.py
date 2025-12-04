@@ -3,31 +3,11 @@ import json
 from sqlalchemy import text
 
 from config import db
-from entities.citation import Citation
 from repositories.category_repository import (
     assign_category_to_citation,
     assign_tags_to_citation,
 )
-
-
-def _to_citation(row):
-    """Converts a database row to a Citation object."""
-    if not row:
-        return None
-
-    fields = row.fields or ""
-    if isinstance(fields, str):
-        try:
-            fields = json.loads(fields)
-        except json.JSONDecodeError:
-            fields = {}
-
-    return Citation(
-        row.id,
-        row.entry_type,
-        row.citation_key,
-        fields
-    )
+from util import to_citation
 
 
 def get_citations(page=None, per_page=None):
@@ -69,7 +49,7 @@ def get_citations(page=None, per_page=None):
     if not result:
         return []
 
-    return [_to_citation(c) for c in result]
+    return [to_citation(c) for c in result]
 
 
 def get_citation_by_id(citation_id):
@@ -97,7 +77,8 @@ def get_citation_by_id(citation_id):
     if not result:
         return None
 
-    return _to_citation(result)
+    return to_citation(result)
+
 
 def get_citation_by_key(citation_key):
     """Fetches a citation by its citation key from the database"""
@@ -124,7 +105,7 @@ def get_citation_by_key(citation_key):
     if not result:
         return None
 
-    return _to_citation(result)
+    return to_citation(result)
 
 
 def create_citation(entry_type_id, citation_key, fields):
@@ -161,7 +142,7 @@ def create_citation(entry_type_id, citation_key, fields):
     if not result:
         return None
 
-    return _to_citation(result)
+    return to_citation(result)
 
 
 def create_citation_with_metadata(
@@ -319,4 +300,4 @@ def search_citations(queries=None):
     sql = text(base_sql)
 
     result = db.session.execute(sql, params).fetchall()
-    return [_to_citation(r) for r in result]
+    return [to_citation(r) for r in result]
