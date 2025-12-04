@@ -252,7 +252,7 @@ def assign_tag_to_citation(citation_id, tag):
 
     sql = text(
         """
-        INSERT INTO citation_tags (citation_id, tag_id)
+        INSERT INTO tags (citation_id, tag_id)
         VALUES (:citation_id, :tag_id)
         """
     )
@@ -285,7 +285,6 @@ def assign_tags_to_citation(citation_id, tags):
         db.session.execute(sql, params)
 
     db.session.commit()
-    db.session.rollback()
 
 
 def assign_category_to_citation(citation_id, category_id):
