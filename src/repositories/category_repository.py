@@ -156,7 +156,7 @@ def create_tags(tag_names):
 
 
 def get_or_create_category(name):
-    """Fetches a category by name or creates it if it does not exist"""
+    """Fetches a category by name or creates a new one if it does not exist"""
 
     sql = text(
         """
@@ -179,7 +179,7 @@ def get_or_create_category(name):
 
 
 def get_or_create_tag(name):
-    """Fetches a tag by name or creates it if it does not exist"""
+    """Fetches a tag by name or creates a new one if it does not exist"""
 
     sql = text(
         """
@@ -238,8 +238,9 @@ def assign_tag_to_citation(citation_id, tag):
 
     sql = text(
         """
-        INSERT INTO tags (citation_id, tag_id)
+        INSERT INTO citations_to_tags (citation_id, tag_id)
         VALUES (:citation_id, :tag_id)
+        ON CONFLICT DO NOTHING
         """
     )
 
@@ -257,8 +258,9 @@ def assign_tags_to_citation(citation_id, tags):
 
     sql = text(
         """
-        INSERT INTO tags (citation_id, tag_id)
+        INSERT INTO citations_to_tags (citation_id, tag_id)
         VALUES (:citation_id, :tag_id)
+        ON CONFLICT DO NOTHING
         """
     )
 
@@ -278,8 +280,9 @@ def assign_category_to_citation(citation_id, category_id):
 
     sql = text(
         """
-        INSERT INTO categories (citation_id, category_id)
+        INSERT INTO citations_to_categories (citation_id, category_id)
         VALUES (:citation_id, :category_id)
+        ON CONFLICT DO NOTHING
         """
     )
 
@@ -297,7 +300,7 @@ def remove_tag_from_citation(tag_id, citation_id):
 
     sql = text(
         """
-        DELETE FROM tags
+        DELETE FROM citations_to_tags
         WHERE citation_id = :citation_id AND tag_id = :tag_id
         """
     )
@@ -316,7 +319,7 @@ def remove_category_from_citation(category_id, citation_id):
 
     sql = text(
         """
-        DELETE FROM categories
+        DELETE FROM citations_to_categories
         WHERE citation_id = :citation_id AND category_id = :category_id
         """
     )

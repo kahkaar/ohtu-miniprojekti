@@ -4,11 +4,11 @@ import routes.bibtex
 import routes.citations
 import routes.delete
 import routes.edit
+import routes.export_bibtex
 import routes.main
 import routes.search
 import routes.select_entry_type
 import routes.testing_env
-import routes.export_bibtex
 from config import app, test_env
 
 if test_env:
@@ -27,6 +27,22 @@ if test_env:
     @app.route("/test_env/citations")
     def json_citations():
         return routes.testing_env.json_citations()
+
+    @app.route("/test_env/tags")
+    def json_tags():
+        return routes.testing_env.json_tags()
+
+    @app.route("/test_env/categories")
+    def json_categories():
+        return routes.testing_env.json_categories()
+
+    @app.route("/test_env/c2c")
+    def json_citations_to_categories():
+        return routes.testing_env.json_citations_to_categories()
+
+    @app.route("/test_env/c2t")
+    def json_citations_to_tags():
+        return routes.testing_env.json_citations_to_tags()
 
 
 @app.route("/", methods=["GET", "POST"])

@@ -134,13 +134,68 @@ class TestCitationRepository(unittest.TestCase):
         citation_id = 7
         repo.delete_citation(citation_id)
 
-        mock_db.session.execute.assert_called_once()
-        args, kwargs = mock_db.session.execute.call_args
+        self.assertEqual(mock_db.session.execute.call_count, 5)
+
+        args, kwargs = mock_db.session.execute.call_args_list[-1]
         sql = args[0]
         params = args[1]
 
         self.assertIn("DELETE FROM citations", str(sql))
         self.assertEqual(params["citation_id"], citation_id)
+        mock_db.session.commit.assert_called_once()
+
+    @patch("repositories.citation_repository.db")
+    def test_delete_citation_early_returns_on_falsy_id(self, mock_db):
+        repo.delete_citation(0)
+        mock_db.session.execute.assert_not_called()
+        mock_db.session.commit.assert_not_called()
+
+    @patch("repositories.citation_repository.db")
+    def test_delete_citation_removes_orphaned_links_and_entities(self, mock_db):
+        citation_id = 42
+
+        mock_select_cat = MagicMock()
+        mock_select_cat.fetchall.return_value = [(1,), (2,)]
+
+        mock_select_tag = MagicMock()
+        mock_select_tag.fetchall.return_value = [(10,)]
+
+        mock_del1 = MagicMock()
+        mock_del2 = MagicMock()
+        mock_del3 = MagicMock()
+        mock_del4 = MagicMock()
+        mock_del5 = MagicMock()
+        mock_del6 = MagicMock()
+
+        mock_db.session.execute.side_effect = [
+            mock_select_cat,
+            mock_select_tag,
+            mock_del1,
+            mock_del2,
+            mock_del3,
+            mock_del4,
+            mock_del5,
+            mock_del6,
+        ]
+
+        repo.delete_citation(citation_id)
+
+        self.assertEqual(mock_db.session.execute.call_count, 8)
+
+        args, kwargs = mock_db.session.execute.call_args_list[4]
+        sql = args[0]
+        params = args[1]
+        self.assertIn("DELETE FROM citations", str(sql))
+        self.assertEqual(params["citation_id"], citation_id)
+
+        cat_delete_args, _ = mock_db.session.execute.call_args_list[5]
+        self.assertIn("DELETE FROM categories", str(cat_delete_args[0]))
+        self.assertIn("NOT EXISTS", str(cat_delete_args[0]))
+
+        tag_delete_args, _ = mock_db.session.execute.call_args_list[7]
+        self.assertIn("DELETE FROM tags", str(tag_delete_args[0]))
+        self.assertIn("NOT EXISTS", str(tag_delete_args[0]))
+
         mock_db.session.commit.assert_called_once()
 
     @patch("repositories.citation_repository.db")
@@ -378,7 +433,6 @@ class TestCitationRepository(unittest.TestCase):
         by_id = repo.get_citation_by_id(10)
         by_key = repo.get_citation_by_key("ck-10")
 
-        # Ensure both queries were executed with the correct parameters
         self.assertEqual(mock_db.session.execute.call_count, 2)
         first_call_args, first_call_kwargs = mock_db.session.execute.call_args_list[0]
         second_call_args, second_call_kwargs = mock_db.session.execute.call_args_list[1]
@@ -417,7 +471,6 @@ class TestCitationRepository(unittest.TestCase):
 
     @patch("repositories.citation_repository.db")
     def test_create_citation_returns_none_when_db_returns_none(self, mock_db):
-        # Simulate DB returning no row after insert
         mock_result = MagicMock()
         mock_result.fetchone.return_value = None
         mock_db.session.execute.return_value = mock_result
@@ -429,7 +482,6 @@ class TestCitationRepository(unittest.TestCase):
     @patch("repositories.citation_repository.assign_tags_to_citation")
     @patch("repositories.citation_repository.assign_category_to_citation")
     def test_create_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_create):
-        # create_citation returns a citation-like object with id
         mock_create.return_value = SimpleNamespace(id=99)
 
         entry_type = SimpleNamespace(id=2)

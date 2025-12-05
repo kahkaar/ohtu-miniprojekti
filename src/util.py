@@ -46,10 +46,20 @@ def collapse_to_hyphens(value):
 
 def extract_fields(form):
     """Extracts and sanitizes posted fields from a form."""
+
+    disallowed_keys = {
+        "citation_key",
+        "entry_type",
+        "category",
+        "category_new",
+        "tags",
+        "tags_new",
+    }
+
     fields = {}
     for k, v in form.items():
         # Citation key and entry type are handled separately.
-        if k in ("citation_key", "entry_type"):
+        if k in disallowed_keys:
             continue
 
         sanitized_value = sanitize(v)
@@ -138,9 +148,15 @@ def parse_search_queries(args):
 
 def extract_category(form):
     """Extracts and creates the category from the request form data if needed."""
-    category = form.get("category")
+
+    new_category = form.get("category_new")
+    if new_category:
+        sanitized = sanitize(new_category)
+        if sanitized:
+            return sanitized
 
     # Category can have spaces, so just sanitize.
+    category = form.get("category")
     sanitized = sanitize(category)
     if not sanitized:
         return None
@@ -150,7 +166,8 @@ def extract_category(form):
 
 def extract_tags(form):
     """Extracts and creates the tags from the request form data if needed."""
-    tag_form_list = form.getlist("tags")
+
+    tag_form_list = form.getlist("tags") or []
     sanitized = []
     for tag_name in tag_form_list:
         # Tags can have spaces, so just sanitize.
@@ -158,7 +175,21 @@ def extract_tags(form):
         if tag:
             sanitized.append(tag)
 
-    return sanitized
+    tags_new = form.get("tags_new")
+    if tags_new:
+        parts = [sanitize(p) for p in tags_new.split(",")]
+        for p in parts:
+            if p:
+                sanitized.append(p)
+
+    seen = set()
+    unique = []
+    for t in sanitized:
+        if t not in seen:
+            seen.add(t)
+            unique.append(t)
+
+    return unique
 
 
 def extract_citation_key(form):
@@ -195,18 +226,46 @@ def to_citation(row):
     if not row:
         return None
 
-    fields = row.fields or ""
-    if isinstance(fields, str):
+    def _parse_fields(val):
+        if not val:
+            return {}
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                return {}
+        return val
+
+    def _to_list(val):
+        if not val:
+            return []
+        if isinstance(val, (list, tuple)):
+            return list(val)
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, (list, tuple)):
+                    return list(parsed)
+            except json.JSONDecodeError:
+                pass
+            return [p.strip() for p in val.split(",") if p.strip()]
         try:
-            fields = json.loads(fields)
-        except json.JSONDecodeError:
-            fields = {}
+            return list(val)
+        except TypeError:
+            return []
+
+    fields = _parse_fields(row.fields)
+    tags = _to_list(getattr(row, "tags", None))
+    categories = _to_list(getattr(row, "categories", None))
 
     return Citation(
         row.id,
         row.entry_type,
         row.citation_key,
-        fields
+        fields,
+        metadata={"tags": tags, "categories": categories},
     )
 
 

@@ -30,14 +30,47 @@
   <h3>Fill in the details:</h3>
   <label>Citation key:
     <input type="text" name="citation_key" required>
-    <br>
-    {% for f in fields %}
-    <label>{{ f.replace("_", " ").capitalize() }}:
-      <input type="text" name="{{ f }}">
-    </label>
-    <br>
-    {% endfor %}
-    <button type="submit">Add Citation</button>
+  </label>
+  {% if fields %}
+  <br>
+  {% for f in fields %}
+  <label>{{ f.replace("_", " ").capitalize() }}:
+    <input type="text" name="{{ f }}">
+  </label>
+  <br>
+  {% endfor %}
+  {% endif %}
+
+  <br>
+  {% if categories %}
+  <label>Assign existing category:
+    <select name="category">
+      <option value="" selected>Select a category</option>
+      {% for c in categories or [] %}
+      <option value="{{ c.name }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Assign category:
+    <input type="text" name="category_new" placeholder="New Category">
+  </label>
+  <br>
+  {% if tags %}
+  <label>Assign existing tags:
+    <select name="tags" multiple>
+      {% for t in tags or [] %}
+      <option value="{{ t.name }}">{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <br>
+  {% endif %}
+  <label>Assign tags (comma-separated):
+    <input type="text" name="tags_new" placeholder="tag1, tag2">
+  </label>
+
+  <button type="submit">Add Citation</button>
 </form>
 {% endif %}
 {% endblock %}

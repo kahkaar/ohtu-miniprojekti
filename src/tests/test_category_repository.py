@@ -274,7 +274,7 @@ class TestCategoryRepository(unittest.TestCase):
         args = mock_db.session.execute.call_args[0]
         sql = args[0]
         params = args[1]
-        self.assertIn("DELETE FROM tags", str(sql))
+        self.assertIn("DELETE FROM citations_to_tags", str(sql))
         self.assertEqual(params["tag_id"], 7)
         self.assertEqual(params["citation_id"], 13)
         mock_db.session.commit.assert_called_once()
@@ -286,7 +286,7 @@ class TestCategoryRepository(unittest.TestCase):
         args = mock_db.session.execute.call_args[0]
         sql = args[0]
         params = args[1]
-        self.assertIn("DELETE FROM categories", str(sql))
+        self.assertIn("DELETE FROM citations_to_categories", str(sql))
         self.assertEqual(params["category_id"], 9)
         self.assertEqual(params["citation_id"], 14)
         mock_db.session.commit.assert_called_once()

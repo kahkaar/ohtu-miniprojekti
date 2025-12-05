@@ -212,6 +212,24 @@ class TestUtilExtensions(unittest.TestCase):
         self.assertEqual(util.extract_category(
             DummyForm({"category": "0"})), "0")
 
+    def test_extract_category_new_precedence_and_empty_new(self):
+        class DummyFormBoth:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+        # new category provided should take precedence and be sanitized
+        f_new = DummyFormBoth(
+            {"category_new": "  New Cat ", "category": "Old"})
+        self.assertEqual(util.extract_category(f_new), "New Cat")
+
+        # new category provided but empty -> fallback to category
+        f_new_empty = DummyFormBoth(
+            {"category_new": "   ", "category": "  Fallback "})
+        self.assertEqual(util.extract_category(f_new_empty), "Fallback")
+
     def test_collapse_and_hyphens_and_none_citation(self):
         self.assertEqual(util.collapse_to_hyphens(" A B C "), "A-B-C")
 
@@ -225,3 +243,143 @@ class TestUtilExtensions(unittest.TestCase):
         et = util.to_entry_type(row)
         self.assertEqual(et.id, 9)
         self.assertEqual(et.name, "custom")
+
+
+class TestUtilTagsExtra(unittest.TestCase):
+    def test_extract_tags_with_tags_new_and_dedup(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            def getlist(self, k):
+                return self._items.get(k, [])
+
+        # existing tags a,b and new tags 'b, c, , a' should produce ['a','b','c']
+        f = DummyForm({"tags": ["a", "b"], "tags_new": "b, c, , a "})
+        out = util.extract_tags(f)
+        self.assertEqual(out, ["a", "b", "c"])
+
+    def test_extract_tags_blank_and_missing(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            def getlist(self, k):
+                return self._items.get(k, [])
+
+        # no tags present
+        f_empty = DummyForm({})
+        self.assertEqual(util.extract_tags(f_empty), [])
+
+        # tags_new provided but only whitespace -> should be ignored
+        f_blank_new = DummyForm({"tags_new": "   ,  ,\t"})
+        self.assertEqual(util.extract_tags(f_blank_new), [])
+
+
+class TestToCitationVariants(unittest.TestCase):
+    def test_to_citation_with_dict_fields_and_list_tags(self):
+        row = type("R", (), {
+            "id": 10,
+            "entry_type": "article",
+            "citation_key": "k10",
+            "fields": {"a": 1},
+            "tags": ["t1", "t2"],
+            "categories": ["c1"],
+        })
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.fields, {"a": 1})
+        self.assertEqual(c.tags, ["t1", "t2"])
+        self.assertEqual(c.categories, ["c1"])
+
+    def test_to_citation_with_json_string_fields_and_json_tags(self):
+        row = type("R", (), {
+            "id": 11,
+            "entry_type": "book",
+            "citation_key": "k11",
+            "fields": '{"b":2}',
+            "tags": '["x","y"]',
+            "categories": '["catA"]',
+        })
+        c = util.to_citation(row)
+        self.assertEqual(c.fields, {"b": 2})
+        self.assertEqual(c.tags, ["x", "y"])
+        self.assertEqual(c.categories, ["catA"])
+
+    def test_to_citation_with_comma_separated_tags_and_categories(self):
+        row = type("R", (), {
+            "id": 12,
+            "entry_type": "misc",
+            "citation_key": "k12",
+            "fields": '{}',
+            "tags": 'a, b, , c',
+            "categories": ' c1, c2 ',
+        })
+        c = util.to_citation(row)
+        self.assertEqual(c.tags, ["a", "b", "c"])
+        self.assertEqual(c.categories, ["c1", "c2"])
+
+    def test_to_citation_with_none_tags_and_categories(self):
+        row = type("R", (), {
+            "id": 13,
+            "entry_type": "misc",
+            "citation_key": "k13",
+            "fields": None,
+            "tags": None,
+            "categories": None,
+        })
+        c = util.to_citation(row)
+        self.assertEqual(c.fields, {})
+        self.assertEqual(c.tags, [])
+        self.assertEqual(c.categories, [])
+
+    def test_to_citation_with_unexpected_iterable(self):
+        class IterableLike:
+            def __iter__(self):
+                yield 'i1'
+                yield 'i2'
+
+        row = type("R", (), {
+            "id": 14,
+            "entry_type": "misc",
+            "citation_key": "k14",
+            "fields": {},
+            "tags": IterableLike(),
+            "categories": IterableLike(),
+        })
+        c = util.to_citation(row)
+
+        if not c:
+            self.fail("to_citation returned None unexpectedly.")
+
+        self.assertEqual(c.tags, ['i1', 'i2'])
+        self.assertEqual(c.categories, ['i1', 'i2'])
+
+    def test_to_citation_with_non_iterable_truthy_triggers_typeerror(self):
+        # An object that is truthy but not iterable should cause list(obj)
+        # to raise TypeError and _to_list should return an empty list.
+        class NotIterable:
+            pass
+
+        row = type("R", (), {
+            "id": 15,
+            "entry_type": "misc",
+            "citation_key": "k15",
+            "fields": {},
+            "tags": NotIterable(),
+            "categories": NotIterable(),
+        })
+
+        c = util.to_citation(row)
+
+        if not c:
+            self.fail("to_citation returned None unexpectedly.")
+
+        self.assertEqual(c.tags, [])
+        self.assertEqual(c.categories, [])

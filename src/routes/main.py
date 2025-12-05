@@ -2,7 +2,12 @@ from flask import flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 import util
-from repositories.category_repository import get_categories, get_tags
+from repositories.category_repository import (
+    get_categories,
+    get_tags,
+    get_or_create_category,
+    get_or_create_tags,
+)
 from repositories.citation_repository import create_citation_with_metadata
 from repositories.entry_fields_repository import get_entry_fields
 from repositories.entry_type_repository import get_entry_types
@@ -49,8 +54,17 @@ def post():
         return redirect(url_for("index"))
 
     fields = util.extract_fields(request.form)
-    category = util.extract_category(request.form)
-    tags = util.extract_tags(request.form)
+    category_name = util.extract_category(request.form)
+    tag_names = util.extract_tags(request.form)
+
+    # Convert names to objects (create if not present)
+    category = None
+    tags = None
+    if category_name:
+        category = get_or_create_category(category_name)
+
+    if tag_names:
+        tags = get_or_create_tags(tag_names)
 
     try:
         create_citation_with_metadata(entry_type, citation_key, fields,

@@ -11,22 +11,27 @@ from util import to_citation
 
 
 def get_citations(page=None, per_page=None):
-    """Fetches citations from the database.
+    """Fetches all citations from the database, with optional pagination."""
 
-    Optional paging:
-      - page: 1-based page number
-      - per_page: items per page
-
-    If both `page` and `per_page` are provided, the query uses LIMIT/OFFSET
-    to return only that page. If omitted, all citations are returned.
-    """
-    # N.B. This method should probably have a default per_page value...
     base_sql = (
         """
         SELECT
             c.id,
             et.name AS entry_type,
-            c.citation_key, c.fields
+            c.citation_key,
+            c.fields,
+            COALESCE((
+                SELECT array_agg(t2.name)
+                FROM citations_to_tags ctt2
+                JOIN tags t2 ON t2.id = ctt2.tag_id
+                WHERE ctt2.citation_id = c.id
+            ), ARRAY[]::text[]) AS tags,
+            COALESCE((
+                SELECT array_agg(cat2.name)
+                FROM citations_to_categories ctc2
+                JOIN categories cat2 ON cat2.id = ctc2.category_id
+                WHERE ctc2.citation_id = c.id
+            ), ARRAY[]::text[]) AS categories
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         ORDER BY c.id
@@ -60,7 +65,20 @@ def get_citation_by_id(citation_id):
         SELECT
             c.id,
             et.name AS entry_type,
-            c.citation_key, c.fields
+            c.citation_key,
+            c.fields,
+            COALESCE((
+                SELECT array_agg(t2.name)
+                FROM citations_to_tags ctt2
+                JOIN tags t2 ON t2.id = ctt2.tag_id
+                WHERE ctt2.citation_id = c.id
+            ), ARRAY[]::text[]) AS tags,
+            COALESCE((
+                SELECT array_agg(cat2.name)
+                FROM citations_to_categories ctc2
+                JOIN categories cat2 ON cat2.id = ctc2.category_id
+                WHERE ctc2.citation_id = c.id
+            ), ARRAY[]::text[]) AS categories
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         WHERE c.id = :citation_id
@@ -88,7 +106,20 @@ def get_citation_by_key(citation_key):
         SELECT
             c.id,
             et.name AS entry_type,
-            c.citation_key, c.fields
+            c.citation_key,
+            c.fields,
+            COALESCE((
+                SELECT array_agg(t2.name)
+                FROM citations_to_tags ctt2
+                JOIN tags t2 ON t2.id = ctt2.tag_id
+                WHERE ctt2.citation_id = c.id
+            ), ARRAY[]::text[]) AS tags,
+            COALESCE((
+                SELECT array_agg(cat2.name)
+                FROM citations_to_categories ctc2
+                JOIN categories cat2 ON cat2.id = ctc2.category_id
+                WHERE ctc2.citation_id = c.id
+            ), ARRAY[]::text[]) AS categories
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
         WHERE c.citation_key = :citation_key
@@ -122,7 +153,19 @@ def create_citation(entry_type_id, citation_key, fields):
             i.id,
             et.name AS entry_type,
             i.citation_key,
-            i.fields
+            i.fields,
+            COALESCE((
+                SELECT array_agg(t2.name)
+                FROM citations_to_tags ctt2
+                JOIN tags t2 ON t2.id = ctt2.tag_id
+                WHERE ctt2.citation_id = i.id
+            ), ARRAY[]::text[]) AS tags,
+            COALESCE((
+                SELECT array_agg(cat2.name)
+                FROM citations_to_categories ctc2
+                JOIN categories cat2 ON cat2.id = ctc2.category_id
+                WHERE ctc2.citation_id = i.id
+            ), ARRAY[]::text[]) AS categories
         FROM inserted i
         JOIN entry_types et ON i.entry_type_id = et.id
         """
@@ -215,16 +258,95 @@ def update_citation(
 
 
 def delete_citation(citation_id):
-    """Deletes a citation entry from the database by its ID"""
+    """Deletes a citation by its ID and cleans up orphaned categories and tags."""
 
-    sql = text(
-        """
-        DELETE FROM citations
-        WHERE id = :citation_id
-        """
+    if not citation_id:
+        return
+
+    cat_rows = db.session.execute(
+        text(
+            """
+            SELECT category_id
+            FROM citations_to_categories
+            WHERE citation_id = :citation_id
+            """
+        ),
+        {"citation_id": citation_id},
+    ).fetchall()
+    cat_ids = [r[0] for r in cat_rows] if cat_rows else []
+
+    tag_rows = db.session.execute(
+        text(
+            """
+            SELECT tag_id
+            FROM citations_to_tags
+            WHERE citation_id = :citation_id
+            """
+        ),
+        {"citation_id": citation_id},
+    ).fetchall()
+    tag_ids = [r[0] for r in tag_rows] if tag_rows else []
+
+    db.session.execute(
+        text(
+            """
+            DELETE FROM citations_to_categories
+            WHERE citation_id = :citation_id
+            """
+        ),
+        {"citation_id": citation_id},
     )
 
-    db.session.execute(sql, {"citation_id": citation_id})
+    db.session.execute(
+        text(
+            """
+            DELETE FROM citations_to_tags
+            WHERE citation_id = :citation_id
+            """
+        ),
+        {"citation_id": citation_id},
+    )
+
+    db.session.execute(
+        text(
+            """
+            DELETE FROM citations
+            WHERE id = :citation_id
+            """
+        ),
+        {"citation_id": citation_id}
+    )
+
+    for cat_id in cat_ids:
+        db.session.execute(
+            text(
+                """
+                DELETE FROM categories c
+                WHERE c.id = :category_id
+                  AND NOT EXISTS (
+                      SELECT 1 FROM citations_to_categories ctc
+                      WHERE ctc.category_id = c.id
+                  )
+                """
+            ),
+            {"category_id": cat_id},
+        )
+
+    for tag_id in tag_ids:
+        db.session.execute(
+            text(
+                """
+                DELETE FROM tags t
+                WHERE t.id = :tag_id
+                  AND NOT EXISTS (
+                      SELECT 1 FROM citations_to_tags ctt
+                      WHERE ctt.tag_id = t.id
+                  )
+                """
+            ),
+            {"tag_id": tag_id},
+        )
+
     db.session.commit()
 
 
@@ -236,7 +358,19 @@ def search_citations(queries=None):
             c.id,
             et.name AS entry_type,
             c.citation_key,
-            c.fields
+            c.fields,
+            COALESCE((
+                SELECT array_agg(t2.name)
+                FROM citations_to_tags ctt2
+                JOIN tags t2 ON t2.id = ctt2.tag_id
+                WHERE ctt2.citation_id = c.id
+            ), ARRAY[]::text[]) AS tags,
+            COALESCE((
+                SELECT array_agg(cat2.name)
+                FROM citations_to_categories ctc2
+                JOIN categories cat2 ON cat2.id = ctc2.category_id
+                WHERE ctc2.citation_id = c.id
+            ), ARRAY[]::text[]) AS categories
         FROM citations c
         JOIN entry_types et ON c.entry_type_id = et.id
     """
