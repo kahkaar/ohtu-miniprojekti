@@ -11,6 +11,7 @@
 {% if citations %}
 {% for c in citations %}
 <div class="citation" id="{{ c.id }}-{{c.citation_key}}">
+  <p>{{ c.show_category_and_tags() }}</p>
   <p>@{{ c.entry_type }} &mdash; {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
   <br>
   <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
@@ -35,7 +36,7 @@
   function export_bibtex() {
     const form = document.forms['exportform'];
     const selectedIds = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function (checkbox) {
       selectedIds.push(checkbox.id);
     });
     if (selectedIds.length === 0) {

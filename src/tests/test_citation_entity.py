@@ -72,6 +72,27 @@ class TestCitationEntity(unittest.TestCase):
         self.assertIn("citation_key", r)
         self.assertIn("k7", r)
 
+    def test_show_category_and_tags_with_values(self):
+        fields = {"title": "T1"}
+        tags = ["tag1", "tag2"]
+        categories = ["catA"]
+
+        c = Citation(8, "book", "k8", fields, metadata={
+                     "tags": tags, "categories": categories})
+
+        out = c.show_category_and_tags()
+        self.assertIn("Categories:", out)
+        self.assertIn("Tags:", out)
+        self.assertIn("catA", out)
+        self.assertIn("tag1", out)
+
+    def test_show_category_and_tags_no_values(self):
+        fields = {"title": "T2"}
+        c = Citation(9, "misc", "k9", fields)
+
+        out = c.show_category_and_tags()
+        self.assertEqual(out, "Categories: No categories | Tags: No tags")
+
 
 if __name__ == "__main__":
     unittest.main()

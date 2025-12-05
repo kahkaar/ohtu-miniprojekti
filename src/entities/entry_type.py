@@ -1,4 +1,6 @@
 class EntryType:
+    """Represents an entry type entity."""
+
     def __init__(self, entry_type_id, name):
         self._id = entry_type_id
         self._name = name
