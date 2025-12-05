@@ -9,7 +9,7 @@ from entities.entry_type import EntryType
 
 def sanitize(value):
     """
-    Sanitizes user input by stripping leading/trailing
+    Sanitizes user input by stripping leading/trailing whitespace
     and collapsing internal whitespace.
     """
     if isinstance(value, str):
