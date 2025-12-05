@@ -257,6 +257,27 @@ def update_citation(
     db.session.commit()
 
 
+def update_citation_with_metadata(
+        citation_id,
+        citation_key=None,
+        fields=None,
+        category=None,
+        tags=None
+):
+    """Updates a citation along with its associated category and tags."""
+
+    update_citation(
+        citation_id=citation_id,
+        citation_key=citation_key,
+        fields=fields
+    )
+    if category:
+        assign_category_to_citation(citation_id, category.id)
+
+    if tags and isinstance(tags, list):
+        assign_tags_to_citation(citation_id, tags)
+
+
 def delete_citation(citation_id):
     """Deletes a citation by its ID and cleans up orphaned categories and tags."""
 

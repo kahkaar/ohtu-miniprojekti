@@ -17,11 +17,42 @@
   </label>
   <br>
   {% endfor %}
+  <br>
+  {% if categories %}
+  <label>Assign existing category:
+    <select name="category">
+      <option value="" selected>Select a category</option>
+      {% for c in categories or [] %}
+      <option value="{{ c.name }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Assign category:
+    <input type="text" name="category_new" placeholder="New Category">
+  </label>
+  <br>
+
+  {% if tags %}
+  <label>Assign existing tags:
+    <select name="tags" multiple>
+      {% for t in tags or [] %}
+      <option value="{{ t.name }}">{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <br>
+  {% endif %}
+  <label>Assign tags (comma-separated):
+    <input type="text" name="tags_new" placeholder="tag1, tag2">
+  </label>
+
   <button type="submit">Save Changes</button>
 </form>
 {% else %}
 <p>Citation not found.</p>
 {% endif %}
+
 
 <form action="/citations" method="get" style="display:inline; margin-top:10px;">
   <button type="submit">Back</button>

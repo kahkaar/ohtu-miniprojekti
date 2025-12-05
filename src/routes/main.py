@@ -4,9 +4,9 @@ from sqlalchemy.exc import SQLAlchemyError
 import util
 from repositories.category_repository import (
     get_categories,
-    get_tags,
     get_or_create_category,
     get_or_create_tags,
+    get_tags,
 )
 from repositories.citation_repository import create_citation_with_metadata
 from repositories.entry_fields_repository import get_entry_fields
@@ -67,8 +67,13 @@ def post():
         tags = get_or_create_tags(tag_names)
 
     try:
-        create_citation_with_metadata(entry_type, citation_key, fields,
-                                      category, tags)
+        create_citation_with_metadata(
+            entry_type=entry_type,
+            citation_key=citation_key,
+            fields=fields,
+            category=category,
+            tags=tags
+        )
 
         flash("A new citation was added successfully!", "success")
     except (ValueError, TypeError, SQLAlchemyError) as e:
