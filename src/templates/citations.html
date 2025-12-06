@@ -106,7 +106,10 @@ document.getElementById("toggleFilters").addEventListener("click", function() {
   <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
     <button type="submit">View BibTeX</button>
   </form>
-  <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
+  <label>
+    <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
+    Select {{ c.citation_key }} for export
+  </label>
 </div>
 
 {% endfor %}

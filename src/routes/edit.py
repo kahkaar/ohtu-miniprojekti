@@ -46,7 +46,7 @@ def post(citation_id):
 
         except (ValueError, TypeError):
             flash("Year must be a number between 0 and 9999.", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("edit_citation", citation_id=citation_id))
     try:
         update_citation(
             citation_id=citation_id,
