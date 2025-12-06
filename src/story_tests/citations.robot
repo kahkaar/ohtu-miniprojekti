@@ -74,3 +74,7 @@ Delete Citation
     Click Button  Delete
     Handle Alert  action=ACCEPT
     Wait Until Page Contains  Citation deleted successfully.
+
+Check That Duplicate Error Was Displayed
+    Go To Home Page
+    Page Should Not Contain  A new citation was added successfully!

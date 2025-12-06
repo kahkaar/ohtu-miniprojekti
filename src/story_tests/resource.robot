@@ -70,4 +70,3 @@ Add Example Book Citation
     Input Text  year  2020
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!
-
