@@ -16,7 +16,7 @@ CREATE TABLE entry_types (
 CREATE TABLE citations (
   id SERIAL PRIMARY KEY,
   entry_type_id INTEGER REFERENCES entry_types(id),
-  citation_key TEXT NOT NULL,
+  citation_key TEXT NOT NULL UNIQUE,
   fields JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 

@@ -35,6 +35,18 @@ def post(citation_id):
         flash("No fields provided for the citation.", "error")
         return redirect(url_for("index"))
 
+    year = posted_fields.get("year")
+    if year:
+        try:
+            year_int = int(year)
+            if year_int < 0 or year_int > 9999:
+                raise ValueError
+
+            posted_fields["year"] = year_int
+
+        except (ValueError, TypeError):
+            flash("Year must be a number between 0 and 9999.", "error")
+            return redirect(url_for("edit_citation", citation_id=citation_id))
     try:
         update_citation(
             citation_id=citation_id,

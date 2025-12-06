@@ -39,7 +39,7 @@ def index():
 @app.route("/citations", methods=["GET"])
 def citations_view():
     """Renders the citations page showing all saved citations."""
-    return routes.citations.get()
+    return routes.search.get()
 
 
 @app.route("/edit/<int:citation_id>", methods=["GET", "POST"])
