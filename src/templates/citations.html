@@ -206,24 +206,24 @@ function export_bibtex() {
   .header h1 {
     font-size: 32px;
     font-weight: 600;
-    color: #1a202c;
+    color: #ffffff;
     margin-bottom: 10px;
   }
 
   .subtitle {
     font-size: 16px;
-    color: #718096;
+    color: #a0a0a0;
   }
 
   .link-primary {
-    color: #3182ce;
+    color: #60a5fa;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
   }
 
   .link-primary:hover {
-    color: #2c5282;
+    color: #93c5fd;
     text-decoration: underline;
   }
 
@@ -233,10 +233,10 @@ function export_bibtex() {
   }
 
   .search-card {
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     margin-bottom: 15px;
   }
 
@@ -252,16 +252,18 @@ function export_bibtex() {
   .search-input {
     flex: 1;
     padding: 12px 15px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #2a3142;
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    background: #242a38;
+    color: #e0e0e0;
   }
 
   .search-input:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
   }
 
   .btn-search {
@@ -284,27 +286,27 @@ function export_bibtex() {
   .btn-toggle-filters {
     width: 100%;
     padding: 12px 20px;
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: #1a1f2e;
+    border: 2px solid #2a3142;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: #4a5568;
+    color: #d0d0d0;
     cursor: pointer;
     transition: all 0.2s;
     margin-bottom: 15px;
   }
 
   .btn-toggle-filters:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
+    background: #242a38;
+    border-color: #3a4452;
   }
 
   .advanced-filters {
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   }
 
   .filters-grid {
@@ -321,7 +323,7 @@ function export_bibtex() {
 
   .filter-label {
     font-weight: 500;
-    color: #4a5568;
+    color: #e0e0e0;
     margin-bottom: 8px;
     font-size: 14px;
   }
@@ -329,17 +331,24 @@ function export_bibtex() {
   .filter-input,
   .filter-select {
     padding: 10px 12px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #2a3142;
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    background: #242a38;
+    color: #e0e0e0;
   }
 
   .filter-input:focus,
   .filter-select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .filter-select option {
+    background: #242a38;
+    color: #e0e0e0;
   }
 
   .year-range {
@@ -357,7 +366,7 @@ function export_bibtex() {
   }
 
   .year-separator {
-    color: #a0aec0;
+    color: #808080;
     font-weight: 500;
   }
 
@@ -365,7 +374,7 @@ function export_bibtex() {
     display: flex;
     gap: 10px;
     padding-top: 10px;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid #2a3142;
   }
 
   .btn {
@@ -391,14 +400,14 @@ function export_bibtex() {
   }
 
   .btn-secondary {
-    background: white;
-    color: #4a5568;
-    border: 2px solid #e2e8f0;
+    background: #242a38;
+    color: #d0d0d0;
+    border: 2px solid #2a3142;
   }
 
   .btn-secondary:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
+    background: #303848;
+    border-color: #3a4452;
   }
 
   /* Citations List */
@@ -410,15 +419,17 @@ function export_bibtex() {
   }
 
   .citation-card {
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     transition: all 0.2s;
+    border: 1px solid #2a3142;
   }
 
   .citation-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
   }
 
   .citation-header {
@@ -440,7 +451,7 @@ function export_bibtex() {
 
   .citation-key {
     font-weight: 600;
-    color: #2d3748;
+    color: #ffffff;
     font-size: 16px;
   }
 
@@ -449,13 +460,13 @@ function export_bibtex() {
   }
 
   .citation-text {
-    color: #4a5568;
+    color: #e0e0e0;
     line-height: 1.6;
     margin-bottom: 8px;
   }
 
   .citation-meta {
-    color: #718096;
+    color: #a0a0a0;
     font-size: 14px;
     font-style: italic;
   }
@@ -467,7 +478,7 @@ function export_bibtex() {
     flex-wrap: wrap;
     gap: 10px;
     padding-top: 15px;
-    border-top: 2px solid #f7fafc;
+    border-top: 1px solid #2a3142;
   }
 
   .action-buttons {
@@ -487,31 +498,34 @@ function export_bibtex() {
   }
 
   .btn-edit {
-    background: #edf2f7;
-    color: #2d3748;
-  }
-
-  .btn-edit:hover {
-    background: #e2e8f0;
-  }
-
-  .btn-delete {
-    background: #fed7d7;
-    color: #c53030;
-  }
-
-  .btn-delete:hover {
-    background: #fc8181;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
   }
 
+  .btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-delete {
+    background: #d32f2f;
+    color: white;
+  }
+
+  .btn-delete:hover {
+    background: #b71c1c;
+    transform: translateY(-1px);
+  }
+
   .btn-view {
-    background: #bee3f8;
-    color: #2c5282;
+    background: #2a3142;
+    color: #60a5fa;
+    border: 1px solid #667eea;
   }
 
   .btn-view:hover {
-    background: #90cdf4;
+    background: #303848;
+    border-color: #60a5fa;
   }
 
   .export-checkbox {
@@ -519,7 +533,7 @@ function export_bibtex() {
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #4a5568;
+    color: #d0d0d0;
     cursor: pointer;
   }
 
@@ -535,11 +549,11 @@ function export_bibtex() {
   }
 
   .export-card {
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: #1a1f2e;
+    border: 1px solid #2a3142;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     text-align: center;
   }
 
@@ -547,7 +561,7 @@ function export_bibtex() {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 15px;
-    color: #2d3748;
+    color: #ffffff;
   }
 
   .btn-export {
@@ -571,14 +585,15 @@ function export_bibtex() {
   .empty-state {
     text-align: center;
     padding: 60px 20px;
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid #2a3142;
   }
 
   .empty-state p {
     font-size: 18px;
-    color: #718096;
+    color: #a0a0a0;
     margin-bottom: 20px;
   }
 

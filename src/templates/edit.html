@@ -106,13 +106,13 @@
   .header h1 {
     font-size: 32px;
     font-weight: 600;
-    color: #1a202c;
+    color: #ffffff;
     margin-bottom: 10px;
   }
 
   .subtitle {
     font-size: 16px;
-    color: #718096;
+    color: #a0a0a0;
   }
 
   .citation-key-badge {
@@ -125,23 +125,26 @@
   }
 
   .card {
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     margin-bottom: 20px;
+    border: 1px solid #2a3142;
   }
 
   .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
     color: white;
-    padding: 20px 25px;
+    padding: 16px 25px;
+    border-bottom: 2px solid #667eea;
   }
 
   .card-header h2 {
-    font-size: 20px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     margin: 0;
+    color: #ffffff;
   }
 
   .card-body {
@@ -156,7 +159,7 @@
   h4 {
     font-size: 18px;
     font-weight: 600;
-    color: #2d3748;
+    color: #ffffff;
     margin-bottom: 15px;
     margin-top: 0;
   }
@@ -164,7 +167,7 @@
   .form-section {
     margin-top: 30px;
     padding-top: 25px;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid #2a3142;
   }
 
   .form-group {
@@ -174,29 +177,31 @@
   .form-label {
     display: block;
     font-weight: 500;
-    color: #4a5568;
+    color: #e0e0e0;
     margin-bottom: 8px;
     font-size: 14px;
   }
 
   .required {
-    color: #e53e3e;
+    color: #ff6b6b;
   }
 
   .form-input {
     width: 100%;
     padding: 12px 15px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #2a3142;
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
     box-sizing: border-box;
+    background: #242a38;
+    color: #e0e0e0;
   }
 
   .form-input:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
   }
 
   .select-wrapper {
@@ -206,10 +211,11 @@
   .form-select {
     width: 100%;
     padding: 12px 15px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #2a3142;
     border-radius: 8px;
     font-size: 14px;
-    background-color: white;
+    background-color: #242a38;
+    color: #e0e0e0;
     cursor: pointer;
     transition: all 0.2s;
     box-sizing: border-box;
@@ -218,7 +224,12 @@
   .form-select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .form-select option {
+    background: #242a38;
+    color: #e0e0e0;
   }
 
   .multi-select {
@@ -229,7 +240,7 @@
     display: block;
     margin-top: 5px;
     font-size: 12px;
-    color: #a0aec0;
+    color: #808080;
     font-style: italic;
   }
 
@@ -238,7 +249,7 @@
     gap: 10px;
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid #2a3142;
   }
 
   .btn {
@@ -265,14 +276,14 @@
   }
 
   .btn-secondary {
-    background: white;
-    color: #4a5568;
-    border: 2px solid #e2e8f0;
+    background: #242a38;
+    color: #d0d0d0;
+    border: 2px solid #2a3142;
   }
 
   .btn-secondary:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
+    background: #303848;
+    border-color: #3a4452;
   }
 
   .btn-primary {
@@ -288,20 +299,21 @@
   .empty-state {
     text-align: center;
     padding: 60px 20px;
-    background: white;
+    background: #1a1f2e;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid #2a3142;
   }
 
   .empty-state h2 {
     font-size: 24px;
-    color: #2d3748;
+    color: #ffffff;
     margin-bottom: 10px;
   }
 
   .empty-state p {
     font-size: 16px;
-    color: #718096;
+    color: #a0a0a0;
     margin-bottom: 20px;
   }
 
