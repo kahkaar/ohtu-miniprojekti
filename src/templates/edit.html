@@ -19,31 +19,31 @@
   {% endfor %}
   <br>
   {% if categories %}
-  <label>Assign existing category:
+  <label>Select an existing category:
     <select name="category">
-      <option value="" selected>Select a category</option>
+      <option value="" selected>None</option>
       {% for c in categories or [] %}
-      <option value="{{ c.name }}">{{ c.name }}</option>
+      <option value="{{ c.name }}" {% if c.name in citation.categories %}selected{% endif %}>{{ c.name }}</option>
       {% endfor %}
     </select>
   </label>
   {% endif %}
-  <label>Assign category:
+  <label>Create a new category:
     <input type="text" name="category_new" placeholder="New Category">
   </label>
   <br>
 
   {% if tags %}
-  <label>Assign existing tags:
+  <label>Select existing tags:
     <select name="tags" multiple>
       {% for t in tags or [] %}
-      <option value="{{ t.name }}">{{ t.name }}</option>
+      <option value="{{ t.name }}" {% if t.name in citation.tags %}selected{% endif %}>{{ t.name }}</option>
       {% endfor %}
     </select>
   </label>
   <br>
   {% endif %}
-  <label>Assign tags (comma-separated):
+  <label>Create new tags (comma-separated):
     <input type="text" name="tags_new" placeholder="tag1, tag2">
   </label>
 
