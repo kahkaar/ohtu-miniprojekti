@@ -1,6 +1,9 @@
 
 import unittest
+from typing import cast
+from unittest.mock import Mock, patch
 
+import requests
 from flask import Flask
 
 import util
@@ -116,10 +119,6 @@ class TestUtil(unittest.TestCase):
             {"year_from": BadStr(), "year_to": BadStr()})
         self.assertIsNone(parsed["year_from"])
         self.assertIsNone(parsed["year_to"])
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class TestUtilExtensions(unittest.TestCase):
@@ -459,3 +458,214 @@ class TestToCitationVariants(unittest.TestCase):
         self.assertIsNotNone(c)
         self.assertEqual(c.tags, ['tagA', 'tagB'])
         self.assertEqual(c.categories, ['catX'])
+
+
+class TestDOIHelpers(unittest.TestCase):
+    def test__doi_extract_no_match(self):
+        self.assertIsNone(util._doi_extract('no doi here'))
+
+    def test__doi_extract_with_url_and_trailing_dot(self):
+        v = 'https://doi.org/10.1234/abcd.'
+        self.assertEqual(util._doi_extract(v), '10.1234/abcd')
+
+    def test__doi_first_of_keys_list_and_scalar(self):
+        d = {'a': ['x'], 'b': 'y'}
+        self.assertEqual(util._doi_first_of_keys(d, ('a', 'b')), 'x')
+        d2 = {'a': [], 'b': 'y'}
+        self.assertEqual(util._doi_first_of_keys(d2, ('a', 'b')), 'y')
+        d3 = {}
+        self.assertIsNone(util._doi_first_of_keys(d3, ('a', 'b')))
+
+    def test__doi_parse_authors_variants(self):
+        authors = [
+            {'given': 'John', 'family': 'Doe'},
+            {'literal': 'SingleName'},
+            {'family': 'Smith'},
+            'Anonymous'
+        ]
+        self.assertEqual(util._doi_parse_authors(authors),
+                         'John Doe; SingleName; Smith; Anonymous')
+        self.assertIsNone(util._doi_parse_authors('notalist'))
+
+    def test__doi_parse_authors_empty_list(self):
+        # empty list should return None
+        self.assertIsNone(util._doi_parse_authors([]))
+
+    def test__doi_parse_authors_family_only(self):
+        # dict with only family should return the family name
+        authors = [{'family': 'OnlyFamily'}]
+        self.assertEqual(util._doi_parse_authors(authors), 'OnlyFamily')
+
+    def test__doi_parse_authors_plain_string(self):
+        # single-string author should be returned as-is
+        authors = ["JustName"]
+        result = util._doi_parse_authors(authors)
+        self.assertEqual(result, "JustName")
+
+    def test__doi_parse_authors_with_non_dict_or_str(self):
+        # single-string author should be returned as-is
+        authors = ["JustName", 1]
+        result = util._doi_parse_authors(authors)
+        self.assertEqual(result, "JustName")
+
+    def test__doi_parse_authors_exhaustive(self):
+        # ensure every inner branch is exercised
+        cases = [
+            ({'given': 'G', 'family': 'F'}, 'G F'),
+            ({'literal': 'L'}, 'L'),
+            ({'family': 'OnlyF'}, 'OnlyF'),
+            ({'given': 'OnlyG'}, None),  # given only -> nothing appended
+            ('PlainString', 'PlainString'),
+        ]
+
+        for inp, expected in cases:
+            if isinstance(inp, str):
+                res = util._doi_parse_authors([inp])
+            else:
+                res = util._doi_parse_authors([inp])
+
+            if expected is None:
+                self.assertIsNone(res)
+            else:
+                self.assertEqual(res, expected)
+
+    def test__doi_parse_authors_mixed_and_tuple(self):
+        # mixed list: dict then string should include both parts
+        authors = [{'given': 'A', 'family': 'B'}, 'Cname']
+        self.assertEqual(util._doi_parse_authors(authors), 'A B; Cname')
+
+        # tuple input should also be accepted and string branch hit
+        authors_tuple = ({'family': 'Solo'}, 'Plain')
+        self.assertEqual(util._doi_parse_authors(authors_tuple), 'Solo; Plain')
+
+    def test__doi_parse_authors_all_combinations(self):
+        # Exhaustively test presence/absence of given/family/literal
+        keys = ('given', 'family', 'literal')
+        for given_present in (False, True):
+            for family_present in (False, True):
+                for literal_present in (False, True):
+                    d = {}
+                    if given_present:
+                        d['given'] = 'G'
+                    if family_present:
+                        d['family'] = 'F'
+                    if literal_present:
+                        d['literal'] = 'L'
+
+                    # Expected selection logic: given+family > literal > family > None
+                    if given_present and family_present:
+                        expected = 'G F'
+                    elif literal_present:
+                        expected = 'L'
+                    elif family_present:
+                        expected = 'F'
+                    else:
+                        expected = None
+
+                    res = util._doi_parse_authors([d])
+                    if expected is None:
+                        self.assertIsNone(res)
+                    else:
+                        self.assertEqual(res, expected)
+
+    def test__doi_parse_year_variants(self):
+        self.assertEqual(util._doi_parse_year(
+            {'issued': {'date-parts': [[2020, 1, 2]]}}), 2020)
+        # non-int first element
+        self.assertIsNone(util._doi_parse_year(
+            {'issued': {'date-parts': [['x']]}}))
+        # missing issued
+        self.assertIsNone(util._doi_parse_year({}))
+        # issued not a dict -> should return None
+        self.assertIsNone(util._doi_parse_year(
+            {'issued': ['not', 'a', 'dict']}))
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_success(self, mock_get):
+        mock_resp = Mock()
+        mock_resp.raise_for_status = Mock()
+        mock_resp.json = Mock(return_value={
+            'title': ['A Great Paper'],
+            'author': [
+                {'given': 'Alice', 'family': 'Adams'},
+                {'literal': 'Bob B.'}
+            ],
+            'issued': {'date-parts': [[2010]]},
+            'container-title': ['Journal of Testing'],
+            'publisher': 'TestPub',
+            'page': '12-34',
+            'volume': 7,
+            'issue': '2'
+        })
+        mock_get.return_value = mock_resp
+        fields = util.fetch_doi_metadata('https://doi.org/10.1000/testdoi')
+        self.assertIsNotNone(fields)
+        self.assertIsInstance(fields, dict)
+        fields = cast(dict, fields)
+        self.assertEqual(fields.get('title'), 'A Great Paper')
+        self.assertEqual(fields.get('author'), 'Alice Adams; Bob B.')
+        self.assertEqual(fields.get('year'), 2010)
+        self.assertEqual(fields.get('journaltitle'), 'Journal of Testing')
+        self.assertEqual(fields.get('publisher'), 'TestPub')
+        self.assertEqual(fields.get('pages'), '12-34')
+        self.assertEqual(fields.get('volume'), '7')
+        self.assertEqual(fields.get('number'), '2')
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_request_exception(self, mock_get):
+        mock_get.side_effect = requests.RequestException('boom')
+        self.assertIsNone(util.fetch_doi_metadata('10.1000/doesntmatter'))
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_invalid_json(self, mock_get):
+        mock_resp = Mock()
+        mock_resp.raise_for_status = Mock()
+        mock_resp.json = Mock(side_effect=ValueError('bad json'))
+        mock_get.return_value = mock_resp
+        self.assertIsNone(util.fetch_doi_metadata('10.1000/x'))
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_non_dict_json(self, mock_get):
+        mock_resp = Mock()
+        mock_resp.raise_for_status = Mock()
+        mock_resp.json = Mock(return_value=['not', 'a', 'dict'])
+        mock_get.return_value = mock_resp
+        self.assertIsNone(util.fetch_doi_metadata('10.1000/x'))
+
+    def test_fetch_doi_metadata_empty_input(self):
+        self.assertIsNone(util.fetch_doi_metadata(''))
+        self.assertIsNone(util.fetch_doi_metadata(None))
+        # input with no DOI-like substring should also return None
+        self.assertIsNone(util.fetch_doi_metadata('no doi here'))
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_title_string_and_authors_key(self, mock_get):
+        mock_resp = Mock()
+        mock_resp.raise_for_status = Mock()
+        mock_resp.json = Mock(return_value={
+            'title': 'Single title string',
+            'authors': ['Solo Author'],
+            'issued': {'date-parts': [[2001]]}
+        })
+        mock_get.return_value = mock_resp
+
+        fields = util.fetch_doi_metadata('10.2000/titlecase')
+        self.assertIsNotNone(fields)
+        self.assertIsInstance(fields, dict)
+        fields = cast(dict, fields)
+        self.assertEqual(fields.get('title'), 'Single title string')
+        self.assertEqual(fields.get('author'), 'Solo Author')
+
+    @patch('util.requests.get')
+    def test_fetch_doi_metadata_empty_dict_returns_none(self, mock_get):
+        mock_resp = Mock()
+        mock_resp.raise_for_status = Mock()
+        mock_resp.json = Mock(return_value={})
+        mock_get.return_value = mock_resp
+
+        # empty dict -> no recognized fields -> should return None
+        self.assertIsNone(util.fetch_doi_metadata('10.3000/empty'))
+
+
+if __name__ == "__main__":
+    unittest.main()
