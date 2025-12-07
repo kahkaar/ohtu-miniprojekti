@@ -56,6 +56,18 @@ def post(citation_id):
     if tag_names:
         tags = get_or_create_tags(tag_names)
 
+    year = posted_fields.get("year")
+    if year:
+        try:
+            year_int = int(year)
+            if year_int < 0 or year_int > 9999:
+                raise ValueError
+
+            posted_fields["year"] = year_int
+
+        except (ValueError, TypeError):
+            flash("Year must be a number between 0 and 9999.", "error")
+            return redirect(url_for("edit_citation", citation_id=citation_id))
     try:
         update_citation_with_metadata(
             citation_id=citation_id,

@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from config import db
 from repositories.category_repository import (
@@ -178,6 +179,9 @@ def create_citation(entry_type_id, citation_key, fields):
         "citation_key": citation_key,
         "fields": serialized,
     }
+    try:
+        db.session.execute(sql, params)
+        db.session.commit()
 
     result = db.session.execute(sql, params).fetchone()
     db.session.commit()

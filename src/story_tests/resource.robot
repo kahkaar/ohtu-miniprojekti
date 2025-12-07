@@ -70,8 +70,3 @@ Add Example Book Citation
     Input Text  year  2020
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!
-
-Go To Search Page
-    Go To  ${SEARCH_URL}
-    Title Should Be  Advanced Search
-
