@@ -1,7 +1,6 @@
 import json
 
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
 
 from config import db
 from repositories.category_repository import (
@@ -179,9 +178,6 @@ def create_citation(entry_type_id, citation_key, fields):
         "citation_key": citation_key,
         "fields": serialized,
     }
-    try:
-        db.session.execute(sql, params)
-        db.session.commit()
 
     result = db.session.execute(sql, params).fetchone()
     db.session.commit()
@@ -200,6 +196,11 @@ def create_citation_with_metadata(
         tags=None
 ):
     """Creates a citation along with its associated category and tags."""
+
+    existing = get_citation_by_key(citation_key)
+    if existing:
+        raise ValueError(f"Citation key '{citation_key}' already exists.")
+
     citation = create_citation(
         entry_type_id=entry_type.id,
         citation_key=citation_key,

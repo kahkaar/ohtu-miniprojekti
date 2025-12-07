@@ -481,7 +481,9 @@ class TestCitationRepository(unittest.TestCase):
     @patch("repositories.citation_repository.create_citation")
     @patch("repositories.citation_repository.assign_tags_to_citation")
     @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_create_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_create):
+    @patch("repositories.citation_repository.get_citation_by_key")
+    def test_create_citation_with_metadata_assigns_category_and_tags(self, mock_get_by_key, mock_assign_category, mock_assign_tags, mock_create):
+        mock_get_by_key.return_value = None
         mock_create.return_value = SimpleNamespace(id=99)
 
         entry_type = SimpleNamespace(id=2)
@@ -497,7 +499,9 @@ class TestCitationRepository(unittest.TestCase):
         self.assertIsNotNone(out)
 
     @patch("repositories.citation_repository.create_citation")
-    def test_create_citation_with_metadata_raises_when_create_fails(self, mock_create):
+    @patch("repositories.citation_repository.get_citation_by_key")
+    def test_create_citation_with_metadata_raises_when_create_fails(self, mock_get_by_key, mock_create):
+        mock_get_by_key.return_value = None
         mock_create.return_value = None
         entry_type = SimpleNamespace(id=2)
 
