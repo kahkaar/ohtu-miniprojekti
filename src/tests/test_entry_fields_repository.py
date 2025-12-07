@@ -33,7 +33,6 @@ class TestEntryFieldsRepository(unittest.TestCase):
 
     @patch("repositories.entry_fields_repository.db")
     def test_get_default_fields_returns_list(self, mock_db):
-        rows = [MagicMock(name='abstract'), MagicMock(name='title')]
         rows = [type('R', (), {'name': 'abstract'})(),
                 type('R', (), {'name': 'title'})()]
         mock_result = MagicMock()
