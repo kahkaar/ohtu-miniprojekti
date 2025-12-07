@@ -30,6 +30,127 @@
         </div>
         {% endfor %}
 
+        {% if default_fields %}
+        <div class="form-section">
+          <h4>Additional Fields</h4>
+          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be saved as global defaults)</p>
+
+          <div id="extra_fields_container">
+            <!-- Existing extra rows will be appended here -->
+          </div>
+
+          <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
+
+          <!-- Template for a single extra field row -->
+          <template id="extra_row_template">
+            <div class="extra-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Field:</label>
+                <select class="extra-select form-select">
+                  <option value="">-- select field --</option>
+                  {% for df in default_fields %}
+                  <option value="{{ df }}">{{ df.replace('_', ' ').capitalize() }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Value:</label>
+                <input type="text" class="extra-input form-input" name="additional_field_value" placeholder="Value for field">
+              </div>
+              <div style="display: flex; align-items: flex-end;">
+                <button type="button" class="remove-extra btn btn-secondary" style="padding: 12px 20px;">Remove</button>
+              </div>
+            </div>
+          </template>
+
+          <script>
+            (function () {
+              var container = document.getElementById('extra_fields_container');
+              var tpl = document.getElementById('extra_row_template');
+              var addBtn = document.getElementById('add_extra');
+
+              function updateDisabledOptions() {
+                // Collect selected values
+                var selects = container.querySelectorAll('.extra-select');
+                var chosen = {};
+                selects.forEach(function (s) {
+                  if (s.value) chosen[s.value] = true;
+                });
+
+                // For every select, disable options that are chosen by others
+                selects.forEach(function (s) {
+                  var options = s.options;
+                  for (var i = 0; i < options.length; i++) {
+                    var opt = options[i];
+                    if (opt.value === '') { opt.disabled = false; continue; }
+                    // allow the currently selected option on this select
+                    if (s.value === opt.value) {
+                      opt.disabled = false;
+                      continue;
+                    }
+                    opt.disabled = !!chosen[opt.value];
+                  }
+                });
+              }
+
+              function bindRow(row) {
+                var select = row.querySelector('.extra-select');
+                var input = row.querySelector('.extra-input');
+                var remove = row.querySelector('.remove-extra');
+
+                function onChange() {
+                  var field = select.value || '';
+                  input.name = field || 'additional_field_value';
+                  updateDisabledOptions();
+                }
+
+                select.addEventListener('change', onChange);
+                remove.addEventListener('click', function () {
+                  row.remove();
+                  updateDisabledOptions();
+                });
+              }
+
+              addBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var clone = tpl.content.firstElementChild.cloneNode(true);
+                container.appendChild(clone);
+                bindRow(clone);
+                updateDisabledOptions();
+              });
+
+              // Prepopulate extra fields with any non-default fields that aren't already rendered
+              (function initExistingExtras() {
+                var existing = {{ citation.fields| tojson }} || {};
+                var defaults = {{ default_fields| tojson }} || [];
+                for (var k in existing) {
+                  if (!existing.hasOwnProperty(k)) continue;
+                  // skip default fields and fields that are already present as inputs in the form
+                  if (defaults.indexOf(k) !== -1) continue;
+                  // also skip keys if an input with that name already exists
+                  if (document.querySelector('input[name="' + k + '"]')) continue;
+
+                  // create a row and set values
+                  addBtn.click();
+                  var last = container.lastElementChild;
+                  var sel = last.querySelector('.extra-select');
+                  var inp = last.querySelector('.extra-input');
+                  sel.value = k;
+                  sel.dispatchEvent(new Event('change'));
+                  inp.value = existing[k];
+                  inp.name = k;
+                }
+              }) ();
+
+              // initialize with one row if there are no existing extras
+              if (!container.children.length) {
+                addBtn.click();
+              }
+            }) ();
+          </script>
+        </div>
+        {% endif %}
+
         <div class="form-section">
           <h4>Categories & Tags</h4>
           

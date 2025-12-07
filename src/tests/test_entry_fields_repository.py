@@ -31,6 +31,17 @@ class TestEntryFieldsRepository(unittest.TestCase):
         fields = repo.get_entry_fields(999)
         self.assertEqual(fields, [])
 
+    @patch("repositories.entry_fields_repository.db")
+    def test_get_default_fields_returns_list(self, mock_db):
+        rows = [type('R', (), {'name': 'abstract'})(),
+                type('R', (), {'name': 'title'})()]
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = rows
+        mock_db.session.execute.return_value = mock_result
+
+        fields = repo.get_default_fields()
+        self.assertEqual(fields, ['abstract', 'title'])
+
 
 if __name__ == "__main__":
     unittest.main()
