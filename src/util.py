@@ -246,8 +246,7 @@ def to_citation(row):
         if isinstance(val, str):
             try:
                 parsed = json.loads(val)
-                if isinstance(parsed, (list, tuple)):
-                    return list(parsed)
+                return list(parsed)
             except json.JSONDecodeError:
                 pass
             return [p.strip() for p in val.split(",") if p.strip()]

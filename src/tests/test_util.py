@@ -383,3 +383,79 @@ class TestToCitationVariants(unittest.TestCase):
 
         self.assertEqual(c.tags, [])
         self.assertEqual(c.categories, [])
+
+    def test_to_citation_with_json_array_string_fields_returns_original_string(self):
+        # fields is a JSON array string; parse yields a list (not dict), so _parse_fields returns original string
+        row = type("R", (), {
+            "id": 16,
+            "entry_type": "misc",
+            "citation_key": "k16",
+            "fields": '["x","y"]',
+            "tags": None,
+            "categories": None,
+        })
+
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.fields, '["x","y"]')
+
+    def test_to_citation_with_list_fields_returns_list(self):
+        # fields provided as a list should be returned as-is
+        row = type("R", (), {
+            "id": 17,
+            "entry_type": "misc",
+            "citation_key": "k17",
+            "fields": ['f1', 'f2'],
+            "tags": None,
+            "categories": None,
+        })
+
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.fields, ['f1', 'f2'])
+
+    def test_to_citation_handles_missing_tags_and_categories_attributes(self):
+        # row has no tags or categories attributes at all
+        row = type("R", (), {
+            "id": 18,
+            "entry_type": "book",
+            "citation_key": "k18",
+            "fields": {},
+        })
+
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.tags, [])
+        self.assertEqual(c.categories, [])
+
+    def test_to_citation_with_tuple_tags_and_categories(self):
+        # tags and categories provided as tuple should be converted to lists
+        row = type("R", (), {
+            "id": 19,
+            "entry_type": "misc",
+            "citation_key": "k19",
+            "fields": {},
+            "tags": ('ta', 'tb'),
+            "categories": ('ca',),
+        })
+
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.tags, ['ta', 'tb'])
+        self.assertEqual(c.categories, ['ca'])
+
+    def test_to_citation_json_array_string_tags_triggers_parsed_list_branch(self):
+        # Ensure that when tags/categories are JSON array strings, _to_list uses parsed list
+        row = type("R", (), {
+            "id": 20,
+            "entry_type": "misc",
+            "citation_key": "k20",
+            "fields": {},
+            "tags": '["tagA","tagB"]',
+            "categories": '["catX"]',
+        })
+
+        c = util.to_citation(row)
+        self.assertIsNotNone(c)
+        self.assertEqual(c.tags, ['tagA', 'tagB'])
+        self.assertEqual(c.categories, ['catX'])
