@@ -103,9 +103,9 @@
 
         // Prepopulate extra fields with any non-default fields that aren't already rendered
         (function initExistingExtras() {
-          var existing = {{ citation.fields| tojson
+        var existing = {{ citation.fields| tojson
         }} || {};
-      var defaults = {{ default_fields| tojson }} || [];
+        var defaults = {{ default_fields| tojson }} || [];
       for (var k in existing) {
         if (!existing.hasOwnProperty(k)) continue;
         // skip default fields and fields that are already present as inputs in the form
