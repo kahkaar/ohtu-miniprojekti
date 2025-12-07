@@ -71,7 +71,7 @@ Edit Category Replace Old Value
     Save Changes
     Go To Citations Page
     Wait Until Page Contains    History
-    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    Science
+    Wait Until Page Does Not Contain    Science
     Close If Open
 
 Edit Tags Replace Old Values
@@ -80,13 +80,14 @@ Edit Tags Replace Old Values
     Go To Citations Page
     Click Button    Edit
         Wait Until Page Contains    Edit Citation
+    Unselect All From List    tags
     Input Text    tags_new    gamma,delta
     Save Changes
     Go To Citations Page
     Wait Until Page Contains    gamma
     Wait Until Page Contains    delta
-    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    alpha
-    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    beta
+    Wait Until Page Does Not Contain    alpha
+    Wait Until Page Does Not Contain    beta
     Close If Open
 
 

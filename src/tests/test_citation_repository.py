@@ -508,10 +508,11 @@ class TestCitationRepository(unittest.TestCase):
         with self.assertRaises(ValueError):
             repo.create_citation_with_metadata(entry_type, "kmeta", {})
 
+    @patch("repositories.citation_repository.db")
     @patch("repositories.citation_repository.update_citation")
     @patch("repositories.citation_repository.assign_tags_to_citation")
     @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_update_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_update):
+    def test_update_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_update, mock_db):
         citation_id = 77
 
         category = SimpleNamespace(id=5)
@@ -530,10 +531,11 @@ class TestCitationRepository(unittest.TestCase):
         mock_assign_category.assert_called_once_with(citation_id, 5)
         mock_assign_tags.assert_called_once_with(citation_id, tags)
 
+    @patch("repositories.citation_repository.db")
     @patch("repositories.citation_repository.update_citation")
     @patch("repositories.citation_repository.assign_tags_to_citation")
     @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_update_citation_with_metadata_assigns_category_only_when_tags_not_list(self, mock_assign_category, mock_assign_tags, mock_update):
+    def test_update_citation_with_metadata_assigns_category_only_when_tags_not_list(self, mock_assign_category, mock_assign_tags, mock_update, mock_db):
         citation_id = 88
 
         category = SimpleNamespace(id=6)

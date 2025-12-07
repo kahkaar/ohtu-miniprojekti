@@ -276,10 +276,30 @@ def update_citation_with_metadata(
         citation_key=citation_key,
         fields=fields
     )
+
     if category:
+        db.session.execute(
+            text(
+                """
+                DELETE FROM citations_to_categories
+                WHERE citation_id = :citation_id
+                """
+            ),
+            {"citation_id": citation_id}
+        )
+
         assign_category_to_citation(citation_id, category.id)
 
     if tags and isinstance(tags, list):
+        db.session.execute(
+            text(
+                """DELETE FROM citations_to_tags
+                WHERE citation_id = :citation_id
+                """
+            ),
+            {"citation_id": citation_id}
+        )
+
         assign_tags_to_citation(citation_id, tags)
 
 
