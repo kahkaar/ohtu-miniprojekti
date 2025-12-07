@@ -1,10 +1,16 @@
+import json
+
 from flask import session
+
+from entities.category import Category, Tag
+from entities.citation import Citation
+from entities.entry_type import EntryType
 
 
 def sanitize(value):
     """
-    Sanitizes user input by stripping leading/trailing
-    whitespace and collapsing internal whitespace.
+    Sanitizes user input by stripping leading/trailing whitespace
+    and collapsing internal whitespace.
     """
     if isinstance(value, str):
         return " ".join(value.strip().split())
@@ -28,18 +34,39 @@ def collapse_whitespace(value):
     return value
 
 
-def get_posted_fields(form):
+def collapse_to_hyphens(value):
+    """
+    Replaces spaces with hyphens.
+    Used for certain identifiers.
+    """
+    if isinstance(value, str):
+        return "-".join(value.strip().split())
+    return value
+
+
+def extract_fields(form):
     """Extracts and sanitizes posted fields from a form."""
-    posted_fields = {}
+
+    disallowed_keys = {
+        "citation_key",
+        "entry_type",
+        "category",
+        "category_new",
+        "tags",
+        "tags_new",
+    }
+
+    fields = {}
     for k, v in form.items():
-        if k in ("citation_key", "entry_type"):
+        # Citation key and entry type are handled separately.
+        if k in disallowed_keys:
             continue
 
         sanitized_value = sanitize(v)
         if validate(sanitized_value):
-            posted_fields[k] = sanitized_value
+            fields[k] = sanitized_value
 
-    return posted_fields
+    return fields
 
 
 def set_session(key, value):
@@ -52,8 +79,15 @@ def get_session(key, default=None):
     return session.get(key, default)
 
 
+def parse_entry_type(entry_type_data):
+    """Parses entry type data from session into an EntryType object."""
+    if not entry_type_data:
+        return None
+    return EntryType(entry_type_data.get("id"), entry_type_data.get("name"))
+
+
 def clear_session(key=None):
-    """Clears a value from the session."""
+    """Clears a value from the session, or the entire session if no key is provided."""
     if not key:
         return session.clear()
     session.pop(key, None)
@@ -110,3 +144,134 @@ def parse_search_queries(args):
         "sort_by": sort_by,
         "direction": direction,
     }
+
+
+def extract_category(form):
+    """Extracts and creates the category from the request form data if needed."""
+
+    new_category = form.get("category_new")
+    if new_category:
+        sanitized = sanitize(new_category)
+        if sanitized:
+            return sanitized
+
+    # Category can have spaces, so just sanitize.
+    category = form.get("category")
+    sanitized = sanitize(category)
+    if not sanitized:
+        return None
+
+    return sanitized
+
+
+def extract_tags(form):
+    """Extracts and creates the tags from the request form data if needed."""
+
+    tag_form_list = form.getlist("tags") or []
+    sanitized = []
+    for tag_name in tag_form_list:
+        # Tags can have spaces, so just sanitize.
+        tag = sanitize(tag_name)
+        if tag:
+            sanitized.append(tag)
+
+    tags_new = form.get("tags_new")
+    if tags_new:
+        parts = [sanitize(p) for p in tags_new.split(",")]
+        for p in parts:
+            if p:
+                sanitized.append(p)
+
+    seen = set()
+    unique = []
+    for t in sanitized:
+        if t not in seen:
+            seen.add(t)
+            unique.append(t)
+
+    return unique
+
+
+def extract_citation_key(form):
+    """Extracts the citation key from the request form data."""
+    citation_key = form.get("citation_key", "")
+
+    # Citation keys cannot have spaces, so sanitize and collapse to hyphens.
+    sanitized = sanitize(citation_key)
+    collapsed = collapse_to_hyphens(sanitized)
+    if not collapsed:
+        return None
+
+    return collapsed
+
+
+def to_category(row):
+    """Converts a database row to a Category object."""
+    return Category(
+        category_id=row.id,
+        name=row.name,
+    )
+
+
+def to_tag(row):
+    """Converts a database row to a Tag object."""
+    return Tag(
+        tag_id=row.id,
+        name=row.name,
+    )
+
+
+def to_citation(row):
+    """Converts a database row to a Citation object."""
+    if not row:
+        return None
+
+    def _parse_fields(val):
+        if not val:
+            return {}
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                return {}
+        return val
+
+    def _to_list(val):
+        if not val:
+            return []
+        if isinstance(val, (list, tuple)):
+            return list(val)
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, (list, tuple)):
+                    return list(parsed)
+            except json.JSONDecodeError:
+                pass
+            return [p.strip() for p in val.split(",") if p.strip()]
+        try:
+            return list(val)
+        except TypeError:
+            return []
+
+    fields = _parse_fields(row.fields)
+    tags = _to_list(getattr(row, "tags", None))
+    categories = _to_list(getattr(row, "categories", None))
+
+    return Citation(
+        row.id,
+        row.entry_type,
+        row.citation_key,
+        fields,
+        metadata={"tags": tags, "categories": categories},
+    )
+
+
+def to_entry_type(row):
+    """Converts a database row to an EntryType object."""
+    return EntryType(
+        entry_type_id=row.id,
+        name=row.name,
+    )

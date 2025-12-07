@@ -11,7 +11,7 @@
 <h2>Create a New Citation</h2>
 <p>Select an entry type and fill in the citation details below.</p>
 
-<form method="post">
+<form action="{{ url_for('select_entry_type') }}" method="post">
   <label>Entry Type:
     <select name="entry_type" required>
       <option value="" disabled selected>Select a citation type</option>
@@ -40,6 +40,34 @@
     <input type="text" name="{{ f }}" placeholder="Enter {{ f.replace('_', ' ') }}">
   </label>
   {% endfor %}
+
+  {% if categories %}
+  <label>Select an existing category:
+    <select name="category">
+      <option value="" selected>Select a category</option>
+      {% for c in categories or [] %}
+      <option value="{{ c.name }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Create a new category:
+    <input type="text" name="category_new" placeholder="New Category">
+  </label>
+
+  {% if tags %}
+  <label>Select existing tags:
+    <select name="tags" multiple>
+      {% for t in tags or [] %}
+      <option value="{{ t.name }}">{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Create new tags (comma-separated):
+    <input type="text" name="tags_new" placeholder="tag1, tag2">
+  </label>
+
   <div style="margin-top: 20px;">
     <button type="submit" class="btn-success">Add Citation</button>
   </div>

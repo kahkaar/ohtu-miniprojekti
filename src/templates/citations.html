@@ -15,6 +15,7 @@
 </p>
 {% for c in citations %}
 <div class="citation" id="{{ c.id }}-{{c.citation_key}}">
+  <p>{{ c.show_category_and_tags() }}</p>
   <p><strong>@{{ c.entry_type }}</strong> &mdash; <strong>{{ c.citation_key }}</strong></p>
   <p style="margin-top: 8px;">{{ c.to_human_readable() }}</p>
   <div style="margin-top: 12px;">
@@ -28,8 +29,43 @@
       <button type="submit" class="btn-secondary">📄 View BibTeX</button>
     </form>
   </div>
+  <label>
+    <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
+    Select {{ c.citation_key }} for export
+  </label>
 </div>
 {% endfor %}
+<<<<<<< HEAD
+=======
+
+<h1>Export selected citations as .bib file</h1>
+<form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
+  <button type="button" onclick="export_bibtex()">Export</button>
+</form>
+
+<script>
+  function export_bibtex() {
+    const form = document.forms['exportform'];
+    const selectedIds = [];
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function (checkbox) {
+      selectedIds.push(checkbox.id);
+    });
+    if (selectedIds.length === 0) {
+      alert('Please select at least one citation to export.');
+      return;
+    }
+    while (form.lastChild && form.lastChild.name === 'citation_ids') {
+      form.removeChild(form.lastChild);
+    }
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'citation_ids';
+    input.value = selectedIds;
+    form.appendChild(input);
+    form.submit();
+  }
+</script>
+>>>>>>> origin/dev
 {% else %}
 <div style="text-align: center; padding: 60px 20px; background: #0f172a; border-radius: 8px; margin-top: 30px; border: 1px solid #334155;">
   <h2 style="color: #64748b;">No saved citations yet</h2>

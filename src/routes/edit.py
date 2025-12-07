@@ -2,56 +2,79 @@ from flask import flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 import util
-from repositories.citation_repository import get_citation_by_id, update_citation
+from repositories.category_repository import (
+    get_categories,
+    get_or_create_category,
+    get_or_create_tags,
+    get_tags,
+)
+from repositories.citation_repository import (
+    get_citation_by_id,
+    update_citation_with_metadata,
+)
 
 
 def get(citation_id):
     """Renders the edit page for a specific citation by its ID"""
     citation = get_citation_by_id(citation_id)
-    return render_template("edit.html", citation=citation)
+    categories = get_categories()
+    tags = get_tags()
+
+    return render_template(
+        "edit.html",
+        citation=citation,
+        categories=categories,
+        tags=tags,
+    )
 
 
 def post(citation_id):
     """Handles the submission of the edit citation form."""
     # pylint: disable=R0801
+
     citation = get_citation_by_id(citation_id)
 
     if not citation:
         flash("Citation not found.", "error")
         return redirect(url_for("citations_view"))
 
-    citation_key = request.form.get("citation_key", "")
-
-    # Collapsing whitespace for citation key only, since it should not contain any spaces.
-    sanitized_citation_key = util.collapse_whitespace(citation_key)
-    if not sanitized_citation_key:
+    citation_key = util.extract_citation_key(request.form)
+    if not citation_key:
         flash("Invalid citation key provided.", "error")
         return redirect(url_for("citations_view"))
 
-    posted_fields = util.get_posted_fields(request.form)
-    # Maybe add a check here to see if fields have actually changed.
+    fields = util.extract_fields(request.form)
+    category_name = util.extract_category(request.form)
+    tag_names = util.extract_tags(request.form)
 
-    if not posted_fields:
-        flash("No fields provided for the citation.", "error")
-        return redirect(url_for("index"))
+    # Convert names to objects (create if not present)
+    category = None
+    tags = None
+    if category_name:
+        category = get_or_create_category(category_name)
 
-    year = posted_fields.get("year")
+    if tag_names:
+        tags = get_or_create_tags(tag_names)
+
+    year = fields.get("year")
     if year:
         try:
             year_int = int(year)
             if year_int < 0 or year_int > 9999:
                 raise ValueError
 
-            posted_fields["year"] = year_int
+            fields["year"] = year_int
 
         except (ValueError, TypeError):
             flash("Year must be a number between 0 and 9999.", "error")
             return redirect(url_for("edit_citation", citation_id=citation_id))
     try:
-        update_citation(
+        update_citation_with_metadata(
             citation_id=citation_id,
-            citation_key=sanitized_citation_key,
-            fields=posted_fields
+            citation_key=citation_key,
+            fields=fields,
+            category=category,
+            tags=tags,
         )
         flash("Citation updated successfully.", "success")
     except (ValueError, TypeError, SQLAlchemyError) as e:
@@ -59,4 +82,4 @@ def post(citation_id):
             f"An error occurred while updating the citation: {str(e)}", "error")
         return redirect(url_for("citations_view"))
 
-    return redirect(url_for("citations_view", _anchor=f"{citation_id}-{sanitized_citation_key}"))
+    return redirect(url_for("citations_view", _anchor=f"{citation_id}-{citation_key}"))

@@ -20,6 +20,34 @@
     <input type="text" name="{{ f }}" value="{{ val }}">
   </label>
   {% endfor %}
+
+  {% if categories %}
+  <label>Select an existing category:
+    <select name="category">
+      <option value="" selected>None</option>
+      {% for c in categories or [] %}
+      <option value="{{ c.name }}" {% if c.name in citation.categories %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Create a new category:
+    <input type="text" name="category_new" placeholder="New Category">
+  </label>
+
+  {% if tags %}
+  <label>Select existing tags:
+    <select name="tags" multiple>
+      {% for t in tags or [] %}
+      <option value="{{ t.name }}" {% if t.name in citation.tags %}selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <label>Create new tags (comma-separated):
+    <input type="text" name="tags_new" placeholder="tag1, tag2">
+  </label>
+
   <div style="margin-top: 20px;">
     <button type="submit" class="btn-success">💾 Save Changes</button>
     <a href="{{ url_for('citations_view') }}" class="btn-link btn-link-secondary">Cancel</a>

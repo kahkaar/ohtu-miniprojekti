@@ -1,9 +1,21 @@
 class Citation:
-    def __init__(self, citation_id, entry_type, citation_key, fields):
+    """Represents a citation entity."""
+
+    def __init__(self, citation_id, entry_type, citation_key, fields, metadata=None):
+        """
+        Initializes a Citation instance.
+        Metadata may include optional `tags` and `categories`.
+        """
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
+
         self._id = citation_id
         self._entry_type = entry_type
         self._citation_key = citation_key
         self._fields = fields
+
+        metadata = metadata or {}
+        self._tags = list(metadata.get("tags") or [])
+        self._categories = list(metadata.get("categories") or [])
 
     @property
     def id(self):
@@ -20,6 +32,14 @@ class Citation:
     @property
     def fields(self):
         return self._fields
+
+    @property
+    def tags(self):
+        return self._tags
+
+    @property
+    def categories(self):
+        return self._categories
 
     def _format_container(self, data):
         """
@@ -105,7 +125,17 @@ class Citation:
             "entry_type": self.entry_type,
             "citation_key": self.citation_key,
             "fields": self.fields,
+            "tags": self.tags,
+            "categories": self.categories,
         }
+
+    def show_category_and_tags(self):
+        """Return a string showing categories and tags."""
+
+        cat_str = ", ".join(
+            self.categories) if self.categories else "No categories"
+        tag_str = ", ".join(self.tags) if self.tags else "No tags"
+        return f"Categories: {cat_str} | Tags: {tag_str}"
 
     def __str__(self):
         return f"@{self.entry_type}{{{self.citation_key}, {self.fields}}}"
