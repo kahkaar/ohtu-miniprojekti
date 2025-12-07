@@ -3,74 +3,320 @@
 {% block title %}Add a new Citation{% endblock %}
 
 {% block body %}
-<h1>Add a new Citation</h1>
-<p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
+<div class="container">
+  <div class="header">
+    <h1>Add a New Citation</h1>
+    <p class="subtitle">or see currently saved citations <a href="{{ url_for('citations_view') }}" class="link-primary">here</a></p>
+  </div>
 
-<h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
-<form action="{{ url_for('select_entry_type') }}" method="post">
-  <label>Entry type:
-    <select name="entry_type" required>
-      <option value="" disabled selected>Select type</option>
-      {% for et in entry_types or [] %}
-      {% if et.id == session.get("entry_type", {}).get("id") %}
-      <option value="{{ et.id }}" selected>{{ et.name }}</option>
-      {% else %}
-      <option value="{{ et.id }}">{{ et.name }}</option>
-      {% endif %}
-      {% endfor %}
-    </select>
-  </label>
-  <button type="submit">Select</button>
-</form>
-<br>
+  <div class="card">
+    <div class="card-header">
+      <h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('select_entry_type') }}" method="post" class="entry-type-form">
+        <div class="form-group">
+          <label class="form-label">Entry type:</label>
+          <div class="select-wrapper">
+            <select name="entry_type" required class="form-select">
+              <option value="" disabled selected>Select type</option>
+              {% for et in entry_types or [] %}
+              {% if et.id == session.get("entry_type", {}).get("id") %}
+              <option value="{{ et.id }}" selected>{{ et.name }}</option>
+              {% else %}
+              <option value="{{ et.id }}">{{ et.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Select</button>
+      </form>
+    </div>
+  </div>
 
-{% if session.get("entry_type") %}
-<form method="post">
-  <h2>Selected entry type: <b>{{ session.get("entry_type").get("name") }}</b></h2>
-  <h3>Fill in the details:</h3>
-  <label>Citation key:
-    <input type="text" name="citation_key" required>
-  </label>
-  {% if fields %}
-  <br>
-  {% for f in fields %}
-  <label>{{ f.replace("_", " ").capitalize() }}:
-    <input type="text" name="{{ f }}">
-  </label>
-  <br>
-  {% endfor %}
+  {% if session.get("entry_type") %}
+  <div class="card mt-3">
+    <div class="card-header">
+      <h2>Selected entry type: <span class="highlight">{{ session.get("entry_type").get("name") }}</span></h2>
+    </div>
+    <div class="card-body">
+      <form method="post" class="citation-form">
+        <h3>Fill in the details:</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Citation key: <span class="required">*</span></label>
+          <input type="text" name="citation_key" required class="form-input">
+        </div>
+
+        {% if fields %}
+        {% for f in fields %}
+        <div class="form-group">
+          <label class="form-label">{{ f.replace("_", " ").capitalize() }}:</label>
+          <input type="text" name="{{ f }}" class="form-input">
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="form-section">
+          <h4>Categories & Tags</h4>
+          
+          {% if categories %}
+          <div class="form-group">
+            <label class="form-label">Select an existing category:</label>
+            <div class="select-wrapper">
+              <select name="category" class="form-select">
+                <option value="" selected>Select a category</option>
+                {% for c in categories or [] %}
+                <option value="{{ c.name }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label class="form-label">Create a new category:</label>
+            <input type="text" name="category_new" placeholder="New Category" class="form-input">
+          </div>
+
+          {% if tags %}
+          <div class="form-group">
+            <label class="form-label">Select existing tags:</label>
+            <div class="select-wrapper">
+              <select name="tags" multiple class="form-select multi-select">
+                {% for t in tags or [] %}
+                <option value="{{ t.name }}">{{ t.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <small class="form-hint">Hold Ctrl/Cmd to select multiple</small>
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label class="form-label">Create new tags (comma-separated):</label>
+            <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Add Citation</button>
+      </form>
+    </div>
+  </div>
   {% endif %}
+</div>
 
-  <br>
-  {% if categories %}
-  <label>Select an existing category:
-    <select name="category">
-      <option value="" selected>Select a category</option>
-      {% for c in categories or [] %}
-      <option value="{{ c.name }}">{{ c.name }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  {% endif %}
-  <label>Create a new category:
-    <input type="text" name="category_new" placeholder="New Category">
-  </label>
-  <br>
-  {% if tags %}
-  <label>Select existing tags:
-    <select name="tags" multiple>
-      {% for t in tags or [] %}
-      <option value="{{ t.name }}">{{ t.name }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  <br>
-  {% endif %}
-  <label>Create new tags (comma-separated):
-    <input type="text" name="tags_new" placeholder="tag1, tag2">
-  </label>
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
 
-  <button type="submit">Add Citation</button>
-</form>
-{% endif %}
+  .header {
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: #718096;
+  }
+
+  .link-primary {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .link-primary:hover {
+    color: #2c5282;
+    text-decoration: underline;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 25px;
+  }
+
+  .card-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .card-header .highlight {
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .card-body {
+    padding: 25px;
+  }
+
+  .mt-3 {
+    margin-top: 20px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 20px;
+    margin-top: 0;
+  }
+
+  h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 15px;
+    margin-top: 0;
+  }
+
+  .form-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px solid #e2e8f0;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .required {
+    color: #e53e3e;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .select-wrapper {
+    position: relative;
+  }
+
+  .form-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .multi-select {
+    min-height: 100px;
+  }
+
+  .form-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #a0aec0;
+    font-style: italic;
+  }
+
+  .btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+  }
+
+  .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+  }
+
+  .entry-type-form,
+  .citation-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 15px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+</style>
 {% endblock %}
