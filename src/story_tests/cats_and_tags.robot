@@ -61,6 +61,34 @@ Edit Category And Tags Of Citation
     Verify Citation On Citations Page    newb
     Close If Open
 
+Edit Category Replace Old Value
+    Open Clean Browser And Reset
+    Create Article Citation    cat-change-2025    Zoe Historian    Journal of Changes    Changing Category    2025    Science
+    Go To Citations Page
+    Click Button    Edit
+        Wait Until Page Contains    Edit Citation
+    Input Text    category_new    History
+    Save Changes
+    Go To Citations Page
+    Wait Until Page Contains    History
+    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    Science
+    Close If Open
+
+Edit Tags Replace Old Values
+    Open Clean Browser And Reset
+    Create Article Citation    tags-change-2025    Yan Tagger    Journal of Tags    Changing Tags    2025    ${NONE}    alpha,beta
+    Go To Citations Page
+    Click Button    Edit
+        Wait Until Page Contains    Edit Citation
+    Input Text    tags_new    gamma,delta
+    Save Changes
+    Go To Citations Page
+    Wait Until Page Contains    gamma
+    Wait Until Page Contains    delta
+    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    alpha
+    Run Keyword And Expect Error    *    Wait Until Page Does Not Contain    beta
+    Close If Open
+
 
 *** Keywords ***
 Open Clean Browser And Reset
