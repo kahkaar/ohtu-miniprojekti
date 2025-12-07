@@ -18,7 +18,7 @@ def get():
 
     return render_template("index.html", entry_types=entry_types, fields=entry_fields)
 
-
+# pylint: disable=R0911
 def post():
     """Handles the submission of the main index form to create a new citation."""
     # pylint: disable=R0801
@@ -55,6 +55,19 @@ def post():
     if not posted_fields:
         flash("No fields provided for the citation.", "error")
         return redirect(url_for("index"))
+
+    year = posted_fields.get("year")
+    if year:
+        try:
+            year_int = int(year)
+            if year_int < 0 or year_int > 9999:
+                raise ValueError
+
+            posted_fields["year"] = year_int
+
+        except (ValueError, TypeError):
+            flash("Year must be a number between 0 and 9999.", "error")
+            return redirect(url_for("index"))
 
     try:
         create_citation(entry_type.get("id"),
