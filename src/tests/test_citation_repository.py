@@ -3,7 +3,10 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 import repositories.citation_repository as repo
+import repositories.citation_repository as citation_repository
 
 
 class TestCitationRepository(unittest.TestCase):
@@ -507,6 +510,33 @@ class TestCitationRepository(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             repo.create_citation_with_metadata(entry_type, "kmeta", {})
+
+    @patch("repositories.citation_repository.get_citation_by_key")
+    def test_create_citation_with_metadata_raises_when_key_exists(self, mock_get_by_key):
+        # simulate existing citation with same key -> should raise
+        mock_get_by_key.return_value = SimpleNamespace(id=123)
+        entry_type = SimpleNamespace(id=3)
+
+        with self.assertRaises(ValueError):
+            repo.create_citation_with_metadata(entry_type, "dup-key", {})
+
+    @patch("repositories.citation_repository.create_citation")
+    @patch("repositories.citation_repository.assign_tags_to_citation")
+    @patch("repositories.citation_repository.assign_category_to_citation")
+    @patch("repositories.citation_repository.get_citation_by_key")
+    def test_create_citation_with_metadata_ignores_tags_when_not_list(self, mock_get_by_key, mock_assign_category, mock_assign_tags, mock_create):
+        # get_citation_by_key returns None, create_citation returns an object
+        mock_get_by_key.return_value = None
+        mock_create.return_value = SimpleNamespace(id=9)
+
+        # call with tags that are not a list and no category -> neither assign fn should be called
+        out = repo.create_citation_with_metadata(SimpleNamespace(
+            id=4), "ck2", {"b": 2}, category=None, tags='not-a-list')
+
+        mock_create.assert_called_once()
+        mock_assign_category.assert_not_called()
+        mock_assign_tags.assert_not_called()
+        self.assertIsNotNone(out)
 
     @patch("repositories.citation_repository.db")
     @patch("repositories.citation_repository.update_citation")
