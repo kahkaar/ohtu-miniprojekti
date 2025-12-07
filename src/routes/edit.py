@@ -12,6 +12,7 @@ from repositories.citation_repository import (
     get_citation_by_id,
     update_citation_with_metadata,
 )
+from repositories.entry_fields_repository import get_default_fields
 
 
 def get(citation_id):
@@ -19,12 +20,14 @@ def get(citation_id):
     citation = get_citation_by_id(citation_id)
     categories = get_categories()
     tags = get_tags()
+    default_fields = get_default_fields()
 
     return render_template(
         "edit.html",
         citation=citation,
         categories=categories,
         tags=tags,
+        default_fields=default_fields,
     )
 
 

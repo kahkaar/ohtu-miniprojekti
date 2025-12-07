@@ -9,7 +9,7 @@ from repositories.category_repository import (
     get_tags,
 )
 from repositories.citation_repository import create_citation_with_metadata
-from repositories.entry_fields_repository import get_entry_fields
+from repositories.entry_fields_repository import get_default_fields, get_entry_fields
 from repositories.entry_type_repository import get_entry_types
 
 
@@ -26,6 +26,7 @@ def get():
 
     categories = get_categories()
     tags = get_tags()
+    default_fields = get_default_fields()
 
     return render_template(
         "index.html",
@@ -33,9 +34,12 @@ def get():
         fields=entry_fields,
         categories=categories,
         tags=tags,
+        default_fields=default_fields,
     )
 
 # pylint: disable=R0911
+
+
 def post():
     """Handles the submission of the main index form to create a new citation."""
     # pylint: disable=R0801
@@ -53,6 +57,8 @@ def post():
         flash("Invalid citation key provided.", "error")
         return redirect(url_for("index"))
 
+    # Extract posted fields. Dynamic extra fields (created by JS) will appear
+    # as regular form keys and are picked up by extract_fields.
     fields = util.extract_fields(request.form)
     category_name = util.extract_category(request.form)
     tag_names = util.extract_tags(request.form)
