@@ -24,3 +24,22 @@ def get_entry_fields(entry_type_id):
         return []
 
     return [r.name for r in result]
+
+
+def get_default_fields():
+    """Returns all available default field names from the database."""
+
+    sql = text(
+        """
+        SELECT name
+        FROM default_fields
+        ORDER BY name
+        """
+    )
+
+    result = db.session.execute(sql).fetchall()
+
+    if not result:
+        return []
+
+    return [r.name for r in result]
