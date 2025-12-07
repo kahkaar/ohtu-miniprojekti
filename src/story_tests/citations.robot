@@ -41,6 +41,7 @@ Adding Duplicate Citation Key Shows Error
     Input Text  title  Example Book
     Input Text  year  2020
     Click Button  Add Citation
+    Wait Until Page Contains  An error occurred while adding the citation: Citation key 'doe2020' already exists.  timeout=5s
     Page Should Contain  An error occurred while adding the citation: Citation key 'doe2020' already exists.
 
 *** Keywords ***
