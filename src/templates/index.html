@@ -43,7 +43,7 @@
 
   <br>
   {% if categories %}
-  <label>Assign existing category:
+  <label>Select an existing category:
     <select name="category">
       <option value="" selected>Select a category</option>
       {% for c in categories or [] %}
@@ -52,7 +52,7 @@
     </select>
   </label>
   {% endif %}
-  <label>Assign category:
+  <label>Create a new category:
     <input type="text" name="category_new" placeholder="New Category">
   </label>
   <br>
