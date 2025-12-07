@@ -6,11 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <title>{% block title %}{% endblock %}</title>
   {% include "style.html" %}
+  <script>
+    // Enable page transition animation only when clicking links
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a');
+      if (link && link.href && !link.target && !link.href.startsWith('#')) {
+        document.documentElement.style.viewTransitionName = 'page-transition';
+        if (document.startViewTransition) {
+          document.startViewTransition();
+        }
+      }
+    });
+  </script>
 </head>
 
 <body>
-  {% include "flashes.html" %}
-  {% block body %}{% endblock %}
+  <div class="container">
+    {% include "flashes.html" %}
+    {% block body %}{% endblock %}
+  </div>
 </body>
 
 </html>

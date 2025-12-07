@@ -5,26 +5,32 @@
 {% block body %}
 
 {% if citation %}
-<h1>Edit Citation</h1>
+<h1>✏️ Edit Citation</h1>
+
+<h2>Citation: <strong>{{ citation.citation_key }}</strong></h2>
+<p style="color: #666;">Type: <strong>@{{ citation.entry_type }}</strong></p>
+
 <form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}">
-  <label>Citation key:
+  <h3>Citation Details</h3>
+  <label>Citation Key (Required):
     <input type="text" name="citation_key" value="{{ citation.citation_key }}" required>
   </label>
-  <br>
   {% for f, val in citation.fields|dictsort %}
-  <label>{{ f.replace("_", " ").capitalize() }}
+  <label>{{ f.replace("_", " ").capitalize() }}:
     <input type="text" name="{{ f }}" value="{{ val }}">
   </label>
-  <br>
   {% endfor %}
-  <button type="submit">Save Changes</button>
+  <div style="margin-top: 20px;">
+    <button type="submit" class="btn-success">💾 Save Changes</button>
+    <a href="{{ url_for('citations_view') }}" class="btn-link btn-link-secondary">Cancel</a>
+  </div>
 </form>
 {% else %}
-<p>Citation not found.</p>
+<h1>Citation Not Found</h1>
+<p>The citation you're looking for doesn't exist.</p>
+<div style="margin-top: 20px;">
+  <a href="{{ url_for('citations_view') }}" class="btn-link btn-link-primary">Back to Citations</a>
+</div>
 {% endif %}
-
-<form action="/citations" method="get" style="display:inline; margin-top:10px;">
-  <button type="submit">Back</button>
-</form>
 
 {% endblock %}

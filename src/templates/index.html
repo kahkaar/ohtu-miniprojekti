@@ -3,14 +3,18 @@
 {% block title %}Add a new Citation{% endblock %}
 
 {% block body %}
-<h1>Add a new Citation</h1>
-<p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
+<h1>📚 Citation Manager</h1>
+<div class="nav-links">
+  <a href="{{ url_for('citations_view') }}">View All Citations</a>
+</div>
 
-<h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
+<h2>Create a New Citation</h2>
+<p>Select an entry type and fill in the citation details below.</p>
+
 <form method="post">
-  <label>Entry type:
+  <label>Entry Type:
     <select name="entry_type" required>
-      <option value="" disabled selected>Select type</option>
+      <option value="" disabled selected>Select a citation type</option>
       {% for et in entry_types or [] %}
       {% if et.id == session.get("entry_type", {}).get("id") %}
       <option value="{{ et.id }}" selected>{{ et.name }}</option>
@@ -20,24 +24,25 @@
       {% endfor %}
     </select>
   </label>
-  <button type="submit">Select</button>
+  <button type="submit">Select Type</button>
 </form>
-<br>
 
 {% if session.get("entry_type") %}
+<hr>
 <form method="post">
-  <h2>Selected entry type: <b>{{ session.get("entry_type").get("name") }}</b></h2>
-  <h3>Fill in the details:</h3>
-  <label>Citation key:
-    <input type="text" name="citation_key" required>
-    <br>
-    {% for f in fields %}
-    <label>{{ f.replace("_", " ").capitalize() }}:
-      <input type="text" name="{{ f }}">
-    </label>
-    <br>
-    {% endfor %}
-    <button type="submit">Add Citation</button>
+  <h2>Entry Type: <strong>{{ session.get("entry_type").get("name") }}</strong></h2>
+  <h3>Citation Details</h3>
+  <label>Citation Key (Required):
+    <input type="text" name="citation_key" required placeholder="e.g., doe2020">
+  </label>
+  {% for f in fields %}
+  <label>{{ f.replace("_", " ").capitalize() }}:
+    <input type="text" name="{{ f }}" placeholder="Enter {{ f.replace('_', ' ') }}">
+  </label>
+  {% endfor %}
+  <div style="margin-top: 20px;">
+    <button type="submit" class="btn-success">Add Citation</button>
+  </div>
 </form>
 {% endif %}
 {% endblock %}

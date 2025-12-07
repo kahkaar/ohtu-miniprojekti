@@ -18,7 +18,7 @@ def get():
     request.args.get("advanced"),])
 
     return render_template(
-        "citations.html",
+        "search.html",
         citations=citations,
         entry_types=entry_types,
         advanced_open=advanced_open)

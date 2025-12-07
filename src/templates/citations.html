@@ -3,146 +3,38 @@
 {% block title %}Saved Citations{% endblock %}
 
 {% block body %}
-<h1>Saved Citations</h1>
-
-<!-- Simple Search (always visible) -->
-<form method="GET" action="{{ url_for('citations_view') }}" style="margin-bottom:10px;">
-    <input type="text" name="q" placeholder="Search citations..." 
-           value="{{ request.args.get('q','') }}"
-           style="padding:6px; width:250px;">
-    <button type="submit">Search</button>
-</form>
-
-<!-- Button to Expand/Collapse Advanced Filters -->
-<button type="button" id="toggleFilters" style="margin-bottom:10px;">
-    {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
-</button>
-
-<!-- Advanced filters (Toggle visibility) -->
-<div id="advancedFilters" style="display: {{ 'block' if advanced_open else 'none' }}; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
-    <form method="GET" action="{{ url_for('citations_view') }}">
-
-        <label>Entry type:</label>
-        <select name="entry_type">
-            <option value="">Any</option>
-            {% for et in entry_types %}
-                <option value="{{ et.name }}" 
-                    {% if request.args.get('entry_type') == et.name %}selected{% endif %}>
-                    {{ et.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <br><br>
-
-        <label>Citation key:</label>
-        <input type="text" name="citation_key" maxlength="50" value="{{ request.args.get('citation_key','') }}"><br><br>
-
-        <label>Author:</label>
-        <input type="text" name="author" maxlength="50" value="{{ request.args.get('author','') }}"><br><br>
-
-      <div style="display: flex; align-items: center; gap: 10px;">
-
-          <label>Year from:</label>
-          <input type="number" name="year_from" min="0" max="9999"
-                value="{{ request.args.get('year_from','') }}"
-                style="width: 100px;">
-          <label>to</label>
-          <input type="number" name="year_to" min="0" max="9999"
-                value="{{ request.args.get('year_to','') }}"
-                style="width: 100px;">
-      </div>
-      <br><br>
-            <label>Sort by:</label>
-            <select name="sort_by">
-                <option value="">None</option>
-                <option value="year" {% if request.args.get('sort_by') == 'year' %}selected{% endif %}>Year</option>
-                <option value="citation_key" {% if request.args.get('sort_by') == 'citation_key' %}selected{% endif %}>Citation Key</option>
-            </select>
-
-            <label>Order:</label>
-            <select name="direction">
-                <option value="ASC" {% if request.args.get('direction', '').upper() == 'ASC' %}selected{% endif %}>Ascending</option>
-                <option value="DESC" {% if request.args.get('direction', '').upper() == 'DESC' %}selected{% endif %}>Descending</option>
-            </select>
-
-            <br><br>
-        <button type="submit">Apply filters</button>
-        <a href="{{ url_for('citations_view', advanced='1') }}" style="margin-left:10px;">
-            <button type="button">Clear all</button>
-        </a>
-    </form>
+<h1>📚 Saved Citations</h1>
+<div class="nav-links">
+  <a href="{{ url_for('index') }}">Back to Main Page</a>
+  <a href="{{ url_for('citations_search') }}">Search Citations</a>
 </div>
 
-<!-- Script for showing and hiding advanced filters on the citations page -->
-<script>
-document.getElementById("toggleFilters").addEventListener("click", function() {
-    const box = document.getElementById("advancedFilters");
-    if (box.style.display === "none") {
-        box.style.display = "block";
-        this.textContent = "▲ Hide filters";
-    } else {
-        box.style.display = "none";
-        this.textContent = "▼ More filters";
-    }
-});
-</script>
-
-<p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
-
-
-<!-- Displays the citations-->
 {% if citations %}
+<p style="color: #666; font-size: 16px; margin-top: 20px;">
+  <strong>{{ citations|length }}</strong> citation(s) found
+</p>
 {% for c in citations %}
-
 <div class="citation" id="{{ c.id }}-{{c.citation_key}}">
-  <p>@{{ c.entry_type }} — {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
-  <br>
-  <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">Edit</button>
-  </form>
-  <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit" onclick="return confirm('Are you sure you want to delete this citation?')">Delete</button>
-  </form>
-  <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">View BibTeX</button>
-  </form>
-  <label>
-    <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
-    Select {{ c.citation_key }} for export
-  </label>
+  <p><strong>@{{ c.entry_type }}</strong> &mdash; <strong>{{ c.citation_key }}</strong></p>
+  <p style="margin-top: 8px;">{{ c.to_human_readable() }}</p>
+  <div style="margin-top: 12px;">
+    <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
+      <button type="submit">✏️ Edit</button>
+    </form>
+    <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
+      <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to delete this citation?')">🗑️ Delete</button>
+    </form>
+    <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
+      <button type="submit" class="btn-secondary">📄 View BibTeX</button>
+    </form>
+  </div>
 </div>
-
 {% endfor %}
-
-<h1>Export selected citations as .bib file</h1>
-<form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
-  <button type="button" onclick="export_bibtex()">Export</button>
-</form>
-
-<script>
-  function export_bibtex() {
-    const form = document.forms['exportform'];
-    const selectedIds = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
-      selectedIds.push(checkbox.id);
-    });
-    if (selectedIds.length === 0) {
-      alert('Please select at least one citation to export.');
-      return;
-    }
-    while (form.lastChild && form.lastChild.name === 'citation_ids') {
-      form.removeChild(form.lastChild);
-    }
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'citation_ids';
-    input.value = selectedIds;
-    form.appendChild(input);
-    form.submit();
-  }
-</script>
 {% else %}
-<p>No saved citations yet.</p>
+<div style="text-align: center; padding: 60px 20px; background: #0f172a; border-radius: 8px; margin-top: 30px; border: 1px solid #334155;">
+  <h2 style="color: #64748b;">No saved citations yet</h2>
+  <p style="color: #64748b; margin: 20px 0;">Start by creating your first citation!</p>
+  <a href="{{ url_for('index') }}" class="btn-link btn-link-primary">Create Citation</a>
+</div>
 {% endif %}
-
 {% endblock %}

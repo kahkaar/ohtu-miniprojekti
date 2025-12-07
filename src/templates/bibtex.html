@@ -3,25 +3,43 @@
 {% block title %}Citation in BibTeX format{% endblock %}
 {% block body %}
 
-<h1>Citation in BibTeX format</h1>
+<h1>📄 BibTeX Format</h1>
 
 {% if citation %}
+<h2>Citation: <strong>{{ citation.citation_key }}</strong></h2>
+<p style="color: #666;">Type: <strong>@{{ citation.entry_type }}</strong></p>
+
 <pre id="bibtex">{{ citation.to_bibtex() }}</pre>
-<button onclick="copy_to_clipboard('bibtex')">Copy to Clipboard</button>
+
+<div style="margin-top: 20px;">
+  <button onclick="copy_to_clipboard('bibtex')" class="btn-success">📋 Copy to Clipboard</button>
+  <a href="{{ url_for('edit_citation', citation_id=citation.id) }}" class="btn-link btn-link-primary">✏️ Edit Citation</a>
+  <a href="{{ url_for('citations_view') }}" class="btn-link btn-link-secondary">Back to List</a>
+</div>
 
 <script>
   function copy_to_clipboard(elm_id) {
     var text = document.getElementById(elm_id).innerHTML;
     navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
+    
+    // Show feedback to user
+    var btn = event.target;
+    var originalText = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    btn.style.background = '#28a745';
+    
+    setTimeout(function() {
+      btn.innerHTML = originalText;
+      btn.style.background = '#667eea';
+    }, 2000);
   }
 </script>
 {% else %}
-<p>No citation found.</p>
+<h1>Citation Not Found</h1>
+<p>The citation you're looking for doesn't exist.</p>
+<div style="margin-top: 20px;">
+  <a href="{{ url_for('citations_view') }}" class="btn-link btn-link-primary">Back to Citations</a>
+</div>
 {% endif %}
-
-<form action="/citations" method="get" style="display:inline; margin-top:10px;">
-  <button type="submit">Back</button>
-</form>
 
 {% endblock %}
