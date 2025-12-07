@@ -1,10 +1,16 @@
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 import util
-from repositories.citation_repository import create_citation
+from repositories.category_repository import (
+    get_categories,
+    get_or_create_category,
+    get_or_create_tags,
+    get_tags,
+)
+from repositories.citation_repository import create_citation_with_metadata
 from repositories.entry_fields_repository import get_entry_fields
-from repositories.entry_type_repository import get_entry_type, get_entry_types
+from repositories.entry_type_repository import get_entry_types
 
 
 def get():
@@ -12,66 +18,76 @@ def get():
     entry_types = get_entry_types()
     entry_fields = []
 
-    selected_entry_type = util.get_session("entry_type")
-    if selected_entry_type:
-        entry_fields = get_entry_fields(selected_entry_type.get("id"))
+    entry_type = util.get_session("entry_type")
+    entry_type = util.parse_entry_type(entry_type)
 
-    return render_template("index.html", entry_types=entry_types, fields=entry_fields)
+    if entry_type:
+        entry_fields = get_entry_fields(entry_type.id)
+
+    categories = get_categories()
+    tags = get_tags()
+
+    return render_template(
+        "index.html",
+        entry_types=entry_types,
+        fields=entry_fields,
+        categories=categories,
+        tags=tags,
+    )
 
 # pylint: disable=R0911
 def post():
     """Handles the submission of the main index form to create a new citation."""
     # pylint: disable=R0801
-    entry_type = request.form.get("entry_type")
 
-    # Exit early if just changing the entry type
-    if entry_type:
-        entry_type_obj = get_entry_type(entry_type)
-        if not entry_type_obj:
-            flash("Entry type was not found.", "error")
-            return redirect(url_for("index"))
+    # Retrieve the selected entry type from the session, set when selecting entry type.
+    entry_type = util.get_session("entry_type")
+    entry_type = util.parse_entry_type(entry_type)
 
-        flash(f"Selected entry type '{entry_type_obj.name}'", "info")
-        if entry_type_obj:
-            util.set_session("entry_type", entry_type_obj.to_dict())
-
-        return redirect(url_for("index"))
-
-    entry_type = session.get("entry_type")
     if not entry_type:
         flash("No entry type selected.", "error")
         return redirect(url_for("index"))
 
-    citation_key = request.form.get("citation_key", "")
-
-    # Collapsing whitespace for citation key only, since it should not contain any spaces.
-    sanitized_citation_key = util.collapse_whitespace(citation_key)
-    if not sanitized_citation_key:
+    citation_key = util.extract_citation_key(request.form)
+    if not citation_key:
         flash("Invalid citation key provided.", "error")
         return redirect(url_for("index"))
 
-    posted_fields = util.get_posted_fields(request.form)
+    fields = util.extract_fields(request.form)
+    category_name = util.extract_category(request.form)
+    tag_names = util.extract_tags(request.form)
 
-    if not posted_fields:
-        flash("No fields provided for the citation.", "error")
-        return redirect(url_for("index"))
+    # Convert names to objects (create if not present)
+    category = None
+    tags = None
+    if category_name:
+        category = get_or_create_category(category_name)
 
-    year = posted_fields.get("year")
+    if tag_names:
+        tags = get_or_create_tags(tag_names)
+
+    year = fields.get("year")
     if year:
         try:
             year_int = int(year)
             if year_int < 0 or year_int > 9999:
                 raise ValueError
 
-            posted_fields["year"] = year_int
+            fields["year"] = year_int
 
         except (ValueError, TypeError):
             flash("Year must be a number between 0 and 9999.", "error")
             return redirect(url_for("index"))
 
     try:
-        create_citation(entry_type.get("id"),
-                        sanitized_citation_key, posted_fields)
+        create_citation_with_metadata(
+            entry_type=entry_type,
+            citation_key=citation_key,
+            fields=fields,
+            category=category,
+            tags=tags
+        )
+
         flash("A new citation was added successfully!", "success")
     except (ValueError, TypeError, SQLAlchemyError) as e:
         flash(
