@@ -56,13 +56,17 @@
   </label>
 
   {% if tags %}
-  <label>Select existing tags:
-    <select name="tags" multiple>
+  <fieldset>
+    <legend>Select existing tags:</legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
       {% for t in tags or [] %}
-      <option value="{{ t.name }}">{{ t.name }}</option>
+      <label style="display: flex; align-items: center; margin: 0;">
+        <input type="checkbox" name="tags" value="{{ t.name }}" style="margin-right: 8px;">
+        {{ t.name }}
+      </label>
       {% endfor %}
-    </select>
-  </label>
+    </div>
+  </fieldset>
   {% endif %}
   <label>Create new tags (comma-separated):
     <input type="text" name="tags_new" placeholder="tag1, tag2">
