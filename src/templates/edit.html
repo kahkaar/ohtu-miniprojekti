@@ -5,26 +5,64 @@
 {% block body %}
 
 {% if citation %}
-<h1>Edit Citation</h1>
-<form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}">
-  <label>Citation key:
-    <input type="text" name="citation_key" value="{{ citation.citation_key }}" required>
-  </label>
-  <br>
-  {% for f, val in citation.fields|dictsort %}
-  <label>{{ f.replace("_", " ").capitalize() }}
-    <input type="text" name="{{ f }}" value="{{ val }}">
-  </label>
-  <br>
-  {% endfor %}
-  <button type="submit">Save Changes</button>
-</form>
-{% else %}
-<p>Citation not found.</p>
-{% endif %}
+<div class="page-header">
+  <h1><i class="bi bi-pencil-square text-primary"></i> Edit Citation</h1>
+  <p class="lead text-muted">Update citation details</p>
+</div>
 
-<form action="/citations" method="get" style="display:inline; margin-top:10px;">
-  <button type="submit">Back</button>
-</form>
+<div class="form-section">
+  <div class="mb-4">
+    <h5>
+      <span class="badge bg-info">@{{ citation.entry_type }}</span>
+      Citation Key: <strong>{{ citation.citation_key }}</strong>
+    </h5>
+  </div>
+
+  <form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}">
+    <div class="mb-3">
+      <label for="citation_key" class="form-label">
+        Citation Key <span class="text-danger">*</span>
+      </label>
+      <input type="text" 
+             name="citation_key" 
+             id="citation_key"
+             class="form-control" 
+             value="{{ citation.citation_key }}" 
+             required>
+      <div class="form-text">A unique identifier for this citation (no spaces)</div>
+    </div>
+
+    {% for f, val in citation.fields|dictsort %}
+    <div class="mb-3">
+      <label for="{{ f }}" class="form-label">{{ f.replace("_", " ").capitalize() }}</label>
+      <input type="text" 
+             name="{{ f }}" 
+             id="{{ f }}"
+             class="form-control" 
+             value="{{ val }}">
+    </div>
+    {% endfor %}
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="bi bi-check-circle"></i> Save Changes
+      </button>
+      <a href="{{ url_for('citations_view') }}" class="btn btn-outline-secondary btn-lg">
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
+      <a href="{{ url_for('show_bibtex', citation_id=citation.id) }}" class="btn btn-outline-info btn-lg">
+        <i class="bi bi-code-square"></i> View BibTeX
+      </a>
+    </div>
+  </form>
+</div>
+{% else %}
+<div class="alert alert-danger">
+  <i class="bi bi-exclamation-triangle"></i> Citation not found.
+</div>
+<a href="{{ url_for('citations_view') }}" class="btn btn-primary">
+  <i class="bi bi-arrow-left"></i> Back to Citations
+</a>
+{% endif %}
 
 {% endblock %}

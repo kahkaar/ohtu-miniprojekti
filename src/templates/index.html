@@ -1,43 +1,83 @@
 {% extends "layout.html" %}
 
-{% block title %}Add a new Citation{% endblock %}
+{% block title %}Add New Citation{% endblock %}
 
 {% block body %}
-<h1>Add a new Citation</h1>
-<p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
+<div class="page-header">
+  <h1><i class="bi bi-plus-circle-fill text-primary"></i> Add New Citation</h1>
+  <p class="lead text-muted">Create a new citation entry for your reference library</p>
+</div>
 
-<h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
-<form method="post">
-  <label>Entry type:
-    <select name="entry_type" required>
-      <option value="" disabled selected>Select type</option>
-      {% for et in entry_types or [] %}
-      {% if et.id == session.get("entry_type", {}).get("id") %}
-      <option value="{{ et.id }}" selected>{{ et.name }}</option>
-      {% else %}
-      <option value="{{ et.id }}">{{ et.name }}</option>
-      {% endif %}
-      {% endfor %}
-    </select>
-  </label>
-  <button type="submit">Select</button>
-</form>
-<br>
+<!-- Step 1: Select Entry Type -->
+<div class="form-section">
+  <h4 class="mb-3"><span class="badge bg-primary">Step 1</span> Select Entry Type</h4>
+  <p class="text-muted">Choose the type of reference you want to add (e.g., article, book, inproceedings)</p>
+  
+  <form method="post" class="row g-3">
+    <div class="col-md-8">
+      <label for="entry_type" class="form-label">Entry Type</label>
+      <select name="entry_type" id="entry_type" class="form-select form-select-lg" required>
+        <option value="" disabled selected>Select a citation type...</option>
+        {% for et in entry_types or [] %}
+          {% if et.id == session.get("entry_type", {}).get("id") %}
+            <option value="{{ et.id }}" selected>{{ et.name }}</option>
+          {% else %}
+            <option value="{{ et.id }}">{{ et.name }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary btn-lg w-100">
+        <i class="bi bi-arrow-right-circle"></i> Continue
+      </button>
+    </div>
+  </form>
+</div>
 
+<!-- Step 2: Fill Citation Details (only shown after entry type is selected) -->
 {% if session.get("entry_type") %}
-<form method="post">
-  <h2>Selected entry type: <b>{{ session.get("entry_type").get("name") }}</b></h2>
-  <h3>Fill in the details:</h3>
-  <label>Citation key:
-    <input type="text" name="citation_key" required>
-    <br>
+<div class="form-section">
+  <h4 class="mb-3">
+    <span class="badge bg-success">Step 2</span> 
+    Fill Citation Details for: <strong>{{ session.get("entry_type").get("name") }}</strong>
+  </h4>
+  <p class="text-muted">Enter the citation details below. The citation key is required, other fields are optional.</p>
+  
+  <form method="post">
+    <div class="mb-3">
+      <label for="citation_key" class="form-label">
+        Citation Key <span class="text-danger">*</span>
+      </label>
+      <input type="text" 
+             name="citation_key" 
+             id="citation_key" 
+             class="form-control" 
+             placeholder="e.g., Smith2023" 
+             required>
+      <div class="form-text">A unique identifier for this citation (no spaces)</div>
+    </div>
+
     {% for f in fields %}
-    <label>{{ f.replace("_", " ").capitalize() }}:
-      <input type="text" name="{{ f }}">
-    </label>
-    <br>
+    <div class="mb-3">
+      <label for="{{ f }}" class="form-label">{{ f.replace("_", " ").capitalize() }}</label>
+      <input type="text" 
+             name="{{ f }}" 
+             id="{{ f }}" 
+             class="form-control" 
+             placeholder="Enter {{ f.replace('_', ' ') }}">
+    </div>
     {% endfor %}
-    <button type="submit">Add Citation</button>
-</form>
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="bi bi-check-circle"></i> Add Citation
+      </button>
+      <a href="{{ url_for('citations_view') }}" class="btn btn-outline-primary btn-lg">
+        <i class="bi bi-list-ul"></i> View Saved Citations
+      </a>
+    </div>
+  </form>
+</div>
 {% endif %}
 {% endblock %}
