@@ -49,6 +49,15 @@
           <input type="text" name="citation_key" required class="form-input">
         </div>
 
+        <div class="form-group">
+          <label class="form-label">Import from DOI (full link or id):</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input" style="flex: 1;">
+            <button type="button" id="doi_fetch" class="btn btn-primary">Fetch DOI</button>
+          </div>
+          <div id="doi_status" style="color: #ff6b6b; margin-top: 8px; font-size: 14px;"></div>
+        </div>
+
         {% if fields %}
         {% for f in fields %}
         <div class="form-group">
@@ -196,6 +205,70 @@
             <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input">
           </div>
         </div>
+
+        <script>
+          (function () {
+            var btn = document.getElementById('doi_fetch');
+            var input = document.getElementById('doi_input');
+            var status = document.getElementById('doi_status');
+
+            if (!btn) return;
+
+            btn.addEventListener('click', function (e) {
+              e.preventDefault();
+              var v = input.value && input.value.trim();
+              if (!v) {
+                status.textContent = 'Please provide a DOI or DOI link.';
+                return;
+              }
+              status.textContent = 'Fetching...';
+              status.style.color = '#60a5fa';
+              fetch('/doi_lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doi: v })
+              }).then(function (res) {
+                if (!res.ok) throw res;
+                return res.json();
+              }).then(function (data) {
+                status.textContent = 'DOI data loaded successfully!';
+                status.style.color = '#48bb78';
+                var fields = data.fields || {};
+                // populate known inputs
+                Object.keys(fields).forEach(function (k) {
+                  var el = document.querySelector('[name="' + k + '"]');
+                  if (el) {
+                    el.value = fields[k];
+                  } else {
+                    // create extra field row if default_fields present
+                    var addBtn = document.getElementById('add_extra');
+                    if (addBtn) {
+                      addBtn.click();
+                      var container = document.getElementById('extra_fields_container');
+                      var last = container.lastElementChild;
+                      var sel = last.querySelector('.extra-select');
+                      var inp = last.querySelector('.extra-input');
+                      sel.value = k;
+                      sel.dispatchEvent(new Event('change'));
+                      inp.value = fields[k];
+                      inp.name = k;
+                    }
+                  }
+                });
+              }).catch(function (err) {
+                if (err && err.json) {
+                  err.json().then(function (j) { 
+                    status.textContent = j.error || 'Failed to fetch DOI metadata.'; 
+                    status.style.color = '#ff6b6b';
+                  });
+                } else {
+                  status.textContent = 'Failed to fetch DOI metadata.';
+                  status.style.color = '#ff6b6b';
+                }
+              });
+            });
+          })();
+        </script>
 
         <button type="submit" class="btn btn-success">Add Citation</button>
       </form>

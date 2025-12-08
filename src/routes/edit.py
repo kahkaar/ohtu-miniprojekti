@@ -13,11 +13,13 @@ from repositories.citation_repository import (
     update_citation_with_metadata,
 )
 from repositories.entry_fields_repository import get_default_fields
+from repositories.entry_type_repository import get_entry_type, get_entry_types
 
 
 def get(citation_id):
     """Renders the edit page for a specific citation by its ID"""
     citation = get_citation_by_id(citation_id)
+    entry_types = get_entry_types()
     categories = get_categories()
     tags = get_tags()
     default_fields = get_default_fields()
@@ -25,6 +27,7 @@ def get(citation_id):
     return render_template(
         "edit.html",
         citation=citation,
+        entry_types=entry_types,
         categories=categories,
         tags=tags,
         default_fields=default_fields,
@@ -49,6 +52,15 @@ def post(citation_id):
     fields = util.extract_fields(request.form)
     category_name = util.extract_category(request.form)
     tag_names = util.extract_tags(request.form)
+    # Entry type selection (optional) - value is entry_type.id
+    entry_type_id = request.form.get("entry_type")
+    entry_type_obj = None
+    if entry_type_id:
+        try:
+            # attempt to cast to int, repository accepts numeric param
+            entry_type_obj = get_entry_type(int(entry_type_id))
+        except (TypeError, ValueError):
+            entry_type_obj = get_entry_type(entry_type_id)
 
     # Convert names to objects (create if not present)
     category = None
@@ -78,6 +90,7 @@ def post(citation_id):
             fields=fields,
             category=category,
             tags=tags,
+            entry_type_id=entry_type_obj.id if entry_type_obj else None,
         )
         flash("Citation updated successfully.", "success")
     except (ValueError, TypeError, SQLAlchemyError) as e:

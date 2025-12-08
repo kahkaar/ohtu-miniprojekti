@@ -3,6 +3,7 @@ from flask import redirect, request, url_for
 import routes.bibtex
 import routes.citations
 import routes.delete
+import routes.doi_lookup
 import routes.edit
 import routes.export_bibtex
 import routes.main
@@ -104,3 +105,9 @@ def citations_search():
 def redirect_to_citations():
     """Redirects to the citations page if no citation ID is provided."""
     return redirect(url_for("citations_view"))
+
+
+@app.route("/doi_lookup", methods=["POST"])
+def doi_lookup():
+    """AJAX endpoint to fetch DOI metadata"""
+    return routes.doi_lookup.post()
