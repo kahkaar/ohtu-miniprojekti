@@ -1,0 +1,642 @@
+{
+  "categories": [
+    "Machine Learning",
+    "Databases",
+    "Human-Computer Interaction",
+    "Natural Language Processing",
+    "Software Engineering",
+    "Networks & Security",
+    "Bioinformatics",
+    "Visualization",
+    "Robotics",
+    "Privacy & Ethics"
+  ],
+  "tags": [
+    "survey",
+    "deep-learning",
+    "cnn",
+    "transformer",
+    "sql",
+    "nosql",
+    "usability",
+    "ux",
+    "nlp",
+    "bert",
+    "testing",
+    "ci",
+    "docker",
+    "privacy",
+    "security",
+    "dataset",
+    "benchmark",
+    "graphs",
+    "genomics",
+    "visualization",
+    "reinforcement-learning",
+    "robotics",
+    "ethics",
+    "fairness",
+    "accessibility",
+    "streaming",
+    "indexing",
+    "caching",
+    "explainability",
+    "reproducibility"
+  ],
+  "citations": [
+    {
+      "citation_key": "lecun2015",
+      "entry_type": "article",
+      "fields": {
+        "author": "Yann LeCun; Yoshua Bengio; Geoffrey Hinton",
+        "title": "Deep learning",
+        "journaltitle": "Nature",
+        "year": 2015,
+        "volume": "521",
+        "pages": "436-444",
+        "doi": "10.1038/nature14539"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "deep-learning",
+        "survey",
+        "explainability"
+      ]
+    },
+    {
+      "citation_key": "vaswani2017",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "Ashish Vaswani; Noam Shazeer; Niki Parmar; Jakob Uszkoreit; Llion Jones; Aidan N Gomez; Łukasz Kaiser; Illia Polosukhin",
+        "title": "Attention is All You Need",
+        "booktitle": "Advances in Neural Information Processing Systems",
+        "year": 2017,
+        "pages": "5998-6008",
+        "doi": "10.5555/3295222.3295349"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "transformer",
+        "deep-learning",
+        "benchmark"
+      ]
+    },
+    {
+      "citation_key": "devlin2018",
+      "entry_type": "techreport",
+      "fields": {
+        "author": "Jacob Devlin; Ming-Wei Chang; Kenton Lee; Kristina Toutanova",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "institution": "Google AI Language",
+        "year": 2018,
+        "url": "https://arxiv.org/abs/1810.04805"
+      },
+      "category": "Natural Language Processing",
+      "tags": [
+        "nlp",
+        "bert",
+        "reproducibility"
+      ]
+    },
+    {
+      "citation_key": "stone2016",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "A. Stone",
+        "title": "Practical SQL patterns",
+        "booktitle": "Proceedings of the Demo Conf",
+        "year": 2016,
+        "pages": "45-52"
+      },
+      "category": "Databases",
+      "tags": [
+        "sql"
+      ]
+    },
+    {
+      "citation_key": "crockford2008",
+      "entry_type": "book",
+      "fields": {
+        "author": "Douglas Crockford",
+        "title": "JavaScript: The Good Parts",
+        "publisher": "O'Reilly Media",
+        "year": 2008,
+        "edition": "1st",
+        "isbn": "978-0596517748"
+      },
+      "category": "Software Engineering",
+      "tags": [
+        "reproducibility",
+        "testing"
+      ]
+    },
+    {
+      "citation_key": "norman2013",
+      "entry_type": "techreport",
+      "fields": {
+        "author": "Don Norman",
+        "title": "The design of everyday things: Revised and expanded edition",
+        "institution": "ACME Research",
+        "year": 2013,
+        "note": "Demo tech report edition"
+      },
+      "category": "Human-Computer Interaction",
+      "tags": [
+        "usability",
+        "ux",
+        "accessibility"
+      ]
+    },
+    {
+      "citation_key": "garcia2019",
+      "entry_type": "article",
+      "fields": {
+        "author": "M. Garcia; L. Chen",
+        "title": "Privacy-preserving data analytics for mobile systems",
+        "journaltitle": "Journal of Mobile Computing",
+        "year": 2019,
+        "volume": "12",
+        "number": "3",
+        "pages": "210-225",
+        "doi": "10.1000/jmc.2019.210"
+      },
+      "category": "Privacy & Ethics",
+      "tags": [
+        "privacy",
+        "security",
+        "ethics"
+      ]
+    },
+    {
+      "citation_key": "wu2014",
+      "entry_type": "article",
+      "fields": {
+        "author": "Z. Wu; C. He",
+        "title": "Image classification with deep convolutional nets",
+        "journaltitle": "International Journal of Vision Systems",
+        "year": 2014,
+        "pages": "101-118",
+        "doi": "10.5555/ijvs.2014.101"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "cnn",
+        "deep-learning",
+        "benchmark"
+      ]
+    },
+    {
+      "citation_key": "kiran2018",
+      "entry_type": "phdthesis",
+      "fields": {
+        "author": "Priya Kiran",
+        "title": "Scalable graph processing for large datasets",
+        "institution": "University of Demo",
+        "year": 2018
+      },
+      "category": "Databases",
+      "tags": [
+        "graphs",
+        "dataset",
+        "streaming"
+      ]
+    },
+    {
+      "citation_key": "zhang2012",
+      "entry_type": "incollection",
+      "fields": {
+        "author": "Q. Zhang",
+        "title": "Chapter on distributed databases",
+        "booktitle": "Handbook of Modern Database Systems",
+        "publisher": "Academic Press",
+        "year": 2012,
+        "pages": "301-342"
+      },
+      "category": "Databases",
+      "tags": [
+        "nosql",
+        "sql",
+        "caching"
+      ]
+    },
+    {
+      "citation_key": "muller2010",
+      "entry_type": "manual",
+      "fields": {
+        "title": "Demo API Reference",
+        "author": "M. Müller",
+        "year": 2010,
+        "note": "Internal API manual for demo systems"
+      },
+      "category": "Software Engineering",
+      "tags": [
+        "manual",
+        "docker",
+        "ci"
+      ]
+    },
+    {
+      "citation_key": "choi2020",
+      "entry_type": "article",
+      "fields": {
+        "author": "H. Choi; L. Tang",
+        "title": "A benchmark for clinical genomics data pipelines",
+        "journaltitle": "Bioinformatics Demo Journal",
+        "year": 2020,
+        "volume": "8",
+        "pages": "50-62",
+        "doi": "10.1000/bdj.2020.08"
+      },
+      "category": "Bioinformatics",
+      "tags": [
+        "genomics",
+        "benchmark",
+        "dataset"
+      ]
+    },
+    {
+      "citation_key": "nguyen2017",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "T. Nguyen; S. Rao",
+        "title": "Efficient routing in mesh networks",
+        "booktitle": "SIGCOMM Workshop on Mesh Networks",
+        "year": 2017,
+        "pages": "12-20"
+      },
+      "category": "Networks & Security",
+      "tags": [
+        "networks",
+        "security"
+      ]
+    },
+    {
+      "citation_key": "rodriguez2011",
+      "entry_type": "proceedings",
+      "fields": {
+        "title": "Proceedings of the Demo Database Symposium 2011",
+        "year": 2011,
+        "publisher": "Demo Conf Publishers"
+      },
+      "category": "Databases",
+      "tags": [
+        "conference"
+      ]
+    },
+    {
+      "citation_key": "white2015",
+      "entry_type": "book",
+      "fields": {
+        "author": "S. White",
+        "title": "Data Visualization Principles",
+        "publisher": "VisPress",
+        "year": 2015,
+        "isbn": "978-0123456789"
+      },
+      "category": "Visualization",
+      "tags": [
+        "visualization",
+        "dataset"
+      ]
+    },
+    {
+      "citation_key": "peterson2009",
+      "entry_type": "inbook",
+      "fields": {
+        "author": "R. Peterson",
+        "title": "Chapter: Usability evaluation methods",
+        "booktitle": "Practical UX Techniques",
+        "publisher": "UXBooks",
+        "year": 2009,
+        "chapter": "4",
+        "pages": "65-88"
+      },
+      "category": "Human-Computer Interaction",
+      "tags": [
+        "usability",
+        "survey",
+        "accessibility"
+      ]
+    },
+    {
+      "citation_key": "lee2021",
+      "entry_type": "online",
+      "fields": {
+        "author": "S. Lee",
+        "title": "Introduction to transformer interpretability",
+        "year": 2021,
+        "url": "https://demo.example.org/transformer-interpretability"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "transformer",
+        "explainability"
+      ]
+    },
+    {
+      "citation_key": "kovacs2013",
+      "entry_type": "misc",
+      "fields": {
+        "author": "A. Kovács",
+        "title": "Lightweight CI for small teams",
+        "year": 2013,
+        "note": "Workshop note"
+      },
+      "category": "Software Engineering",
+      "tags": [
+        "ci",
+        "testing",
+        "reproducibility"
+      ]
+    },
+    {
+      "citation_key": "ng2008",
+      "entry_type": "article",
+      "fields": {
+        "author": "A. Ng",
+        "title": "Large-scale machine learning",
+        "journaltitle": "Journal of Machine Learning Practice",
+        "year": 2008,
+        "pages": "1-20"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "survey",
+        "deep-learning",
+        "reproducibility"
+      ]
+    },
+    {
+      "citation_key": "petrov2014",
+      "entry_type": "techreport",
+      "fields": {
+        "author": "I. Petrov",
+        "title": "Secure storage patterns for the cloud",
+        "institution": "Cloud Research Labs",
+        "year": 2014,
+        "url": "https://cloud.example.org/reports/secure-storage-2014.pdf"
+      },
+      "category": "Networks & Security",
+      "tags": [
+        "security",
+        "privacy"
+      ]
+    },
+    {
+      "citation_key": "rao2018",
+      "entry_type": "masterthesis",
+      "fields": {
+        "author": "S. Rao",
+        "title": "Exploring graph embeddings for recommender systems",
+        "institution": "University of Demo",
+        "year": 2018
+      },
+      "category": "Databases",
+      "tags": [
+        "graphs",
+        "benchmark"
+      ]
+    },
+    {
+      "citation_key": "alvarez2012",
+      "entry_type": "booklet",
+      "fields": {
+        "author": "M. Álvarez",
+        "title": "Quick guide to SQL tuning",
+        "year": 2012,
+        "publisher": "Demo Guides"
+      },
+      "category": "Databases",
+      "tags": [
+        "sql",
+        "tutorial"
+      ]
+    },
+    {
+      "citation_key": "perkins2019",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "T. Perkins; L. Gomez",
+        "title": "Towards interactive visualization of large networks",
+        "booktitle": "Visualization for Networks (VisNet'19)",
+        "year": 2019,
+        "pages": "99-108"
+      },
+      "category": "Visualization",
+      "tags": [
+        "visualization",
+        "graphs"
+      ]
+    },
+    {
+      "citation_key": "hayes2022",
+      "entry_type": "article",
+      "fields": {
+        "author": "E. Hayes; R. Kim",
+        "title": "A survey on fairness in machine learning",
+        "journaltitle": "Ethics in AI Journal",
+        "year": 2022,
+        "volume": "3",
+        "pages": "1-34",
+        "doi": "10.1000/eiaj.2022.003"
+      },
+      "category": "Privacy & Ethics",
+      "tags": [
+        "survey",
+        "fairness",
+        "ethics"
+      ]
+    },
+    {
+      "citation_key": "liu2016",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "F. Liu; H. Zhao",
+        "title": "An incremental indexing approach for streaming data",
+        "booktitle": "VLDB Demo & Systems",
+        "year": 2016,
+        "pages": "5-10"
+      },
+      "category": "Databases",
+      "tags": [
+        "streaming",
+        "indexing",
+        "benchmark"
+      ]
+    },
+    {
+      "citation_key": "herrmann2011",
+      "entry_type": "unpublished",
+      "fields": {
+        "author": "K. Herrmann",
+        "title": "Notes on developer ergonomics for CI pipelines",
+        "note": "Internal memo, draft",
+        "year": 2011
+      },
+      "category": "Software Engineering",
+      "tags": [
+        "ci",
+        "reproducibility"
+      ]
+    },
+    {
+      "citation_key": "taylor2013",
+      "entry_type": "patent",
+      "fields": {
+        "author": "R. Taylor",
+        "title": "Adaptive caching for large-scale web services",
+        "year": 2013,
+        "number": "US-2013-123456",
+        "assignee": "DemoWeb Inc."
+      },
+      "category": "Databases",
+      "tags": [
+        "caching"
+      ]
+    },
+    {
+      "citation_key": "ortega2015",
+      "entry_type": "manual",
+      "fields": {
+        "author": "L. Ortega",
+        "title": "Guide to reproducible experiments in ML",
+        "year": 2015,
+        "note": "Includes sample config files and Docker recipes"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "reproducibility",
+        "docker"
+      ]
+    },
+    {
+      "citation_key": "fischer2007",
+      "entry_type": "proceedings",
+      "fields": {
+        "title": "Proceedings of the International Robotics Symposium 2007",
+        "year": 2007,
+        "publisher": "Robotics Press"
+      },
+      "category": "Robotics",
+      "tags": [
+        "robotics",
+        "benchmark"
+      ]
+    },
+    {
+      "citation_key": "gomez2019",
+      "entry_type": "article",
+      "fields": {
+        "author": "L. Gomez; A. Singh",
+        "title": "Explainable recommender systems for social platforms",
+        "journaltitle": "Journal of Recommender Systems",
+        "year": 2019,
+        "pages": "88-105",
+        "doi": "10.1000/jrs.2019.088"
+      },
+      "category": "Machine Learning",
+      "tags": [
+        "explainability",
+        "fairness",
+        "graphs"
+      ]
+    },
+    {
+      "citation_key": "singh2014",
+      "entry_type": "article",
+      "fields": {
+        "author": "R. Singh",
+        "title": "Efficient sequence alignment for genomics",
+        "journaltitle": "Journal of Bioinformatics Methods",
+        "year": 2014,
+        "pages": "200-215"
+      },
+      "category": "Bioinformatics",
+      "tags": [
+        "genomics",
+        "dataset"
+      ]
+    },
+    {
+      "citation_key": "lin2010",
+      "entry_type": "inproceedings",
+      "fields": {
+        "author": "J. Lin; K. Patel",
+        "title": "Accelerating join operations with caching indices",
+        "booktitle": "Database Systems Conference (DSC'10)",
+        "year": 2010,
+        "pages": "150-159"
+      },
+      "category": "Databases",
+      "tags": [
+        "indexing",
+        "caching",
+        "sql"
+      ]
+    },
+    {
+      "citation_key": "abdi2020",
+      "entry_type": "article",
+      "fields": {
+        "author": "N. Abdi; Y. Sun",
+        "title": "Accessibility in modern web apps: guidelines and case studies",
+        "journaltitle": "Human-Computer Interaction Review",
+        "year": 2020,
+        "pages": "33-54"
+      },
+      "category": "Human-Computer Interaction",
+      "tags": [
+        "accessibility",
+        "ux",
+        "usability"
+      ]
+    },
+    {
+      "citation_key": "baker2018",
+      "entry_type": "masterthesis",
+      "fields": {
+        "author": "C. Baker",
+        "title": "Robust navigation for low-cost robots",
+        "institution": "Demo Institute of Technology",
+        "year": 2018
+      },
+      "category": "Robotics",
+      "tags": [
+        "robotics",
+        "reinforcement-learning"
+      ]
+    },
+    {
+      "citation_key": "iwata2011",
+      "entry_type": "booklet",
+      "fields": {
+        "author": "M. Iwata",
+        "title": "Practical visualization tips",
+        "year": 2011,
+        "publisher": "VizSmall Press"
+      },
+      "category": "Visualization",
+      "tags": [
+        "visualization",
+        "tutorial"
+      ]
+    },
+    {
+      "citation_key": "cho2016",
+      "entry_type": "article",
+      "fields": {
+        "author": "S. Cho; P. Fernandez",
+        "title": "Streaming graph analytics at scale",
+        "journaltitle": "Distributed Systems Journal",
+        "year": 2016,
+        "pages": "120-138"
+      },
+      "category": "Databases",
+      "tags": [
+        "streaming",
+        "graphs",
+        "benchmark"
+      ]
+    }
+  ]
+}
