@@ -17,6 +17,7 @@ After Adding Two Citations Search By Author Works
     Add Example Book Citation
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=author  timeout=2s
     Input Text     name=author     Jane
     Click Button   Apply filters
 
@@ -30,6 +31,7 @@ Search By Entry Type Shows Only Matching Types
 
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=entry_type  timeout=2s
     Select From List By Label     entry_type     article
     Click Button   Apply filters
 
@@ -43,6 +45,7 @@ Search By Year Range From
 
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=year_from  timeout=2s
     Input Text     year_from    2000
     Click Button   Apply filters
 
@@ -56,6 +59,7 @@ Search By Year Range To
 
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=year_to  timeout=2s
     Input Text     year_to    2000
     Click Button   Apply filters
 
@@ -81,10 +85,12 @@ Sorting By Year Ascending Shows Older First
 
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=sort_by  timeout=2s
     Select From List By Label     sort_by      Year
     Select From List By Label     direction    Ascending
     Click Button  Apply filters
 
+    Wait Until Page Contains  doe1998  timeout=3s
     ${text}=   Get Text   css=body
     Should Match Regexp    ${text}    (?s)doe1998.*doe2020
 
@@ -95,10 +101,12 @@ Sorting By Citation Key Descending Shows Z→A
 
     Go To Citations Page
     Click Button  id=toggleFilters
+    Wait Until Element Is Visible  name=sort_by  timeout=2s
     Select From List By Label     sort_by      Citation Key
     Select From List By Label     direction    Descending
     Click Button  Apply filters
 
+    Wait Until Page Contains  doe2020  timeout=3s
     ${text}=   Get Text   css=body
     Should Match Regexp    ${text}    (?s)doe2020.*doe1998
 

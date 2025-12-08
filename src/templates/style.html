@@ -1,7 +1,13 @@
 <style>
+  * {
+    color-scheme: dark;
+  }
+
   body {
     font-family: Arial, sans-serif;
     margin: 25px;
+    background: #0f1419;
+    color: #e0e0e0;
   }
 
   h1 {
@@ -10,10 +16,44 @@
     font-weight: normal;
     display: inline;
     margin: 0;
+    color: #ffffff;
   }
 
   .citation {
     margin-bottom: 15px;
     line-height: 1.5;
+    color: #b0b0b0;
+  }
+
+  .flashes {
+    margin: 20px auto;
+    max-width: 800px;
+  }
+
+  .flashes ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .flashes li {
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background-color: #1e3a5f;
+    border: 1px solid #3b82f6;
+    color: #60a5fa;
+  }
+
+  .flashes li.flash-error {
+    background-color: #3f1f1f;
+    border: 1px solid #dc2626;
+    color: #fca5a5;
+  }
+
+  .flashes li.flash-success {
+    background-color: #1e3a2a;
+    border: 1px solid #16a34a;
+    color: #86efac;
   }
 </style>

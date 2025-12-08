@@ -3,77 +3,160 @@
 {% block title %}Saved Citations{% endblock %}
 
 {% block body %}
-<h1>Saved Citations</h1>
+<div class="citations-container">
+  <div class="header">
+    <h1>Saved Citations</h1>
+    <p class="subtitle"><a href="{{ url_for('index') }}" class="link-primary">Add New Citation</a></p>
+  </div>
 
-<!-- Simple Search (always visible) -->
-<form method="GET" action="{{ url_for('citations_view') }}" style="margin-bottom:10px;">
-    <input type="text" name="q" placeholder="Search citations..." 
-           value="{{ request.args.get('q','') }}"
-           style="padding:6px; width:250px;">
-    <button type="submit">Search</button>
-</form>
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <!-- Simple Search -->
+    <div class="search-card">
+      <form method="GET" action="{{ url_for('citations_view') }}" class="search-form">
+        <div class="search-input-wrapper">
+          <input type="text" name="q" placeholder="Search citations..." 
+                 value="{{ request.args.get('q','') }}"
+                 class="search-input">
+          <button type="submit" class="btn btn-search">Search</button>
+        </div>
+      </form>
+    </div>
 
-<!-- Button to Expand/Collapse Advanced Filters -->
-<button type="button" id="toggleFilters" style="margin-bottom:10px;">
-    {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
-</button>
+    <!-- Advanced Filters Toggle -->
+    <button type="button" id="toggleFilters" class="btn-toggle-filters">
+      {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
+    </button>
 
-<!-- Advanced filters (Toggle visibility) -->
-<div id="advancedFilters" style="display: {{ 'block' if advanced_open else 'none' }}; margin-bottom:20px; border:1px solid #ccc; padding:10px;">
-    <form method="GET" action="{{ url_for('citations_view') }}">
-
-        <label>Entry type:</label>
-        <select name="entry_type">
-            <option value="">Any</option>
-            {% for et in entry_types %}
+    <!-- Advanced Filters -->
+    <div id="advancedFilters" class="advanced-filters" style="display: {{ 'block' if advanced_open else 'none' }};">
+      <form method="GET" action="{{ url_for('citations_view') }}" class="filters-form">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label class="filter-label">Entry type:</label>
+            <select name="entry_type" class="filter-select">
+              <option value="">Any</option>
+              {% for et in entry_types %}
                 <option value="{{ et.name }}" 
-                    {% if request.args.get('entry_type') == et.name %}selected{% endif %}>
-                    {{ et.name }}
+                  {% if request.args.get('entry_type') == et.name %}selected{% endif %}>
+                  {{ et.name }}
                 </option>
-            {% endfor %}
-        </select>
-        <br><br>
+              {% endfor %}
+            </select>
+          </div>
 
-        <label>Citation key:</label>
-        <input type="text" name="citation_key" maxlength="50" value="{{ request.args.get('citation_key','') }}"><br><br>
+          <div class="filter-group">
+            <label class="filter-label">Citation key:</label>
+            <input type="text" name="citation_key" maxlength="50" 
+                   value="{{ request.args.get('citation_key','') }}" 
+                   class="filter-input">
+          </div>
 
-        <label>Author:</label>
-        <input type="text" name="author" maxlength="50" value="{{ request.args.get('author','') }}"><br><br>
+          <div class="filter-group">
+            <label class="filter-label">Author:</label>
+            <input type="text" name="author" maxlength="50" 
+                   value="{{ request.args.get('author','') }}" 
+                   class="filter-input">
+          </div>
 
-      <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="filter-group year-range">
+            <label class="filter-label">Year:</label>
+            <div class="year-inputs">
+              <input type="number" name="year_from" min="0" max="9999"
+                     value="{{ request.args.get('year_from','') }}"
+                     placeholder="From"
+                     class="filter-input year-input">
+              <span class="year-separator">to</span>
+              <input type="number" name="year_to" min="0" max="9999"
+                     value="{{ request.args.get('year_to','') }}"
+                     placeholder="To"
+                     class="filter-input year-input">
+            </div>
+          </div>
 
-          <label>Year from:</label>
-          <input type="number" name="year_from" min="0" max="9999"
-                value="{{ request.args.get('year_from','') }}"
-                style="width: 100px;">
-          <label>to</label>
-          <input type="number" name="year_to" min="0" max="9999"
-                value="{{ request.args.get('year_to','') }}"
-                style="width: 100px;">
+          <div class="filter-group">
+            <label class="filter-label">Sort by:</label>
+            <select name="sort_by" class="filter-select">
+              <option value="">None</option>
+              <option value="year" {% if request.args.get('sort_by') == 'year' %}selected{% endif %}>Year</option>
+              <option value="citation_key" {% if request.args.get('sort_by') == 'citation_key' %}selected{% endif %}>Citation Key</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Order:</label>
+            <select name="direction" class="filter-select">
+              <option value="ASC" {% if request.args.get('direction', '').upper() == 'ASC' %}selected{% endif %}>Ascending</option>
+              <option value="DESC" {% if request.args.get('direction', '').upper() == 'DESC' %}selected{% endif %}>Descending</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">Apply filters</button>
+          <a href="{{ url_for('citations_view', advanced='1') }}" class="btn btn-secondary">Clear all</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Citations Display -->
+  {% if citations %}
+  <div class="citations-list">
+    {% for c in citations %}
+    <div class="citation-card" id="{{ c.id }}-{{c.citation_key}}">
+      <div class="citation-header">
+        <div class="citation-type-badge">@{{ c.entry_type }}</div>
+        <div class="citation-key">{{ c.citation_key }}</div>
       </div>
-      <br><br>
-            <label>Sort by:</label>
-            <select name="sort_by">
-                <option value="">None</option>
-                <option value="year" {% if request.args.get('sort_by') == 'year' %}selected{% endif %}>Year</option>
-                <option value="citation_key" {% if request.args.get('sort_by') == 'citation_key' %}selected{% endif %}>Citation Key</option>
-            </select>
+      
+      <div class="citation-content">
+        <p class="citation-text">{{ c.to_human_readable() }}</p>
+        {% if c.show_category_and_tags() %}
+        <div class="citation-meta">{{ c.show_category_and_tags() }}</div>
+        {% endif %}
+      </div>
 
-            <label>Order:</label>
-            <select name="direction">
-                <option value="ASC" {% if request.args.get('direction', '').upper() == 'ASC' %}selected{% endif %}>Ascending</option>
-                <option value="DESC" {% if request.args.get('direction', '').upper() == 'DESC' %}selected{% endif %}>Descending</option>
-            </select>
+      <div class="citation-actions">
+        <div class="action-buttons">
+          <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-edit">Edit</button>
+          </form>
+          <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-delete" onclick="return confirm('Are you sure you want to delete this citation?')">Delete</button>
+          </form>
+          <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-view">View BibTeX</button>
+          </form>
+        </div>
+        <label class="export-checkbox">
+          <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
+          <span>Select for export</span>
+        </label>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 
-            <br><br>
-        <button type="submit">Apply filters</button>
-        <a href="{{ url_for('citations_view', advanced='1') }}" style="margin-left:10px;">
-            <button type="button">Clear all</button>
-        </a>
-    </form>
+  <!-- Export Section -->
+  <div class="export-section">
+    <div class="export-card">
+      <h2>Export selected citations as .bib file</h2>
+      <form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
+        <button type="button" onclick="export_bibtex()" class="btn btn-export">Export</button>
+      </form>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <p>No saved citations yet.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Add your first citation</a>
+  </div>
+  {% endif %}
 </div>
 
-<!-- Script for showing and hiding advanced filters on the citations page -->
+<!-- Scripts -->
 <script>
 document.getElementById("toggleFilters").addEventListener("click", function() {
     const box = document.getElementById("advancedFilters");
@@ -85,65 +168,461 @@ document.getElementById("toggleFilters").addEventListener("click", function() {
         this.textContent = "▼ More filters";
     }
 });
-</script>
 
-<p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
-
-
-<!-- Displays the citations-->
-{% if citations %}
-{% for c in citations %}
-
-<div class="citation" id="{{ c.id }}-{{c.citation_key}}">
-  <p>{{ c.show_category_and_tags() }}</p>
-  <p>@{{ c.entry_type }} &mdash; {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
-  <br>
-  <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">Edit</button>
-  </form>
-  <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit" onclick="return confirm('Are you sure you want to delete this citation?')">Delete</button>
-  </form>
-  <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">View BibTeX</button>
-  </form>
-  <label>
-    <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
-    Select {{ c.citation_key }} for export
-  </label>
-</div>
-
-{% endfor %}
-
-<h1>Export selected citations as .bib file</h1>
-<form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
-  <button type="button" onclick="export_bibtex()">Export</button>
-</form>
-
-<script>
-  function export_bibtex() {
-    const form = document.forms['exportform'];
-    const selectedIds = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(function (checkbox) {
-      selectedIds.push(checkbox.id);
-    });
-    if (selectedIds.length === 0) {
-      alert('Please select at least one citation to export.');
-      return;
-    }
-    while (form.lastChild && form.lastChild.name === 'citation_ids') {
-      form.removeChild(form.lastChild);
-    }
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'citation_ids';
-    input.value = selectedIds;
-    form.appendChild(input);
-    form.submit();
+function export_bibtex() {
+  const form = document.forms['exportform'];
+  const selectedIds = [];
+  document.querySelectorAll('input[type="checkbox"]:checked').forEach(function (checkbox) {
+    selectedIds.push(checkbox.id);
+  });
+  if (selectedIds.length === 0) {
+    alert('Please select at least one citation to export.');
+    return;
   }
+  while (form.lastChild && form.lastChild.name === 'citation_ids') {
+    form.removeChild(form.lastChild);
+  }
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'citation_ids';
+  input.value = selectedIds;
+  form.appendChild(input);
+  form.submit();
+}
 </script>
-{% else %}
-<p>No saved citations yet.</p>
-{% endif %}
+
+<style>
+  .citations-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: #a0a0a0;
+  }
+
+  .link-primary {
+    color: #60a5fa;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .link-primary:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+  }
+
+  /* Search and Filter Section */
+  .search-filter-section {
+    margin-bottom: 30px;
+  }
+
+  .search-card {
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    margin-bottom: 15px;
+  }
+
+  .search-form {
+    margin: 0;
+  }
+
+  .search-input-wrapper {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #2a3142;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #242a38;
+    color: #e0e0e0;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .btn-search {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-toggle-filters {
+    width: 100%;
+    padding: 12px 20px;
+    background: #1a1f2e;
+    border: 2px solid #2a3142;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #d0d0d0;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 15px;
+  }
+
+  .btn-toggle-filters:hover {
+    background: #242a38;
+    border-color: #3a4452;
+  }
+
+  .advanced-filters {
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-label {
+    font-weight: 500;
+    color: #e0e0e0;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .filter-input,
+  .filter-select {
+    padding: 10px 12px;
+    border: 2px solid #2a3142;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #242a38;
+    color: #e0e0e0;
+  }
+
+  .filter-input:focus,
+  .filter-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .filter-select option {
+    background: #242a38;
+    color: #e0e0e0;
+  }
+
+  .year-range {
+    grid-column: span 2;
+  }
+
+  .year-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .year-input {
+    flex: 1;
+  }
+
+  .year-separator {
+    color: #808080;
+    font-weight: 500;
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 2px solid #2a3142;
+  }
+
+  .btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-secondary {
+    background: #242a38;
+    color: #d0d0d0;
+    border: 2px solid #2a3142;
+  }
+
+  .btn-secondary:hover {
+    background: #303848;
+    border-color: #3a4452;
+  }
+
+  /* Citations List */
+  .citations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .citation-card {
+    background: #1a1f2e;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s;
+    border: 1px solid #2a3142;
+  }
+
+  .citation-card:hover {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border-color: #667eea;
+  }
+
+  .citation-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .citation-type-badge {
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: lowercase;
+  }
+
+  .citation-key {
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 16px;
+  }
+
+  .citation-content {
+    margin-bottom: 15px;
+  }
+
+  .citation-text {
+    color: #e0e0e0;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  .citation-meta {
+    color: #a0a0a0;
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  .citation-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #2a3142;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-edit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-delete {
+    background: #d32f2f;
+    color: white;
+  }
+
+  .btn-delete:hover {
+    background: #b71c1c;
+    transform: translateY(-1px);
+  }
+
+  .btn-view {
+    background: #2a3142;
+    color: #60a5fa;
+    border: 1px solid #667eea;
+  }
+
+  .btn-view:hover {
+    background: #303848;
+    border-color: #60a5fa;
+  }
+
+  .export-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #d0d0d0;
+    cursor: pointer;
+  }
+
+  .export-checkbox input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Export Section */
+  .export-section {
+    margin-top: 30px;
+  }
+
+  .export-card {
+    background: #1a1f2e;
+    border: 1px solid #2a3142;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    text-align: center;
+  }
+
+  .export-card h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #ffffff;
+  }
+
+  .btn-export {
+    padding: 12px 40px;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #1a1f2e;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid #2a3142;
+  }
+
+  .empty-state p {
+    font-size: 18px;
+    color: #a0a0a0;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .citations-container {
+      padding: 15px;
+    }
+
+    .filters-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .year-range {
+      grid-column: span 1;
+    }
+
+    .citation-actions {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .action-buttons {
+      width: 100%;
+    }
+
+    .btn-action {
+      flex: 1;
+    }
+  }
+</style>
 
 {% endblock %}

@@ -43,6 +43,7 @@ Go To Citations Page
 Go To BibTeX Page
     Go To Citations Page
     Click Button  View BibTeX
+    Wait Until Page Contains  @
     Title Should Be  Citation in BibTeX format
 
 Add Example Article Citation

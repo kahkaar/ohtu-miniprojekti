@@ -10,6 +10,7 @@ Add Additional Entry Fields While Editing
     Add Example Book Citation
     Go To Citations Page
     Click Button  Edit
+    Wait Until Page Contains  Edit Citation
     Title Should Be  Edit Citation
 
     Click Button  Add field
@@ -19,6 +20,7 @@ Add Additional Entry Fields While Editing
     Input Text    xpath=(//input[contains(@class, 'extra-input')])[last()]    This is an extra note added in test
 
     Click Button  Save Changes
+    Wait Until Page Contains  Citation updated successfully.
 
     Go To Citations Page
     Click Button  View BibTeX

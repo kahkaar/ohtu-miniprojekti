@@ -31,8 +31,8 @@ After Changing Entry Type While Editing It Is Reflected
     Input Text  citation_key  doe2018
     Select From List By Label  entry_type  article
     Click Button  Save Changes
-    Title Should Be  Saved Citations
     Wait Until Page Contains  Citation updated successfully.
+    Title Should Be  Saved Citations
     # Verify the entry type label is shown for the citation in the list
     Go To Citations Page
     Page Should Contain  @article
@@ -74,16 +74,15 @@ Adding Duplicate Citation Key Shows Error
     Input Text  title  Example Book
     Input Text  year  2020
     Click Button  Add Citation
+    Wait Until Page Contains  An error occurred while adding the citation: Citation key 'doe2020' already exists.  timeout=5s
     Page Should Contain  An error occurred while adding the citation: Citation key 'doe2020' already exists.
 
 *** Keywords ***
 Find Example Book Citation
-    Go To Citations Page
     Page Should Contain  John Doe (2020). Example Book. Example Publisher.
     Page Should Not Contain  No saved citations yet.
 
 Edit Book Citation
-    Go To Citations Page
     Click Button  Edit
     Input Text  citation_key  doe2019
     Input Text  author  John Doe
@@ -91,15 +90,13 @@ Edit Book Citation
     Input Text  title  Changed Example Book
     Input Text  year  2019
     Click Button  Save Changes
-    Title Should Be  Saved Citations
     Wait Until Page Contains  Citation updated successfully.
+    Title Should Be  Saved Citations
 
 Find Edited Book Citation
-    Go To Citations Page
     Page Should Contain  John Doe (2019). Changed Example Book. Example Publisher.
 
 Confirm No Example Book Citation Is In The List
-    Go To Citations Page
     Page Should Not Contain  John Doe (2020). Example Book. Example Publisher.
 
 Delete Citation
