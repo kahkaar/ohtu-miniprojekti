@@ -22,6 +22,39 @@ After Editing A Book Citation It Is Shown In The List
     Find Edited Book Citation
     Confirm No Example Book Citation Is In The List
 
+After Changing Entry Type While Editing It Is Reflected
+    Add Example Book Citation
+    Go To Citations Page
+    # Open edit page for the added citation
+    Click Button  Edit
+    # Change citation key to ensure uniqueness and change entry type to 'article'
+    Input Text  citation_key  doe2018
+    Select From List By Label  entry_type  article
+    Click Button  Save Changes
+    Title Should Be  Saved Citations
+    Wait Until Page Contains  Citation updated successfully.
+    # Verify the entry type label is shown for the citation in the list
+    Go To Citations Page
+    Page Should Contain  @article
+
+Edit Page Shows Entry Type Select
+    Add Example Book Citation
+    Go To Citations Page
+    Click Button  Edit
+    Page Should Contain  Entry type:
+
+Keeping Entry Type Unchanged Preserves It
+    Add Example Book Citation
+    Go To Citations Page
+    Click Button  Edit
+    # change only citation key and explicitly choose the '(keep current: book)' option
+    Input Text  citation_key  doe2017
+    Select From List By Label  entry_type  (keep current: book)
+    Click Button  Save Changes
+    Wait Until Page Contains  Citation updated successfully.
+    Go To Citations Page
+    Page Should Contain  @book
+
 After Deleting A Book Citation It Is No Longer In The List
     Add Example Book Citation
     Go To Citations Page
