@@ -375,7 +375,7 @@ def fetch_doi_metadata(doi_input):
         fields["author"] = author_str
 
     year_val = _doi_parse_year(data)
-    if year_val:
+    if isinstance(year_val, int) and 0 <= year_val <= 9999:
         fields["year"] = year_val
 
     journ = _doi_first_of_keys(
