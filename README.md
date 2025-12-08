@@ -50,6 +50,18 @@ poetry run python src/index.py
 pre-commit install
 ```
 
+### Seeding the Database
+
+- Initialize database
+```bash
+poetry run python src/db_helper.py
+```
+
+- Seed database with (believable) data
+```bash
+poetry run python src/seed.py
+```
+
 
 ## Definition of done
 - The feature is implemented
