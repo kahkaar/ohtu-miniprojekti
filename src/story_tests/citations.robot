@@ -90,8 +90,8 @@ Edit Book Citation
     Input Text  title  Changed Example Book
     Input Text  year  2019
     Click Button  Save Changes
-    Title Should Be  Saved Citations
     Wait Until Page Contains  Citation updated successfully.
+    Title Should Be  Saved Citations
 
 Find Edited Book Citation
     Page Should Contain  John Doe (2019). Changed Example Book. Example Publisher.
