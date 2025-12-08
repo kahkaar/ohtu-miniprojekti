@@ -540,7 +540,6 @@ class TestDOIHelpers(unittest.TestCase):
 
     def test__doi_parse_authors_all_combinations(self):
         # Exhaustively test presence/absence of given/family/literal
-        keys = ('given', 'family', 'literal')
         for given_present in (False, True):
             for family_present in (False, True):
                 for literal_present in (False, True):
