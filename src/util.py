@@ -298,7 +298,7 @@ def _doi_first_of_keys(dct, keys):
         v = dct.get(k)
         if v:
             if isinstance(v, list):
-                return v[0] if v else None
+                return v[0]
             return v
     return None
 
