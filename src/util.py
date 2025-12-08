@@ -285,10 +285,10 @@ def _doi_extract(value):
 
 
 def _doi_request_json(doi):
-    url = f"https://citation.doi.org/metadata?doi={doi}"
+    url = "https://citation.doi.org/metadata"
     headers = {
         "Accept": "application/vnd.citationstyles.csl+json, application/json"}
-    resp = requests.get(url, headers=headers, timeout=10)
+    resp = requests.get(url, params={"doi": doi}, headers=headers, timeout=10)
     resp.raise_for_status()
     return resp.json()
 
