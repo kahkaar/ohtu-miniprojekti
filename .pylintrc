@@ -1,6 +1,7 @@
 [MASTER]
 
-ignore-paths=src/tests
+ignore-paths=src/tests,
+             src/seed.py
 
 [MESSAGE CONTROL]
 
