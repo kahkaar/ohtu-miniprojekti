@@ -1,5 +1,7 @@
 import json
+import re
 
+import requests
 from flask import session
 
 from entities.category import Category, Tag
@@ -274,3 +276,127 @@ def to_entry_type(row):
         entry_type_id=row.id,
         name=row.name,
     )
+
+
+def _doi_extract(value):
+    s = str(value).strip()
+    m = re.search(r"10\.\d{4,9}/\S+", s)
+    return m.group(0).rstrip(".") if m else None
+
+
+def _doi_request_json(doi):
+    url = "https://citation.doi.org/metadata"
+    headers = {
+        "Accept": "application/vnd.citationstyles.csl+json, application/json"}
+    resp = requests.get(url, params={"doi": doi}, headers=headers, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _doi_first_of_keys(dct, keys):
+    for k in keys:
+        v = dct.get(k)
+        if v:
+            if isinstance(v, list):
+                return v[0]
+            return v
+    return None
+
+
+def _doi_parse_authors(auth_list):
+    if not isinstance(auth_list, (list, tuple)):
+        return None
+    parts = []
+    for a in auth_list:
+        if isinstance(a, dict):
+            given = a.get("given")
+            family = a.get("family")
+            literal = a.get("literal")
+            if given and family:
+                parts.append(f"{given} {family}")
+            elif literal:
+                parts.append(literal)
+            elif family:
+                parts.append(family)
+        elif isinstance(a, str):
+            parts.append(a)
+    return "; ".join(parts) if parts else None
+
+
+def _doi_parse_year(dct):
+    issued = dct.get("issued") or dct.get("created") or {}
+    if not isinstance(issued, dict):
+        return None
+    dp = issued.get("date-parts") or issued.get("date_parts")
+    if isinstance(dp, list) and dp and isinstance(dp[0], (list, tuple)) and dp[0]:
+        first = dp[0][0]
+        try:
+            return int(first)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def fetch_doi_metadata(doi_input):
+    """Fetch citation metadata for a DOI.
+
+    This function extracts a DOI from the input, queries the DOI metadata
+    endpoint and returns a compact `fields` dict. It delegates parsing tasks
+    to small helpers to keep complexity low (fewer local variables and
+    branches) and avoids catching overly broad exceptions.
+    """
+    # pylint: disable=R0912
+
+    if not doi_input:
+        return None
+
+    doi = _doi_extract(doi_input)
+    if not doi:
+        return None
+
+    try:
+        data = _doi_request_json(doi)
+    except requests.RequestException:
+        return None
+    except ValueError:
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    fields = {}
+
+    title = _doi_first_of_keys(data, ("title",))
+    if title:
+        fields["title"] = title
+
+    author_str = _doi_parse_authors(data.get("author") or data.get("authors"))
+    if author_str:
+        fields["author"] = author_str
+
+    year_val = _doi_parse_year(data)
+    if isinstance(year_val, int) and 0 <= year_val <= 9999:
+        fields["year"] = year_val
+
+    journ = _doi_first_of_keys(
+        data, ("container-title", "container_title", "journaltitle", "journal"))
+    if journ:
+        fields["journaltitle"] = journ
+
+    pub = _doi_first_of_keys(data, ("publisher", "publisher-name"))
+    if pub:
+        fields["publisher"] = pub
+
+    pages = data.get("page") or data.get("pages")
+    if pages:
+        fields["pages"] = pages
+
+    vol = data.get("volume")
+    if vol is not None:
+        fields["volume"] = str(vol)
+
+    num = data.get("issue") or data.get("number")
+    if num is not None:
+        fields["number"] = str(num)
+
+    return fields or None

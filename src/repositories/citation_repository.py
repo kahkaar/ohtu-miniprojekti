@@ -263,19 +263,25 @@ def update_citation(
 
 
 def update_citation_with_metadata(
-        citation_id,
-        citation_key=None,
-        fields=None,
-        category=None,
-        tags=None
-):
+    citation_id,
+    citation_key=None,
+    fields=None,
+    category=None,
+    tags=None,
+    entry_type_id=None,
+):  # pylint: disable=R0913,R0917
     """Updates a citation along with its associated category and tags."""
 
-    update_citation(
-        citation_id=citation_id,
-        citation_key=citation_key,
-        fields=fields
-    )
+    # Preserve previous behavior: only pass entry_type_id when explicitly provided
+    update_args = {
+        "citation_id": citation_id,
+        "citation_key": citation_key,
+        "fields": fields,
+    }
+    if entry_type_id is not None:
+        update_args["entry_type_id"] = entry_type_id
+
+    update_citation(**update_args)
 
     if category:
         db.session.execute(
