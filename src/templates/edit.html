@@ -11,6 +11,18 @@
     <input type="text" name="citation_key" value="{{ citation.citation_key }}" required>
   </label>
   <br>
+  {% if entry_types %}
+  <label>Entry type:
+    <select name="entry_type">
+      <option value="">(keep current: {{ citation.entry_type }})</option>
+      {% for et in entry_types %}
+      <option value="{{ et.id }}" {% if et.name==citation.entry_type %}selected{% endif %}>{{ et.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <br>
+  {% endif %}
+  <br>
   <label>Import from DOI (full link or id):
     <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/...">
     <button type="button" id="doi_fetch">Fetch DOI</button>
