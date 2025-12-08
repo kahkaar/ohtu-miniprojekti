@@ -31,8 +31,8 @@ After Changing Entry Type While Editing It Is Reflected
     Input Text  citation_key  doe2018
     Select From List By Label  entry_type  article
     Click Button  Save Changes
-    Title Should Be  Saved Citations
     Wait Until Page Contains  Citation updated successfully.
+    Title Should Be  Saved Citations
     # Verify the entry type label is shown for the citation in the list
     Go To Citations Page
     Page Should Contain  @article
