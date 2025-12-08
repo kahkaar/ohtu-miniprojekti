@@ -79,12 +79,10 @@ Adding Duplicate Citation Key Shows Error
 
 *** Keywords ***
 Find Example Book Citation
-    Go To Citations Page
     Page Should Contain  John Doe (2020). Example Book. Example Publisher.
     Page Should Not Contain  No saved citations yet.
 
 Edit Book Citation
-    Go To Citations Page
     Click Button  Edit
     Input Text  citation_key  doe2019
     Input Text  author  John Doe
@@ -96,11 +94,9 @@ Edit Book Citation
     Wait Until Page Contains  Citation updated successfully.
 
 Find Edited Book Citation
-    Go To Citations Page
     Page Should Contain  John Doe (2019). Changed Example Book. Example Publisher.
 
 Confirm No Example Book Citation Is In The List
-    Go To Citations Page
     Page Should Not Contain  John Doe (2020). Example Book. Example Publisher.
 
 Delete Citation
