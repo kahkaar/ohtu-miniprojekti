@@ -92,6 +92,60 @@
           </div>
         </div>
 
+          <div class="filter-group">
+                    <label class="filter-label">Tags:</label>
+
+                    <div id="selected-tags" class="chip-container">
+                      {% for tag in selected_tags %}
+                        <div class="chip" data-value="{{ tag }}">
+                          {{ tag }} <span class="chip-remove" data-value="{{ tag }}">✕</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+
+                    <select id="tag-select" class="filter-select">
+                      <option value="">+ Add tag</option>
+                      {% for tag in tags %}
+                        {% if tag.name not in selected_tags %}
+                          <option value="{{ tag.name }}">{{ tag.name }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+
+                    <div id="tag-hidden-inputs">
+                      {% for tag in selected_tags %}
+                        <input type="hidden" name="tags" value="{{ tag }}">
+                      {% endfor %}
+                    </div>
+                  </div>
+
+                  <div class="filter-group">
+                    <label class="filter-label">Categories:</label>
+
+                    <div id="selected-categories" class="chip-container">
+                      {% for c in selected_categories %}
+                        <div class="chip" data-value="{{ c }}">
+                          {{ c }} <span class="chip-remove-category" data-value="{{ c }}">✕</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+
+                    <select id="category-select" class="filter-select">
+                      <option value="">+ Add category</option>
+                      {% for cat in categories %}
+                        {% if cat.name not in selected_categories %}
+                          <option value="{{ cat.name }}">{{ cat.name }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+
+                    <div id="category-hidden-inputs">
+                      {% for c in selected_categories %}
+                        <input type="hidden" name="categories" value="{{ c }}">
+                      {% endfor %}
+                    </div>
+                  </div>
+
         <div class="filter-actions">
           <button type="submit" class="btn btn-primary">Apply filters</button>
           <a href="{{ url_for('citations_view', advanced='1') }}" class="btn btn-secondary">Clear all</a>
@@ -189,6 +243,93 @@ function export_bibtex() {
   form.appendChild(input);
   form.submit();
 }
+</script>
+
+<script>
+const tagSelect = document.getElementById("tag-select");
+const chipContainer = document.getElementById("selected-tags");
+const hiddenInputs = document.getElementById("tag-hidden-inputs");
+
+tagSelect.addEventListener("change", function() {
+    const value = this.value;
+    if (!value) return;
+
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.dataset.value = value;
+    chip.innerHTML = `${value} <span class="chip-remove" data-value="${value}">✕</span>`;
+    chipContainer.appendChild(chip);
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "tags";
+    input.value = value;
+    hiddenInputs.appendChild(input);
+
+    this.querySelector(`option[value="${value}"]`).remove();
+    this.value = "";
+});
+
+document.addEventListener("click", function(e) {
+    if (!e.target.classList.contains("chip-remove")) return;
+
+    const value = e.target.dataset.value;
+
+    const chip = chipContainer.querySelector(`.chip[data-value="${value}"]`);
+    chip.remove();
+
+    const input = hiddenInputs.querySelector(`input[value="${value}"]`);
+    input.remove();
+
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    tagSelect.appendChild(opt);
+});
+</script>
+
+<script>
+/* CATEGORY CHIP LOGIC */
+const categorySelect = document.getElementById("category-select");
+const categoryChips = document.getElementById("selected-categories");
+const categoryInputs = document.getElementById("category-hidden-inputs");
+
+categorySelect.addEventListener("change", function() {
+    const value = this.value;
+    if (!value) return;
+
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.dataset.value = value;
+    chip.innerHTML = `${value} <span class="chip-remove-category" data-value="${value}">✕</span>`;
+    categoryChips.appendChild(chip);
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "categories";
+    input.value = value;
+    categoryInputs.appendChild(input);
+
+    this.querySelector(`option[value="${value}"]`).remove();
+    this.value = "";
+});
+
+document.addEventListener("click", function(e) {
+    if (!e.target.classList.contains("chip-remove-category")) return;
+
+    const value = e.target.dataset.value;
+
+    const chip = categoryChips.querySelector(`.chip[data-value="${value}"]`);
+    if (chip) chip.remove();
+
+    const input = categoryInputs.querySelector(`input[value="${value}"]`);
+    if (input) input.remove();
+
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    categorySelect.appendChild(opt);
+});
 </script>
 
 <style>
@@ -596,6 +737,35 @@ function export_bibtex() {
     color: #a0a0a0;
     margin-bottom: 20px;
   }
+  .chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    }
+
+  .chip {
+    background: #242a38;
+    border: 1px solid #667eea;
+    color: #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    }
+    
+  .chip-remove-category {
+    cursor: pointer;
+    color: #a0a0a0;
+    font-weight: bold;
+    }
+
+  .chip-remove:hover,
+    .chip-remove-category:hover {
+      color: #ff6b6b;
+    }
 
   @media (max-width: 768px) {
     .citations-container {
