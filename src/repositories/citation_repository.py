@@ -403,6 +403,7 @@ def delete_citation(citation_id):
 
 
 def search_citations(queries=None):
+    # pylint: disable=too-many-branches, too-many-statements
     if queries is None:
         queries = {}
     base_sql = """
@@ -464,6 +465,30 @@ def search_citations(queries=None):
     if year_to:
         filters.append("(c.fields->>'year')::int <= :year_to")
         params["year_to"] = year_to
+
+    tag_names = queries.get("tags")
+    if tag_names:
+        filters.append("""
+            c.id IN (
+                SELECT citation_id
+                FROM citations_to_tags ctt
+                JOIN tags t ON t.id = ctt.tag_id
+                WHERE t.name = ANY(:tag_names)
+            )
+        """)
+        params["tag_names"] = tag_names
+
+    category_names = queries.get("categories")
+    if category_names:
+        filters.append("""
+            c.id IN (
+                SELECT citation_id
+                FROM citations_to_categories ctc
+                JOIN categories cat ON cat.id = ctc.category_id
+                WHERE cat.name = ANY(:category_names)
+            )
+        """)
+        params["category_names"] = category_names
 
     if filters:
         base_sql += " WHERE " + " AND ".join(filters)
