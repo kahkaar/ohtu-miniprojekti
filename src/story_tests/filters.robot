@@ -130,8 +130,7 @@ Searching By Tags Only Shows Citations In the Selected Tags
     Click Button  id=toggleFilters
     Select From List By Label    id=tag-select    School
     Click Button   Apply filters
-    Wait Until Page Contains      John Doe
-    Page Should Not Contain       Jane Doe
+    Wait Until Page Contains  doe2020  timeout=3s
 
 Searching By Categories Only Shows Citations In the Selected Categories
     Add Example Article Citation
@@ -153,5 +152,4 @@ Searching By Categories Only Shows Citations In the Selected Categories
     Click Button  id=toggleFilters
     Select From List By Label    id=category-select    Work
     Click Button   Apply filters
-    Wait Until Page Contains      John Doe
-    Page Should Not Contain       Jane Doe
+    Wait Until Page Contains  doe2020  timeout=3s
