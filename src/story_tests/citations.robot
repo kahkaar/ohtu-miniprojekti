@@ -28,6 +28,7 @@ After Changing Entry Type While Editing It Is Reflected
     # Open edit page for the added citation
     Click Button  Edit
     # Change citation key to ensure uniqueness and change entry type to 'article'
+    Wait Until Page Contains  Edit Citation
     Input Text  citation_key  doe2018
     Select From List By Label  entry_type  article
     Click Button  Save Changes
