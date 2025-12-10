@@ -64,7 +64,6 @@
 
           <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
 
-          <!-- Template for a single extra field row -->
           <template id="extra_row_template">
             <div class="extra-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
               <div>
@@ -93,24 +92,18 @@
               var addBtn = document.getElementById('add_extra');
 
               function updateDisabledOptions() {
-                // Collect selected values
                 var selects = container.querySelectorAll('.extra-select');
                 var chosen = {};
                 selects.forEach(function (s) {
                   if (s.value) chosen[s.value] = true;
                 });
 
-                // For every select, disable options that are chosen by others
                 selects.forEach(function (s) {
                   var options = s.options;
                   for (var i = 0; i < options.length; i++) {
                     var opt = options[i];
                     if (opt.value === '') { opt.disabled = false; continue; }
-                    // allow the currently selected option on this select
-                    if (s.value === opt.value) {
-                      opt.disabled = false;
-                      continue;
-                    }
+                    if (s.value === opt.value) { opt.disabled = false; continue; }
                     opt.disabled = !!chosen[opt.value];
                   }
                 });
@@ -142,18 +135,14 @@
                 updateDisabledOptions();
               });
 
-              // Prepopulate extra fields with any non-default fields that aren't already rendered
               (function initExistingExtras() {
                 var existing = {{ citation.fields| tojson }} || {};
                 var defaults = {{ default_fields| tojson }} || [];
                 for (var k in existing) {
                   if (!existing.hasOwnProperty(k)) continue;
-                  // skip default fields and fields that are already present as inputs in the form
                   if (defaults.indexOf(k) !== -1) continue;
-                  // also skip keys if an input with that name already exists
                   if (document.querySelector('input[name="' + k + '"]')) continue;
 
-                  // create a row and set values
                   addBtn.click();
                   var last = container.lastElementChild;
                   var sel = last.querySelector('.extra-select');
@@ -163,58 +152,81 @@
                   inp.value = existing[k];
                   inp.name = k;
                 }
-              }) ();
+              })();
 
-              // initialize with one row if there are no existing extras
               if (!container.children.length) {
                 addBtn.click();
               }
-            }) ();
+            })();
           </script>
         </div>
         {% endif %}
 
+        <!-- FIXED CHIP SYSTEM -->
         <div class="form-section">
           <h4>Categories & Tags</h4>
-          
-          {% if categories %}
+
+          <!-- CATEGORIES -->
           <div class="form-group">
-            <label class="form-label">Select an existing category:</label>
-            <div class="select-wrapper">
-              <select name="category" class="form-select">
-                <option value="" selected>None</option>
-                {% for c in categories or [] %}
-                <option value="{{ c.name }}" {% if c.name in citation.categories %}selected{% endif %}>{{ c.name }}</option>
-                {% endfor %}
-              </select>
+            <label class="form-label">Categories:</label>
+
+            <div id="selected-categories" class="chip-container">
+              {% for c in citation.categories %}
+                <div class="chip" data-value="{{ c }}">
+                  {{ c }} <span class="chip-remove-category" data-value="{{ c }}">✕</span>
+                </div>
+              {% endfor %}
             </div>
-          </div>
-          {% endif %}
 
-          <div class="form-group">
-            <label class="form-label">Create a new category:</label>
-            <input type="text" name="category_new" placeholder="New Category" class="form-input">
-          </div>
+            <select id="category-select" class="form-select">
+              <option value="">+ Add category</option>
+              {% for cat in categories %}
+                {% if cat.name not in citation.categories %}
+                  <option value="{{ cat.name }}">{{ cat.name }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
 
-          {% if tags %}
-          <div class="form-group">
-            <label class="form-label">Select existing tags:</label>
-            <div class="select-wrapper">
-              <select name="tags" multiple class="form-select multi-select">
-                {% for t in tags or [] %}
-                <option value="{{ t.name }}" {% if t.name in citation.tags %}selected{% endif %}>{{ t.name }}</option>
-                {% endfor %}
-              </select>
+            <div id="category-hidden-inputs">
+              {% for c in citation.categories %}
+                <input type="hidden" name="categories" value="{{ c }}">
+              {% endfor %}
             </div>
-            <small class="form-hint">Hold Ctrl/Cmd to select multiple</small>
-          </div>
-          {% endif %}
 
+            <input type="text" name="category_new" placeholder="Create new category" class="form-input" style="margin-top:10px;">
+          </div>
+
+          <!-- TAGS -->
           <div class="form-group">
-            <label class="form-label">Create new tags (comma-separated):</label>
-            <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input">
+            <label class="form-label">Tags:</label>
+
+            <div id="selected-tags" class="chip-container">
+              {% for t in citation.tags %}
+                <div class="chip" data-value="{{ t }}">
+                  {{ t }} <span class="chip-remove" data-value="{{ t }}">✕</span>
+                </div>
+              {% endfor %}
+            </div>
+
+            <select id="tag-select" class="form-select">
+              <option value="">+ Add tag</option>
+              {% for t in tags %}
+                {% if t.name not in citation.tags %}
+                  <option value="{{ t.name }}">{{ t.name }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+
+            <div id="tag-hidden-inputs">
+              {% for t in citation.tags %}
+                <input type="hidden" name="tags" value="{{ t }}">
+              {% endfor %}
+            </div>
+
+            <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input" style="margin-top:10px;">
           </div>
         </div>
+        <!-- END FIX -->
 
         <script>
           (function () {
@@ -296,6 +308,93 @@
   </div>
 </div>
 {% endif %}
+
+<!-- CHIP SYSTEM JAVASCRIPT -->
+<script>
+const tagSelect = document.getElementById("tag-select");
+const chipContainer = document.getElementById("selected-tags");
+const hiddenInputs = document.getElementById("tag-hidden-inputs");
+
+tagSelect.addEventListener("change", function() {
+    const value = this.value;
+    if (!value) return;
+
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.dataset.value = value;
+    chip.innerHTML = `${value} <span class="chip-remove" data-value="${value}">✕</span>`;
+    chipContainer.appendChild(chip);
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "tags";
+    input.value = value;
+    hiddenInputs.appendChild(input);
+
+    this.querySelector(`option[value="${value}"]`).remove();
+    this.value = "";
+});
+
+document.addEventListener("click", function(e) {
+    if (!e.target.classList.contains("chip-remove")) return;
+
+    const value = e.target.dataset.value;
+
+    const chip = chipContainer.querySelector(`.chip[data-value="${value}"]`);
+    chip.remove();
+
+    const input = hiddenInputs.querySelector(`input[value="${value}"]`);
+    input.remove();
+
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    tagSelect.appendChild(opt);
+});
+</script>
+
+<script>
+const categorySelect = document.getElementById("category-select");
+const categoryChips = document.getElementById("selected-categories");
+const categoryInputs = document.getElementById("category-hidden-inputs");
+
+categorySelect.addEventListener("change", function() {
+    const value = this.value;
+    if (!value) return;
+
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.dataset.value = value;
+    chip.innerHTML = `${value} <span class="chip-remove-category" data-value="${value}">✕</span>`;
+    categoryChips.appendChild(chip);
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "categories";
+    input.value = value;
+    categoryInputs.appendChild(input);
+
+    this.querySelector(`option[value="${value}"]`).remove();
+    this.value = "";
+});
+
+document.addEventListener("click", function(e) {
+    if (!e.target.classList.contains("chip-remove-category")) return;
+
+    const value = e.target.dataset.value;
+
+    const chip = categoryChips.querySelector(`.chip[data-value="${value}"]`);
+    chip.remove();
+
+    const input = categoryInputs.querySelector(`input[value="${value}"]`);
+    input.remove();
+
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    categorySelect.appendChild(opt);
+});
+</script>
 
 <style>
   .edit-container {
@@ -522,6 +621,35 @@
     color: #a0a0a0;
     margin-bottom: 20px;
   }
+  .chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    }
+
+  .chip {
+    background: #242a38;
+    border: 1px solid #667eea;
+    color: #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    }
+    
+  .chip-remove-category {
+    cursor: pointer;
+    color: #a0a0a0;
+    font-weight: bold;
+    }
+
+  .chip-remove:hover,
+    .chip-remove-category:hover {
+      color: #ff6b6b;
+    }
 
   @media (max-width: 768px) {
     .edit-container {
