@@ -110,3 +110,48 @@ Sorting By Citation Key Descending Shows Z→A
     ${text}=   Get Text   css=body
     Should Match Regexp    ${text}    (?s)doe2020.*doe1998
 
+Searching By Tags Only Shows Citations In the Selected Tags
+    Add Example Article Citation
+    Go To Home Page
+    Select From List By Label  entry_type  book
+    Click Button  Select
+    Wait Until Page Contains  Selected entry type 'book'
+    Input Text  citation_key  doe2020
+    Input Text  author  John Doe
+    Input Text  publisher  Example Publisher
+    Input Text  title  Example Book
+    Input Text  year  2020
+    Input Text    name=category_new    Work
+    Input Text    name=tags_new        School
+
+    Click Button  Add Citation
+    Wait Until Page Contains  A new citation was added successfully!
+    Go To Citations Page
+    Click Button  id=toggleFilters
+    Select From List By Label    id=tag-select    School
+    Click Button   Apply filters
+    Wait Until Page Contains      John Doe
+    Page Should Not Contain       Jane Doe
+
+Searching By Categories Only Shows Citations In the Selected Categories
+    Add Example Article Citation
+    Go To Home Page
+    Select From List By Label  entry_type  book
+    Click Button  Select
+    Wait Until Page Contains  Selected entry type 'book'
+    Input Text  citation_key  doe2020
+    Input Text  author  John Doe
+    Input Text  publisher  Example Publisher
+    Input Text  title  Example Book
+    Input Text  year  2020
+    Input Text    name=category_new    Work
+    Input Text    name=tags_new        School
+
+    Click Button  Add Citation
+    Wait Until Page Contains  A new citation was added successfully!
+    Go To Citations Page
+    Click Button  id=toggleFilters
+    Select From List By Label    id=category-select    Work
+    Click Button   Apply filters
+    Wait Until Page Contains      John Doe
+    Page Should Not Contain       Jane Doe
