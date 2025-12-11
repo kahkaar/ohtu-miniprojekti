@@ -142,6 +142,17 @@ def parse_search_queries(args):
     q_val = args.get("q", "")
     q_sanitized = sanitize(q_val) if q_val is not None else ""
 
+    tag_list = args.get("tag_list", [])
+    if isinstance(tag_list, str):
+        tag_list = [tag_list]
+
+    category_list = args.get("category_list", [])
+    if isinstance(category_list, str):
+        category_list = [category_list]
+
+    tags = [sanitize(t) for t in tag_list if sanitize(t)]
+    categories = [sanitize(c) for c in category_list if sanitize(c)]
+
     return {
         "q": q_sanitized or "",
         "citation_key": _str_lower("citation_key"),
@@ -151,6 +162,8 @@ def parse_search_queries(args):
         "year_to": _int_or_none(args.get("year_to")),
         "sort_by": sort_by,
         "direction": direction,
+        "tags": tags,
+        "categories": categories,
     }
 
 

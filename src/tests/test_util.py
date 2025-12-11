@@ -742,6 +742,17 @@ class TestUtilExtra(unittest.TestCase):
         out = util.extract_metadata(f)
         self.assertEqual(out.get("tags"), ["a", "b"])
 
+    def test_parse_search_queries_with_str_tags_cats(self):
+        args = {
+            "tag_list": " tag1 ",
+            "category_list": " catA ",
+        }
+
+        parsed = util.parse_search_queries(args)
+
+        self.assertEqual(parsed["tags"], ["tag1"])
+        self.assertEqual(parsed["categories"], ["catA"])
+
 
 if __name__ == "__main__":
     unittest.main()
