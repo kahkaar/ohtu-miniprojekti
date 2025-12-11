@@ -43,7 +43,7 @@
     <div class="card-body">
       <form method="post" class="citation-form">
         <h3>Fill in the details:</h3>
-        
+
         <div class="form-group">
           <label class="form-label">Citation key: <span class="required">*</span></label>
           <input type="text" name="citation_key" required class="form-input">
@@ -52,7 +52,8 @@
         <div class="form-group">
           <label class="form-label">Import from DOI (full link or id):</label>
           <div style="display: flex; gap: 10px;">
-            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input" style="flex: 1;">
+            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input"
+              style="flex: 1;">
             <button type="button" id="doi_fetch" class="btn btn-primary">Fetch DOI</button>
           </div>
           <div id="doi_status" style="color: #ff6b6b; margin-top: 8px; font-size: 14px;"></div>
@@ -70,17 +71,19 @@
         {% if default_fields %}
         <div class="form-section">
           <h4>Additional Fields</h4>
-          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be saved as global defaults)</p>
+          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be
+            saved as global defaults)</p>
 
           <div id="extra_fields_container">
-            <!-- Existing extra rows will be appended here -->
+            {# <!-- Existing extra rows will be appended here --> #}
           </div>
 
           <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
 
-          <!-- Template for a single extra field row -->
+          {# <!-- Template for a single extra field row --> #}
           <template id="extra_row_template">
-            <div class="extra-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
+            <div class="extra-row"
+              style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
               <div>
                 <label class="form-label" style="margin-bottom: 5px;">Field:</label>
                 <select class="extra-select form-select">
@@ -92,7 +95,8 @@
               </div>
               <div>
                 <label class="form-label" style="margin-bottom: 5px;">Value:</label>
-                <input type="text" class="extra-input form-input" name="additional_field_value" placeholder="Value for field">
+                <input type="text" class="extra-input form-input" name="additional_field_value"
+                  placeholder="Value for field">
               </div>
               <div style="display: flex; align-items: flex-end;">
                 <button type="button" class="remove-extra btn btn-secondary" style="padding: 12px 20px;">Remove</button>
@@ -100,175 +104,58 @@
             </div>
           </template>
 
-          <script>
-            (function () {
-              var container = document.getElementById('extra_fields_container');
-              var tpl = document.getElementById('extra_row_template');
-              var addBtn = document.getElementById('add_extra');
-
-              function updateDisabledOptions() {
-                // Collect selected values
-                var selects = container.querySelectorAll('.extra-select');
-                var chosen = {};
-                selects.forEach(function (s) {
-                  if (s.value) chosen[s.value] = true;
-                });
-
-                // For every select, disable options that are chosen by others
-                selects.forEach(function (s) {
-                  var options = s.options;
-                  for (var i = 0; i < options.length; i++) {
-                    var opt = options[i];
-                    if (opt.value === '') { opt.disabled = false; continue; }
-                    // allow the currently selected option on this select
-                    if (s.value === opt.value) {
-                      opt.disabled = false;
-                      continue;
-                    }
-                    opt.disabled = !!chosen[opt.value];
-                  }
-                });
-              }
-
-              function bindRow(row) {
-                var select = row.querySelector('.extra-select');
-                var input = row.querySelector('.extra-input');
-                var remove = row.querySelector('.remove-extra');
-
-                function onChange() {
-                  var field = select.value || '';
-                  input.name = field || 'additional_field_value';
-                  updateDisabledOptions();
-                }
-
-                select.addEventListener('change', onChange);
-                remove.addEventListener('click', function (e) {
-                  e.preventDefault();
-                  row.remove();
-                  updateDisabledOptions();
-                });
-              }
-
-              addBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var clone = tpl.content.firstElementChild.cloneNode(true);
-                container.appendChild(clone);
-                bindRow(clone);
-                updateDisabledOptions();
-              });
-
-              // initialize with one row
-              addBtn.click();
-            })();
-          </script>
+          {# <!-- extra fields initialized by shared script --> #}
         </div>
         {% endif %}
 
         <div class="form-section">
           <h4>Categories & Tags</h4>
-          
-          {% if categories %}
+
           <div class="form-group">
-            <label class="form-label">Select an existing category:</label>
-            <div class="select-wrapper">
-              <select name="category" class="form-select">
-                <option value="" selected>Select a category</option>
-                {% for c in categories or [] %}
-                <option value="{{ c.name }}">{{ c.name }}</option>
-                {% endfor %}
-              </select>
+            <label class="form-label">Categories:</label>
+
+            <div id="selected-categories" class="chip-container">
+              {# <!-- no pre-selected categories on add page --> #}
             </div>
-          </div>
-          {% endif %}
 
-          <div class="form-group">
-            <label class="form-label">Create a new category:</label>
-            <input type="text" name="category_new" placeholder="New Category" class="form-input">
-          </div>
+            <select id="category-select" class="form-select">
+              <option value="">+ Add category</option>
+              {% for cat in categories %}
+              <option value="{{ cat.name }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
 
-          {% if tags %}
-          <div class="form-group">
-            <label class="form-label">Select existing tags:</label>
-            <div class="select-wrapper">
-              <select name="tags" multiple class="form-select multi-select">
-                {% for t in tags or [] %}
-                <option value="{{ t.name }}">{{ t.name }}</option>
-                {% endfor %}
-              </select>
+            <div id="category-hidden-inputs">
+              {# <!-- hidden inputs for selected categories will be appended here --> #}
             </div>
-            <small class="form-hint">Hold Ctrl/Cmd to select multiple</small>
+
+            <input type="text" name="new_categories" placeholder="Computer Science, Chemistry" class="form-input"
+              style="margin-top:10px;">
           </div>
-          {% endif %}
 
           <div class="form-group">
-            <label class="form-label">Create new tags (comma-separated):</label>
-            <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input">
+            <label class="form-label">Tags:</label>
+
+            <div id="selected-tags" class="chip-container">
+              {# <!-- no pre-selected tags on add page --> #}
+            </div>
+
+            <select id="tag-select" class="form-select">
+              <option value="">+ Add tag</option>
+              {% for t in tags %}
+              <option value="{{ t.name }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+
+            <div id="tag-hidden-inputs">
+              {# <!-- hidden inputs for selected tags will be appended here --> #}
+            </div>
+
+            <input type="text" name="new_tags" placeholder="OHTU, TINT" class="form-input" style="margin-top:10px;">
           </div>
         </div>
 
-        <script>
-          (function () {
-            var btn = document.getElementById('doi_fetch');
-            var input = document.getElementById('doi_input');
-            var status = document.getElementById('doi_status');
-
-            if (!btn) return;
-
-            btn.addEventListener('click', function (e) {
-              e.preventDefault();
-              var v = input.value && input.value.trim();
-              if (!v) {
-                status.textContent = 'Please provide a DOI or DOI link.';
-                return;
-              }
-              status.textContent = 'Fetching...';
-              status.style.color = '#60a5fa';
-              fetch('/doi_lookup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doi: v })
-              }).then(function (res) {
-                if (!res.ok) throw res;
-                return res.json();
-              }).then(function (data) {
-                status.textContent = 'DOI data loaded successfully!';
-                status.style.color = '#48bb78';
-                var fields = data.fields || {};
-                // populate known inputs
-                Object.keys(fields).forEach(function (k) {
-                  var el = document.querySelector('[name="' + k + '"]');
-                  if (el) {
-                    el.value = fields[k];
-                  } else {
-                    // create extra field row if default_fields present
-                    var addBtn = document.getElementById('add_extra');
-                    if (addBtn) {
-                      addBtn.click();
-                      var container = document.getElementById('extra_fields_container');
-                      var last = container.lastElementChild;
-                      var sel = last.querySelector('.extra-select');
-                      var inp = last.querySelector('.extra-input');
-                      sel.value = k;
-                      sel.dispatchEvent(new Event('change'));
-                      inp.value = fields[k];
-                      inp.name = k;
-                    }
-                  }
-                });
-              }).catch(function (err) {
-                if (err && err.json) {
-                  err.json().then(function (j) { 
-                    status.textContent = j.error || 'Failed to fetch DOI metadata.'; 
-                    status.style.color = '#ff6b6b';
-                  });
-                } else {
-                  status.textContent = 'Failed to fetch DOI metadata.';
-                  status.style.color = '#ff6b6b';
-                }
-              });
-            });
-          })();
-        </script>
+        {# <!-- doi fetch initialized by shared script --> #}
 
         <button type="submit" class="btn btn-success">Add Citation</button>
       </form>
@@ -276,6 +163,45 @@
   </div>
   {% endif %}
 </div>
+
+{# <!-- include shared chips JS and initialize --> #}
+<script src="{{ url_for('static', filename='js/chips.js') }}"></script>
+<script>
+  // Initialize chip inputs on the add citation page
+  setupChipInput({
+    selectId: "tag-select",
+    containerId: "selected-tags",
+    hiddenInputsId: "tag-hidden-inputs",
+    inputName: "tag_list",
+    removeClass: "chip-remove-tag",
+  });
+
+  setupChipInput({
+    selectId: "category-select",
+    containerId: "selected-categories",
+    hiddenInputsId: "category-hidden-inputs",
+    inputName: "category_list",
+    removeClass: "chip-remove-category",
+  });
+</script>
+
+{# <!-- extra fields shared script --> #}
+<script src="{{ url_for('static', filename='js/extra_fields.js') }}"></script>
+<script>
+  // initialize extra fields on add page; auto-add first row
+  initExtraFields({
+    containerId: 'extra_fields_container',
+    tplId: 'extra_row_template',
+    addBtnId: 'add_extra',
+    defaultFields: {{ default_fields | tojson }},
+    autoAddIfEmpty: true
+  });
+</script>
+<script src="{{ url_for('static', filename='js/doi_fetch.js') }}"></script>
+<script>
+  // initialize DOI fetch
+  if (window.initDoiFetch) initDoiFetch();
+</script>
 
 <style>
   .container {
@@ -497,6 +423,36 @@
     .btn {
       width: 100%;
     }
+  }
+
+  .chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .chip {
+    background: #242a38;
+    border: 1px solid #667eea;
+    color: #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chip-remove-category {
+    cursor: pointer;
+    color: #a0a0a0;
+    font-weight: bold;
+  }
+
+  .chip-remove-tag:hover,
+  .chip-remove-category:hover {
+    color: #ff6b6b;
   }
 </style>
 {% endblock %}

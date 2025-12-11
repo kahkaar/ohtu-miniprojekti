@@ -1,20 +1,24 @@
-from flask import request, Response
+from flask import Response, request
 
-from repositories.citation_repository import get_citation_by_id, get_citation_by_key
+from repositories.citation_repository import get_citations_by_ids, get_citations_by_keys
+
 
 def get():
     """Exports selected citations as a .bib file"""
-    ids_string = request.args.get('citation_ids', '')
+
+    ids_string = request.args.get("citation_ids", "")
     if ids_string:
-        ids = [int(id) for id in ids_string.split(',')]
-        citations = [get_citation_by_id(citation_id) for citation_id in ids]
+        ids = [int(id) for id in ids_string.split(",")]
+        citations = get_citations_by_ids(ids)
     else:
-        keys_string = request.args.get('citation_keys', '')
-        keys = keys_string.split(',')
-        citations = [get_citation_by_key(key) for key in keys]
-    bibtex = "\n\n".join(citation.to_bibtex() for citation in citations)
+        keys_string = request.args.get("citation_keys", "")
+        keys = keys_string.split(",")
+        citations = get_citations_by_keys(keys)
+
+    bibtex = "\n\n".join(c.to_bibtex() for c in citations)
     bibtex += "\n"
 
     response = Response(bibtex, mimetype='application/x-bibtex')
     response.headers['Content-Disposition'] = 'attachment; filename=selected_citations.bib'
+
     return response

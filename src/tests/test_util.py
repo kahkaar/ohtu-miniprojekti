@@ -24,10 +24,6 @@ class TestUtil(unittest.TestCase):
         self.assertIsNone(util.validate("   "))
         self.assertIsNone(util.validate(None))
 
-    def test_collapse_whitespace(self):
-        self.assertEqual(util.collapse_whitespace(" a b \n c "), "abc")
-        self.assertEqual(util.collapse_whitespace(5), 5)
-
     def test_get_posted_fields_filters_and_sanitizes(self):
         form = {
             "title": "  A  title ",
@@ -50,16 +46,6 @@ class TestUtil(unittest.TestCase):
             util.set_session("foo", "bar")
             self.assertEqual(util.get_session("foo"), "bar")
             self.assertEqual(util.get_session("nope", "default"), "default")
-
-            util.set_session("to_clear", "x")
-            util.clear_session("to_clear")
-            self.assertIsNone(util.get_session("to_clear"))
-
-            util.set_session("a", 1)
-            util.set_session("b", 2)
-            util.clear_session()
-            self.assertIsNone(util.get_session("a"))
-            self.assertIsNone(util.get_session("b"))
 
     def test_parse_search_queries_from_util(self):
         args = {
@@ -135,27 +121,6 @@ class TestUtilExtensions(unittest.TestCase):
         self.assertEqual(parsed.id, 7)
         self.assertEqual(parsed.name, "misc")
 
-    def test_extract_category_and_tags_and_key_variants(self):
-        class DummyForm:
-            def __init__(self, items):
-                self._items = items
-
-            def get(self, k, default=None):
-                return self._items.get(k, default)
-
-            def getlist(self, k):
-                return self._items.get(k, [])
-
-        f = DummyForm({"category": "  Cat XX  ", "tags": [" One ", "", "Two"]})
-        self.assertEqual(util.extract_category(f), "Cat XX")
-        self.assertEqual(util.extract_tags(f), ["One", "Two"])
-
-        fk = DummyForm({"citation_key": " My Key  "})
-        self.assertEqual(util.extract_citation_key(fk), "My-Key")
-
-        fk2 = DummyForm({"citation_key": "   "})
-        self.assertIsNone(util.extract_citation_key(fk2))
-
     def test_to_category_and_to_tag_and_to_citation_json_variants(self):
         row_cat = type("R", (), {"id": 1, "name": "C1"})
         cat = util.to_category(row_cat)
@@ -192,43 +157,6 @@ class TestUtilExtensions(unittest.TestCase):
             self.fail("Citation should not be None")
         self.assertEqual(c3.fields, {})
 
-    def test_extract_category_edgecases(self):
-        class DummyForm:
-            def __init__(self, items):
-                self._items = items
-
-            def get(self, k, default=None):
-                return self._items.get(k, default)
-
-        self.assertIsNone(util.extract_category(DummyForm({})))
-
-        self.assertIsNone(util.extract_category(DummyForm({"category": ""})))
-        self.assertIsNone(util.extract_category(
-            DummyForm({"category": "   "})))
-
-        self.assertIsNone(util.extract_category(DummyForm({"category": 0})))
-
-        self.assertEqual(util.extract_category(
-            DummyForm({"category": "0"})), "0")
-
-    def test_extract_category_new_precedence_and_empty_new(self):
-        class DummyFormBoth:
-            def __init__(self, items):
-                self._items = items
-
-            def get(self, k, default=None):
-                return self._items.get(k, default)
-
-        # new category provided should take precedence and be sanitized
-        f_new = DummyFormBoth(
-            {"category_new": "  New Cat ", "category": "Old"})
-        self.assertEqual(util.extract_category(f_new), "New Cat")
-
-        # new category provided but empty -> fallback to category
-        f_new_empty = DummyFormBoth(
-            {"category_new": "   ", "category": "  Fallback "})
-        self.assertEqual(util.extract_category(f_new_empty), "Fallback")
-
     def test_collapse_and_hyphens_and_none_citation(self):
         self.assertEqual(util.collapse_to_hyphens(" A B C "), "A-B-C")
 
@@ -257,8 +185,8 @@ class TestUtilTagsExtra(unittest.TestCase):
                 return self._items.get(k, [])
 
         # existing tags a,b and new tags 'b, c, , a' should produce ['a','b','c']
-        f = DummyForm({"tags": ["a", "b"], "tags_new": "b, c, , a "})
-        out = util.extract_tags(f)
+        f = DummyForm({"tags": ["a", "b"], "new_tags": "b, c, , a "})
+        out = util.extract_metadata(f).get("tags", [])
         self.assertEqual(out, ["a", "b", "c"])
 
     def test_extract_tags_blank_and_missing(self):
@@ -274,11 +202,12 @@ class TestUtilTagsExtra(unittest.TestCase):
 
         # no tags present
         f_empty = DummyForm({})
-        self.assertEqual(util.extract_tags(f_empty), [])
+        self.assertEqual(util.extract_metadata(f_empty).get("tags", []), [])
 
-        # tags_new provided but only whitespace -> should be ignored
-        f_blank_new = DummyForm({"tags_new": "   ,  ,\t"})
-        self.assertEqual(util.extract_tags(f_blank_new), [])
+        # new_tags provided but only whitespace -> should be ignored
+        f_blank_new = DummyForm({"new_tags": "   ,  ,\t"})
+        self.assertEqual(util.extract_metadata(
+            f_blank_new).get("tags", []), [])
 
 
 class TestToCitationVariants(unittest.TestCase):
@@ -664,6 +593,194 @@ class TestDOIHelpers(unittest.TestCase):
 
         # empty dict -> no recognized fields -> should return None
         self.assertIsNone(util.fetch_doi_metadata('10.3000/empty'))
+
+
+class TestUtilMore(unittest.TestCase):
+    def test_extract_fields_year_invalid_raises(self):
+        # Non-digit year should raise ValueError from extract_fields
+        form = {"year": "abcd", "title": "ok"}
+        with self.assertRaises(ValueError):
+            util.extract_fields(form)
+
+    def test_extract_data_propagates_extract_fields_error(self):
+        # extract_data should propagate ValueError raised by extract_fields
+        form = {"year": "-1"}
+        # '-1' is not all digits -> should raise
+        with self.assertRaises(ValueError):
+            util.extract_data(form)
+
+    def test_extract_metadata_handles_getlist_none_and_dedup(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            # Simulate getlist returning None (should be treated as empty)
+            def getlist(self, k):
+                return None
+
+        f = DummyForm({"new_tags": "a, b, a", "new_categories": "c, c"})
+        meta = util.extract_metadata(f)
+        self.assertEqual(meta.get("tags"), ["a", "b"])
+        self.assertEqual(meta.get("categories"), ["c"])
+
+    def test_extract_citation_key_empty_raises(self):
+        self.assertRaises(ValueError, lambda: util.extract_citation_key({}))
+
+    def test__doi_parse_year_date_parts_alt_key(self):
+        # support for 'date_parts' key should be handled the same
+        d = {"issued": {"date_parts": [[1984, 5, 6]]}}
+        self.assertEqual(util._doi_parse_year(d), 1984)
+
+
+class TestUtilMoreInline(unittest.TestCase):
+    def test_extract_fields_year_invalid_raises(self):
+        # Non-digit year should raise ValueError from extract_fields
+        form = {"year": "abcd", "title": "ok"}
+        with self.assertRaises(ValueError):
+            util.extract_fields(form)
+
+    def test_extract_data_propagates_extract_fields_error(self):
+        # extract_data should propagate ValueError raised by extract_fields
+        form = {"year": "-1"}
+        # '-1' is not all digits -> should raise
+        with self.assertRaises(ValueError):
+            util.extract_data(form)
+
+    def test_extract_metadata_handles_getlist_none_and_dedup(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            # Simulate getlist returning None (should be treated as empty)
+            def getlist(self, k):
+                return None
+
+        f = DummyForm({"new_tags": "a, b, a", "new_categories": "c, c"})
+        meta = util.extract_metadata(f)
+        self.assertEqual(meta.get("tags"), ["a", "b"])
+        self.assertEqual(meta.get("categories"), ["c"])
+
+    def test_extract_citation_key_empty_raises(self):
+        self.assertRaises(ValueError, lambda: util.extract_citation_key({}))
+
+    def test__doi_parse_year_date_parts_alt_key(self):
+        # support for 'date_parts' key should be handled the same
+        d = {"issued": {"date_parts": [[1984, 5, 6]]}}
+        self.assertEqual(util._doi_parse_year(d), 1984)
+
+
+class TestUtilExtra(unittest.TestCase):
+    def test_extract_fields_ignores_disallowed_and_handles_year_bounds(self):
+        # disallowed keys should be filtered out
+        form = {
+            'title': '  Title  ',
+            'citation_key': 'should-be-ignored',
+            'entry_type': 'book',
+            'year': '0',
+        }
+        out = util.extract_fields(form)
+        self.assertIn('title', out)
+        self.assertNotIn('citation_key', out)
+        self.assertNotIn('entry_type', out)
+        # year at lower bound passes
+        self.assertEqual(out.get('year'), '0')
+
+        # year at upper bound passes
+        form['year'] = '9999'
+        out2 = util.extract_fields(form)
+        self.assertEqual(out2.get('year'), '9999')
+
+    def test_extract_fields_rejects_out_of_range_year(self):
+        form = {'year': '10000', 'title': 'ok'}
+        with self.assertRaises(ValueError):
+            util.extract_fields(form)
+
+    def test_extract_data_success_path_and_metadata_integration(self):
+        # create a form-like object that supports items(), get(), getlist()
+        class FormLike:
+            def __init__(self, items):
+                self._items = items
+
+            def items(self):
+                return list(self._items.items())
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            def getlist(self, k):
+                return self._items.get(k, [])
+
+        f = FormLike({
+            'title': '  My Title ',
+            'year': '2020',
+            'tags': ['a', 'b'],
+            'new_tags': 'b, c, ',
+            'categories': [],
+            'new_categories': 'x, x , y'
+        })
+
+        fields, cats, tags = util.extract_data(f)
+        # fields come from extract_fields
+        self.assertEqual(fields.get('title'), 'My Title')
+        self.assertEqual(fields.get('year'), '2020')
+        # categories and tags are deduped and sanitized
+        self.assertEqual(tags, ['a', 'b', 'c'])
+        self.assertEqual(cats, ['x', 'y'])
+
+    def test_extract_metadata_existing_and_new_values_and_getlist_none(self):
+        # test with getlist present and with getlist returning None
+        class F:
+            def __init__(self, items):
+                self._items = items
+
+            def getlist(self, k):
+                return self._items.get(k)
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+        # case: getlist returns explicit list
+        f1 = F({'tags': [' t1 ', 't2'], 'new_tags': 't2, t3',
+                'categories': ['c1'], 'new_categories': ''})
+        meta1 = util.extract_metadata(f1)
+        self.assertEqual(meta1['tags'], ['t1', 't2', 't3'])
+        self.assertEqual(meta1['categories'], ['c1'])
+
+        # case: getlist returns None -> should be treated as empty
+        f2 = F({'tags': None, 'new_tags': 'a, a, b',
+               'categories': None, 'new_categories': None})
+        meta2 = util.extract_metadata(f2)
+        self.assertEqual(meta2['tags'], ['a', 'b'])
+        self.assertEqual(meta2['categories'], [])
+
+    def test_extract_citation_key_success_and_failure(self):
+        good = {'citation_key': '  My Key  '}
+        self.assertEqual(util.extract_citation_key(good), 'My-Key')
+
+        bad = {'citation_key': '   '}
+        with self.assertRaises(ValueError):
+            util.extract_citation_key(bad)
+
+    def test_extract_metadata_with_an_empty_str_as_tag(self):
+        class DummyForm:
+            def __init__(self, items):
+                self._items = items
+
+            def get(self, k, default=None):
+                return self._items.get(k, default)
+
+            def getlist(self, k):
+                return self._items.get(k, [])
+
+        f = DummyForm({"tags": ["a", ""], "new_tags": " , b "})
+        out = util.extract_metadata(f)
+        self.assertEqual(out.get("tags"), ["a", "b"])
 
 
 if __name__ == "__main__":

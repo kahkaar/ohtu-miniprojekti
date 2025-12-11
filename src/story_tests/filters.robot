@@ -121,8 +121,8 @@ Searching By Tags Only Shows Citations In the Selected Tags
     Input Text  publisher  Example Publisher
     Input Text  title  Example Book
     Input Text  year  2020
-    Input Text    name=category_new    Work
-    Input Text    name=tags_new        School
+    Input Text    name=new_categories    Work
+    Input Text    name=new_tags        School
 
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!
@@ -143,8 +143,8 @@ Searching By Categories Only Shows Citations In the Selected Categories
     Input Text  publisher  Example Publisher
     Input Text  title  Example Book
     Input Text  year  2020
-    Input Text    name=category_new    Work
-    Input Text    name=tags_new        School
+    Input Text    name=new_categories    Work
+    Input Text    name=new_tags        School
 
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!

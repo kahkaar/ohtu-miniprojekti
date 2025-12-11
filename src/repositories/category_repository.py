@@ -109,6 +109,31 @@ def create_category(name):
     return to_category(result)
 
 
+def create_categories(category_names):
+    """Creates multiple categories in the database"""
+
+    sql = text(
+        """
+        INSERT INTO categories (name)
+        VALUES (:name)
+        RETURNING id, name
+        """
+    )
+
+    created_categories = []
+    for name in category_names:
+        params = {
+            "name": name,
+        }
+
+        result = db.session.execute(sql, params).fetchone()
+        created_categories.append(to_category(result))
+
+    db.session.commit()
+
+    return created_categories
+
+
 def create_tag(name):
     """Creates a new tag in the database"""
 
@@ -201,6 +226,39 @@ def get_or_create_tag(name):
     return create_tag(name)
 
 
+def get_or_create_categories(category_names):
+    """Fetches multiple categories by name or creates them if they do not exist"""
+
+    existing_categories = {}
+    sql = text(
+        """
+        SELECT id, name
+        FROM categories
+        WHERE name = :name
+        """
+    )
+
+    for name in category_names:
+        params = {
+            "name": name,
+        }
+
+        result = db.session.execute(sql, params).fetchone()
+
+        if result:
+            existing_categories[name] = to_category(result)
+
+    categories_to_create = [
+        name for name in category_names if name not in existing_categories]
+
+    created_categories = create_categories(categories_to_create)
+
+    for category in created_categories:
+        existing_categories[category.name] = category
+
+    return list(existing_categories.values())
+
+
 def get_or_create_tags(tag_names):
     """Fetches multiple tags by name or creates them if they do not exist"""
 
@@ -231,6 +289,18 @@ def get_or_create_tags(tag_names):
         existing_tags[tag.name] = tag
 
     return list(existing_tags.values())
+
+
+def get_or_create_metadata(category_names, tag_names):
+    """Fetches or creates categories and tags by their names
+
+    Returns a tuple of (categories, tags)
+    """
+
+    categories = get_or_create_categories(category_names)
+    tags = get_or_create_tags(tag_names)
+
+    return categories, tags
 
 
 def assign_tag_to_citation(citation_id, tag):
@@ -293,6 +363,38 @@ def assign_category_to_citation(citation_id, category_id):
 
     db.session.execute(sql, params)
     db.session.commit()
+
+
+def assign_categories_to_citation(citation_id, categories):
+    """Assigns multiple categories to a citation"""
+
+    sql = text(
+        """
+        INSERT INTO citations_to_categories (citation_id, category_id)
+        VALUES (:citation_id, :category_id)
+        ON CONFLICT DO NOTHING
+        """
+    )
+
+    for c in categories:
+        params = {
+            "citation_id": citation_id,
+            "category_id": c.id,
+        }
+
+        db.session.execute(sql, params)
+
+    db.session.commit()
+
+
+def assign_metadata_to_citation(citation_id, categories, tags):
+    """Assigns categories and tags to a citation"""
+
+    if categories and isinstance(categories, list):
+        assign_categories_to_citation(citation_id, categories)
+
+    if tags and isinstance(tags, list):
+        assign_tags_to_citation(citation_id, tags)
 
 
 def remove_tag_from_citation(tag_id, citation_id):
