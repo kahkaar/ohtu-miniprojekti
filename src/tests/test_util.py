@@ -185,7 +185,7 @@ class TestUtilTagsExtra(unittest.TestCase):
                 return self._items.get(k, [])
 
         # existing tags a,b and new tags 'b, c, , a' should produce ['a','b','c']
-        f = DummyForm({"tags": ["a", "b"], "new_tags": "b, c, , a "})
+        f = DummyForm({"tag_list": ["a", "b"], "new_tags": "b, c, , a "})
         out = util.extract_metadata(f).get("tags", [])
         self.assertEqual(out, ["a", "b", "c"])
 
@@ -635,46 +635,6 @@ class TestUtilMore(unittest.TestCase):
         self.assertEqual(util._doi_parse_year(d), 1984)
 
 
-class TestUtilMoreInline(unittest.TestCase):
-    def test_extract_fields_year_invalid_raises(self):
-        # Non-digit year should raise ValueError from extract_fields
-        form = {"year": "abcd", "title": "ok"}
-        with self.assertRaises(ValueError):
-            util.extract_fields(form)
-
-    def test_extract_data_propagates_extract_fields_error(self):
-        # extract_data should propagate ValueError raised by extract_fields
-        form = {"year": "-1"}
-        # '-1' is not all digits -> should raise
-        with self.assertRaises(ValueError):
-            util.extract_data(form)
-
-    def test_extract_metadata_handles_getlist_none_and_dedup(self):
-        class DummyForm:
-            def __init__(self, items):
-                self._items = items
-
-            def get(self, k, default=None):
-                return self._items.get(k, default)
-
-            # Simulate getlist returning None (should be treated as empty)
-            def getlist(self, k):
-                return None
-
-        f = DummyForm({"new_tags": "a, b, a", "new_categories": "c, c"})
-        meta = util.extract_metadata(f)
-        self.assertEqual(meta.get("tags"), ["a", "b"])
-        self.assertEqual(meta.get("categories"), ["c"])
-
-    def test_extract_citation_key_empty_raises(self):
-        self.assertRaises(ValueError, lambda: util.extract_citation_key({}))
-
-    def test__doi_parse_year_date_parts_alt_key(self):
-        # support for 'date_parts' key should be handled the same
-        d = {"issued": {"date_parts": [[1984, 5, 6]]}}
-        self.assertEqual(util._doi_parse_year(d), 1984)
-
-
 class TestUtilExtra(unittest.TestCase):
     def test_extract_fields_ignores_disallowed_and_handles_year_bounds(self):
         # disallowed keys should be filtered out
@@ -719,9 +679,9 @@ class TestUtilExtra(unittest.TestCase):
         f = FormLike({
             'title': '  My Title ',
             'year': '2020',
-            'tags': ['a', 'b'],
+            'tag_list': ['a', 'b'],
             'new_tags': 'b, c, ',
-            'categories': [],
+            'category_list': [],
             'new_categories': 'x, x , y'
         })
 
@@ -746,15 +706,15 @@ class TestUtilExtra(unittest.TestCase):
                 return self._items.get(k, default)
 
         # case: getlist returns explicit list
-        f1 = F({'tags': [' t1 ', 't2'], 'new_tags': 't2, t3',
-                'categories': ['c1'], 'new_categories': ''})
+        f1 = F({'tag_list': [' t1 ', 't2'], 'new_tags': 't2, t3',
+                'category_list': ['c1'], 'new_categories': ''})
         meta1 = util.extract_metadata(f1)
         self.assertEqual(meta1['tags'], ['t1', 't2', 't3'])
         self.assertEqual(meta1['categories'], ['c1'])
 
         # case: getlist returns None -> should be treated as empty
-        f2 = F({'tags': None, 'new_tags': 'a, a, b',
-               'categories': None, 'new_categories': None})
+        f2 = F({'tag_list': None, 'new_tags': 'a, a, b',
+               'category_list': None, 'new_categories': None})
         meta2 = util.extract_metadata(f2)
         self.assertEqual(meta2['tags'], ['a', 'b'])
         self.assertEqual(meta2['categories'], [])
@@ -778,7 +738,7 @@ class TestUtilExtra(unittest.TestCase):
             def getlist(self, k):
                 return self._items.get(k, [])
 
-        f = DummyForm({"tags": ["a", ""], "new_tags": " , b "})
+        f = DummyForm({"tag_list": ["a", ""], "new_tags": " , b "})
         out = util.extract_metadata(f)
         self.assertEqual(out.get("tags"), ["a", "b"])
 
