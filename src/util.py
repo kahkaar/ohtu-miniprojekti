@@ -65,7 +65,7 @@ def extract_fields(form):
 
         # Special validation for year field
         # no need to convert to int here, since saved as string in fields dict
-        if k in ("year") and is_valid and not _year_is_valid(sanitized):
+        if k == "year" and is_valid and not _year_is_valid(sanitized):
             raise ValueError("Year must be between 0 and 9999.")
 
         if is_valid:
@@ -77,11 +77,7 @@ def extract_fields(form):
 def extract_data(form):
     """Extracts fields, categories and tags from the provided form."""
 
-    try:
-        fields = extract_fields(form)
-    except ValueError as ve:
-        raise ve
-
+    fields = extract_fields(form)
     meta = extract_metadata(form)
     category_names = meta.get("categories", [])
     tag_names = meta.get("tags", [])
@@ -146,6 +142,17 @@ def parse_search_queries(args):
     q_val = args.get("q", "")
     q_sanitized = sanitize(q_val) if q_val is not None else ""
 
+    tag_list = args.get("tag_list", [])
+    if isinstance(tag_list, str):
+        tag_list = [tag_list]
+
+    category_list = args.get("category_list", [])
+    if isinstance(category_list, str):
+        category_list = [category_list]
+
+    tags = [sanitize(t) for t in tag_list if sanitize(t)]
+    categories = [sanitize(c) for c in category_list if sanitize(c)]
+
     return {
         "q": q_sanitized or "",
         "citation_key": _str_lower("citation_key"),
@@ -155,6 +162,8 @@ def parse_search_queries(args):
         "year_to": _int_or_none(args.get("year_to")),
         "sort_by": sort_by,
         "direction": direction,
+        "tags": tags,
+        "categories": categories,
     }
 
 
@@ -191,8 +200,8 @@ def extract_metadata(form):
 
         return uniq
 
-    tags_unique = _collect("tags", "new_tags")
-    cats_unique = _collect("categories", "new_categories")
+    tags_unique = _collect("tag_list", "new_tags")
+    cats_unique = _collect("category_list", "new_categories")
 
     return {"tags": tags_unique, "categories": cats_unique}
 

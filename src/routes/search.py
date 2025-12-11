@@ -17,9 +17,12 @@ def get():
         request.args.get("year_from"),
         request.args.get("year_to"),
         request.args.get("advanced"),
-        request.args.getlist("tags"),
-        request.args.getlist("categories"),
+        request.args.getlist("tag_list"),
+        request.args.getlist("category_list"),
     ])
+
+    selected_tags = queries.get("tag_list", [])
+    selected_categories = queries.get("category_list", [])
 
     return render_template(
         "citations.html",
@@ -27,7 +30,7 @@ def get():
         entry_types=entry_types,
         tags=get_tags(),
         categories=get_categories(),
-        selected_tags=queries.get("tags", []),
-        selected_categories=queries.get("categories", []),
+        selected_tags=selected_tags,
+        selected_categories=selected_categories,
         advanced_open=advanced_open
     )
