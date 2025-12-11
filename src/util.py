@@ -77,11 +77,7 @@ def extract_fields(form):
 def extract_data(form):
     """Extracts fields, categories and tags from the provided form."""
 
-    try:
-        fields = extract_fields(form)
-    except ValueError as ve:
-        raise ve
-
+    fields = extract_fields(form)
     meta = extract_metadata(form)
     category_names = meta.get("categories", [])
     tag_names = meta.get("tags", [])
