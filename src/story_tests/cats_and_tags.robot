@@ -30,7 +30,7 @@ Edit Category Of Citation
     Go To Citations Page
     Click Button    Edit
         Wait Until Page Contains    Edit Citation
-    Input Text    category_new    EditedCategory
+    Input Text    new_categories    EditedCategory
     Save Changes
     Verify Citation On Citations Page    EditedCategory
     Close If Open
@@ -41,7 +41,7 @@ Edit Tags Of Citation
     Go To Citations Page
     Click Button    Edit
         Wait Until Page Contains    Edit Citation
-    Input Text    tags_new    t1,t2
+    Input Text    new_tags    t1,t2
     Save Changes
     Verify Citation On Citations Page    t1
     Verify Citation On Citations Page    t2
@@ -53,8 +53,8 @@ Edit Category And Tags Of Citation
     Go To Citations Page
     Click Button    Edit
         Wait Until Page Contains    Edit Citation
-    Input Text    category_new    NewCat
-    Input Text    tags_new    newa,newb
+    Input Text    new_categories    NewCat
+    Input Text    new_tags    newa,newb
     Save Changes
     Verify Citation On Citations Page    NewCat
     Verify Citation On Citations Page    newa
@@ -66,12 +66,14 @@ Edit Category Replace Old Value
     Create Article Citation    cat-change-2025    Zoe Historian    Journal of Changes    Changing Category    2025    Science
     Go To Citations Page
     Click Button    Edit
-        Wait Until Page Contains    Edit Citation
-    Input Text    category_new    History
+    Wait Until Page Contains    Edit Citation
+    Input Text    new_categories    History
+    Click Element  id:Science-cat
     Save Changes
     Go To Citations Page
+    Wait Until Page Contains    Saved Citations
     Wait Until Page Contains    History
-    Wait Until Page Does Not Contain    Science
+    Wait Until Page Does Not Contain    Categories: Science
     Close If Open
 
 Edit Tags Replace Old Values
@@ -79,15 +81,15 @@ Edit Tags Replace Old Values
     Create Article Citation    tags-change-2025    Yan Tagger    Journal of Tags    Changing Tags    2025    ${NONE}    alpha,beta
     Go To Citations Page
     Click Button    Edit
-        Wait Until Page Contains    Edit Citation
-    Unselect All From List    tags
-    Input Text    tags_new    gamma,delta
+    Wait Until Page Contains    Edit Citation
+    Click Element  id:alpha-tag
+    Click Element  id:beta-tag
+    Input Text    new_tags    gamma,delta
     Save Changes
     Go To Citations Page
-    Wait Until Page Contains    gamma
-    Wait Until Page Contains    delta
-    Wait Until Page Does Not Contain    alpha
-    Wait Until Page Does Not Contain    beta
+    Wait Until Page Contains    Saved Citations
+    Wait Until Page Contains    Tags: gamma, delta
+    Wait Until Page Does Not Contain    Tags: alpha, beta
     Close If Open
 
 
@@ -107,8 +109,8 @@ Create Article Citation
     Input Text    journaltitle    ${journaltitle}
     Input Text    title    ${title}
     Input Text    year    ${year}
-    Run Keyword If    '${category}' != 'None'    Input Text    category_new    ${category}
-    Run Keyword If    '${tags}' != 'None'    Input Text    tags_new    ${tags}
+    Run Keyword If    '${category}' != 'None'    Input Text    new_categories    ${category}
+    Run Keyword If    '${tags}' != 'None'    Input Text    new_tags    ${tags}
     Click Button    Add Citation
     Wait Until Page Contains    A new citation was added successfully!
 
@@ -122,4 +124,4 @@ Close If Open
 
 Save Changes
     Click Button    Save Changes
-    Wait Until Page Contains    Citation updated successfully.
+    Wait Until Page Contains    Citation was updated successfully.

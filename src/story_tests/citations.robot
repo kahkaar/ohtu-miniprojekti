@@ -31,7 +31,7 @@ After Changing Entry Type While Editing It Is Reflected
     Input Text  citation_key  doe2018
     Select From List By Label  entry_type  article
     Click Button  Save Changes
-    Wait Until Page Contains  Citation updated successfully.
+    Wait Until Page Contains  Citation was updated successfully.
     Title Should Be  Saved Citations
     # Verify the entry type label is shown for the citation in the list
     Go To Citations Page
@@ -51,7 +51,7 @@ Keeping Entry Type Unchanged Preserves It
     Input Text  citation_key  doe2017
     Select From List By Label  entry_type  (keep current: book)
     Click Button  Save Changes
-    Wait Until Page Contains  Citation updated successfully.
+    Wait Until Page Contains  Citation was updated successfully.
     Go To Citations Page
     Page Should Contain  @book
 
@@ -84,13 +84,14 @@ Find Example Book Citation
 
 Edit Book Citation
     Click Button  Edit
+    Wait Until Page Contains  Edit Citation
     Input Text  citation_key  doe2019
     Input Text  author  John Doe
     Input Text  publisher  Example Publisher
     Input Text  title  Changed Example Book
     Input Text  year  2019
     Click Button  Save Changes
-    Wait Until Page Contains  Citation updated successfully.
+    Wait Until Page Contains  Citation was updated successfully.
     Title Should Be  Saved Citations
 
 Find Edited Book Citation

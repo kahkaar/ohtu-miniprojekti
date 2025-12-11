@@ -4,11 +4,14 @@
 
 {% block body %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/edit.css') }}">
+
 {% if citation %}
 <div class="edit-container">
   <div class="header">
     <h1>Edit Citation</h1>
-    <p class="subtitle">Update citation details for <span class="citation-key-badge">{{ citation.citation_key }}</span></p>
+    <p class="subtitle">Update citation details for <span class="citation-key-badge">{{ citation.citation_key }}</span>
+    </p>
   </div>
 
   <div class="card">
@@ -17,7 +20,7 @@
     </div>
     <div class="card-body">
       <form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}" class="edit-form">
-        
+
         <div class="form-group">
           <label class="form-label">Citation key: <span class="required">*</span></label>
           <input type="text" name="citation_key" value="{{ citation.citation_key }}" required class="form-input">
@@ -30,7 +33,8 @@
             <select name="entry_type" class="form-select">
               <option value="">(keep current: {{ citation.entry_type }})</option>
               {% for et in entry_types %}
-              <option value="{{ et.id }}" {% if et.name==citation.entry_type %}selected{% endif %}>{{ et.name }}</option>
+              <option value="{{ et.id }}" {% if et.name==citation.entry_type %}selected{% endif %}>{{ et.name }}
+              </option>
               {% endfor %}
             </select>
           </div>
@@ -40,7 +44,8 @@
         <div class="form-group">
           <label class="form-label">Import from DOI (full link or id):</label>
           <div style="display: flex; gap: 10px;">
-            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input" style="flex: 1;">
+            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input"
+              style="flex: 1;">
             <button type="button" id="doi_fetch" class="btn btn-primary">Fetch DOI</button>
           </div>
           <div id="doi_status" style="color: #ff6b6b; margin-top: 8px; font-size: 14px;"></div>
@@ -56,17 +61,18 @@
         {% if default_fields %}
         <div class="form-section">
           <h4>Additional Fields</h4>
-          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be saved as global defaults)</p>
+          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be
+            saved as global defaults)</p>
 
           <div id="extra_fields_container">
-            <!-- Existing extra rows will be appended here -->
+            {# <!-- Existing extra rows will be appended here --> #}
           </div>
 
           <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
 
-          <!-- Template for a single extra field row -->
           <template id="extra_row_template">
-            <div class="extra-row" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
+            <div class="extra-row"
+              style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
               <div>
                 <label class="form-label" style="margin-bottom: 5px;">Field:</label>
                 <select class="extra-select form-select">
@@ -78,472 +84,138 @@
               </div>
               <div>
                 <label class="form-label" style="margin-bottom: 5px;">Value:</label>
-                <input type="text" class="extra-input form-input" name="additional_field_value" placeholder="Value for field">
+                <input type="text" class="extra-input form-input" name="additional_field_value"
+                  placeholder="Value for field">
               </div>
               <div style="display: flex; align-items: flex-end;">
                 <button type="button" class="remove-extra btn btn-secondary" style="padding: 12px 20px;">Remove</button>
               </div>
             </div>
           </template>
-
-          <script>
-            (function () {
-              var container = document.getElementById('extra_fields_container');
-              var tpl = document.getElementById('extra_row_template');
-              var addBtn = document.getElementById('add_extra');
-
-              function updateDisabledOptions() {
-                // Collect selected values
-                var selects = container.querySelectorAll('.extra-select');
-                var chosen = {};
-                selects.forEach(function (s) {
-                  if (s.value) chosen[s.value] = true;
-                });
-
-                // For every select, disable options that are chosen by others
-                selects.forEach(function (s) {
-                  var options = s.options;
-                  for (var i = 0; i < options.length; i++) {
-                    var opt = options[i];
-                    if (opt.value === '') { opt.disabled = false; continue; }
-                    // allow the currently selected option on this select
-                    if (s.value === opt.value) {
-                      opt.disabled = false;
-                      continue;
-                    }
-                    opt.disabled = !!chosen[opt.value];
-                  }
-                });
-              }
-
-              function bindRow(row) {
-                var select = row.querySelector('.extra-select');
-                var input = row.querySelector('.extra-input');
-                var remove = row.querySelector('.remove-extra');
-
-                function onChange() {
-                  var field = select.value || '';
-                  input.name = field || 'additional_field_value';
-                  updateDisabledOptions();
-                }
-
-                select.addEventListener('change', onChange);
-                remove.addEventListener('click', function () {
-                  row.remove();
-                  updateDisabledOptions();
-                });
-              }
-
-              addBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var clone = tpl.content.firstElementChild.cloneNode(true);
-                container.appendChild(clone);
-                bindRow(clone);
-                updateDisabledOptions();
-              });
-
-              // Prepopulate extra fields with any non-default fields that aren't already rendered
-              (function initExistingExtras() {
-                var existing = {{ citation.fields| tojson }} || {};
-                var defaults = {{ default_fields| tojson }} || [];
-                for (var k in existing) {
-                  if (!existing.hasOwnProperty(k)) continue;
-                  // skip default fields and fields that are already present as inputs in the form
-                  if (defaults.indexOf(k) !== -1) continue;
-                  // also skip keys if an input with that name already exists
-                  if (document.querySelector('input[name="' + k + '"]')) continue;
-
-                  // create a row and set values
-                  addBtn.click();
-                  var last = container.lastElementChild;
-                  var sel = last.querySelector('.extra-select');
-                  var inp = last.querySelector('.extra-input');
-                  sel.value = k;
-                  sel.dispatchEvent(new Event('change'));
-                  inp.value = existing[k];
-                  inp.name = k;
-                }
-              }) ();
-
-              // initialize with one row if there are no existing extras
-              if (!container.children.length) {
-                addBtn.click();
-              }
-            }) ();
-          </script>
         </div>
         {% endif %}
 
-        <div class="form-section">
-          <h4>Categories & Tags</h4>
-          
-          {% if categories %}
-          <div class="form-group">
-            <label class="form-label">Select an existing category:</label>
-            <div class="select-wrapper">
-              <select name="category" class="form-select">
-                <option value="" selected>None</option>
-                {% for c in categories or [] %}
-                <option value="{{ c.name }}" {% if c.name in citation.categories %}selected{% endif %}>{{ c.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          {% endif %}
-
-          <div class="form-group">
-            <label class="form-label">Create a new category:</label>
-            <input type="text" name="category_new" placeholder="New Category" class="form-input">
-          </div>
-
-          {% if tags %}
-          <div class="form-group">
-            <label class="form-label">Select existing tags:</label>
-            <div class="select-wrapper">
-              <select name="tags" multiple class="form-select multi-select">
-                {% for t in tags or [] %}
-                <option value="{{ t.name }}" {% if t.name in citation.tags %}selected{% endif %}>{{ t.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <small class="form-hint">Hold Ctrl/Cmd to select multiple</small>
-          </div>
-          {% endif %}
-
-          <div class="form-group">
-            <label class="form-label">Create new tags (comma-separated):</label>
-            <input type="text" name="tags_new" placeholder="tag1, tag2" class="form-input">
-          </div>
-        </div>
-
+        {# include extra_fields script and initialize after template #}
+        <script src="{{ url_for('static', filename='js/extra_fields.js') }}"></script>
         <script>
-          (function () {
-            var btn = document.getElementById('doi_fetch');
-            var input = document.getElementById('doi_input');
-            var status = document.getElementById('doi_status');
-
-            if (!btn) return;
-
-            btn.addEventListener('click', function (e) {
-              e.preventDefault();
-              var v = input.value && input.value.trim();
-              if (!v) {
-                status.textContent = 'Please provide a DOI or DOI link.';
-                return;
-              }
-              status.textContent = 'Fetching...';
-              status.style.color = '#60a5fa';
-              fetch('/doi_lookup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doi: v })
-              }).then(function (res) {
-                if (!res.ok) throw res;
-                return res.json();
-              }).then(function (data) {
-                status.textContent = 'DOI data loaded successfully!';
-                status.style.color = '#48bb78';
-                var fields = data.fields || {};
-                Object.keys(fields).forEach(function (k) {
-                  var el = document.querySelector('[name="' + k + '"]');
-                  if (el) {
-                    el.value = fields[k];
-                  } else {
-                    var addBtn = document.getElementById('add_extra');
-                    if (addBtn) {
-                      addBtn.click();
-                      var container = document.getElementById('extra_fields_container');
-                      var last = container.lastElementChild;
-                      var sel = last.querySelector('.extra-select');
-                      var inp = last.querySelector('.extra-input');
-                      sel.value = k;
-                      sel.dispatchEvent(new Event('change'));
-                      inp.value = fields[k];
-                      inp.name = k;
-                    }
-                  }
-                });
-              }).catch(function (err) {
-                if (err && err.json) {
-                  err.json().then(function (j) { 
-                    status.textContent = j.error || 'Failed to fetch DOI metadata.'; 
-                    status.style.color = '#ff6b6b';
-                  });
-                } else {
-                  status.textContent = 'Failed to fetch DOI metadata.';
-                  status.style.color = '#ff6b6b';
-                }
-              });
-            });
-          })();
+          // initialize extra fields on edit page with existing citation.fields and defaults
+          initExtraFields({
+            containerId: 'extra_fields_container',
+            tplId: 'extra_row_template',
+            addBtnId: 'add_extra',
+            existing: {{ citation.fields | tojson }},
+            defaultFields: {{ default_fields | tojson }},
+            autoAddIfEmpty: false
+          });
         </script>
 
+        {# <!-- FIXED CHIP SYSTEM --> #}
+        <div class="form-section">
+          <h4>Categories & Tags</h4>
+
+          {# <!-- CATEGORIES --> #}
+          <div class="form-group">
+            <label class="form-label">Categories:</label>
+
+            <div id="selected-categories" class="chip-container">
+              {% for c in citation.categories %}
+              <div class="chip" data-value="{{ c }}">
+                {{ c }} <span id="{{ c }}-cat" class="chip-remove-category" data-value="{{ c }}">✕</span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <select id="category-select" class="form-select">
+              <option value="">+ Add category</option>
+              {% for cat in categories %}
+              {% if cat.name not in citation.categories %}
+              <option value="{{ cat.name }}">{{ cat.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+
+            <div id="category-hidden-inputs">
+              {% for c in citation.categories %}
+              <input type="hidden" name="category_list" value="{{ c }}">
+              {% endfor %}
+            </div>
+
+            <input type="text" name="new_categories" placeholder="Computer Science, Chemistry" class="form-input"
+              style="margin-top:10px;">
+          </div>
+
+          {# <!-- TAGS --> #}
+          <div class="form-group">
+            <label class="form-label">Tags:</label>
+
+            <div id="selected-tags" class="chip-container">
+              {% for t in citation.tags %}
+              <div class="chip" data-value="{{ t }}">
+                {{ t }} <span id="{{ t }}-tag" class="chip-remove-tag" data-value="{{ t }}">✕</span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <select id="tag-select" class="form-select">
+              <option value="">+ Add tag</option>
+              {% for t in tags %}
+              {% if t.name not in citation.tags %}
+              <option value="{{ t.name }}">{{ t.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+
+            <div id="tag-hidden-inputs">
+              {% for t in citation.tags %}
+              <input type="hidden" name="tag_list" value="{{ t }}">
+              {% endfor %}
+            </div>
+
+            <input type="text" name="new_tags" placeholder="OHTU, TINT" class="form-input" style="margin-top:10px;">
+          </div>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-success">Save Changes</button>
-          <a href="/citations" class="btn btn-secondary">Back</a>
+          <a href="{{ url_for('citations_view') }}" class="btn btn-secondary">Back</a>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 {% else %}
 <div class="edit-container">
   <div class="empty-state">
     <h2>Citation Not Found</h2>
     <p>The citation you're trying to edit could not be found.</p>
-    <a href="/citations" class="btn btn-primary">Back to Citations</a>
+    <a href="{{ url_for('citations_view') }}" class="btn btn-primary">Back to Citations</a>
   </div>
 </div>
 {% endif %}
 
-<style>
-  .edit-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-  }
+{# <!-- include shared chips JS and initialize --> #}
+<script src="{{ url_for('static', filename='js/chips.js') }}"></script>
+<script>
+  setupChipInput({
+    selectId: "tag-select",
+    containerId: "selected-tags",
+    hiddenInputsId: "tag-hidden-inputs",
+    inputName: "tag_list",
+    removeClass: "chip-remove-tag",
+  });
 
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .header h1 {
-    font-size: 32px;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 10px;
-  }
-
-  .subtitle {
-    font-size: 16px;
-    color: #a0a0a0;
-  }
-
-  .citation-key-badge {
-    padding: 4px 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  .card {
-    background: #1a1f2e;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-    margin-bottom: 20px;
-    border: 1px solid #2a3142;
-  }
-
-  .card-header {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-    color: white;
-    padding: 16px 25px;
-    border-bottom: 2px solid #667eea;
-  }
-
-  .card-header h2 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
-    color: #ffffff;
-  }
-
-  .card-body {
-    padding: 25px;
-  }
-
-  .edit-form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  h4 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 15px;
-    margin-top: 0;
-  }
-
-  .form-section {
-    margin-top: 30px;
-    padding-top: 25px;
-    border-top: 2px solid #2a3142;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-label {
-    display: block;
-    font-weight: 500;
-    color: #e0e0e0;
-    margin-bottom: 8px;
-    font-size: 14px;
-  }
-
-  .required {
-    color: #ff6b6b;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #2a3142;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s;
-    box-sizing: border-box;
-    background: #242a38;
-    color: #e0e0e0;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  }
-
-  .select-wrapper {
-    position: relative;
-  }
-
-  .form-select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #2a3142;
-    border-radius: 8px;
-    font-size: 14px;
-    background-color: #242a38;
-    color: #e0e0e0;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-sizing: border-box;
-  }
-
-  .form-select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  }
-
-  .form-select option {
-    background: #242a38;
-    color: #e0e0e0;
-  }
-
-  .multi-select {
-    min-height: 100px;
-  }
-
-  .form-hint {
-    display: block;
-    margin-top: 5px;
-    font-size: 12px;
-    color: #808080;
-    font-style: italic;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #2a3142;
-  }
-
-  .btn {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-  }
-
-  .btn-success {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-  }
-
-  .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-  }
-
-  .btn-secondary {
-    background: #242a38;
-    color: #d0d0d0;
-    border: 2px solid #2a3142;
-  }
-
-  .btn-secondary:hover {
-    background: #303848;
-    border-color: #3a4452;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: #1a1f2e;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    border: 1px solid #2a3142;
-  }
-
-  .empty-state h2 {
-    font-size: 24px;
-    color: #ffffff;
-    margin-bottom: 10px;
-  }
-
-  .empty-state p {
-    font-size: 16px;
-    color: #a0a0a0;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 768px) {
-    .edit-container {
-      padding: 15px;
-    }
-
-    .header h1 {
-      font-size: 24px;
-    }
-
-    .card-body {
-      padding: 20px;
-    }
-
-    .form-actions {
-      flex-direction: column;
-    }
-
-    .btn {
-      width: 100%;
-    }
-  }
-</style>
+  setupChipInput({
+    selectId: "category-select",
+    containerId: "selected-categories",
+    hiddenInputsId: "category-hidden-inputs",
+    inputName: "category_list",
+    removeClass: "chip-remove-category",
+  });
+</script>
+{# <!-- extra fields shared script will be included after the form so DOM nodes exist --> #}
+<script src="{{ url_for('static', filename='js/doi_fetch.js') }}"></script>
+<script>
+  // initialize DOI fetch
+  if (window.initDoiFetch) initDoiFetch();
+</script>
 
 {% endblock %}

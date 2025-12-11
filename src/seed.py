@@ -76,7 +76,7 @@ def seed_demo(data=None, json_path=None):
                 entry_type=et(c["entry_type"]),
                 citation_key=c["citation_key"],
                 fields=c.get("fields") or {},
-                category=c_category,
+                categories=[c_category],
                 tags=tag_objs,
             )
         except Exception as exc:

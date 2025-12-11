@@ -7,6 +7,7 @@ import pytest
 
 import repositories.citation_repository as repo
 import repositories.citation_repository as citation_repository
+from errors import CitationNotFoundError
 
 
 class TestCitationRepository(unittest.TestCase):
@@ -77,15 +78,6 @@ class TestCitationRepository(unittest.TestCase):
 
         citations = repo.get_citations(page="x", per_page="y")
         self.assertEqual(citations, [])
-
-    @patch("repositories.citation_repository.db")
-    def test_get_citation_returns_none_when_not_found(self, mock_db):
-        mock_result = MagicMock()
-        mock_result.fetchone.return_value = None
-        mock_db.session.execute.return_value = mock_result
-
-        citation = repo.get_citation_by_id(123)
-        self.assertIsNone(citation)
 
     @patch("repositories.citation_repository.db")
     def test_create_citation_executes_insert(self, mock_db):
@@ -482,26 +474,6 @@ class TestCitationRepository(unittest.TestCase):
         self.assertIsNone(out)
 
     @patch("repositories.citation_repository.create_citation")
-    @patch("repositories.citation_repository.assign_tags_to_citation")
-    @patch("repositories.citation_repository.assign_category_to_citation")
-    @patch("repositories.citation_repository.get_citation_by_key")
-    def test_create_citation_with_metadata_assigns_category_and_tags(self, mock_get_by_key, mock_assign_category, mock_assign_tags, mock_create):
-        mock_get_by_key.return_value = None
-        mock_create.return_value = SimpleNamespace(id=99)
-
-        entry_type = SimpleNamespace(id=2)
-        category = SimpleNamespace(id=5)
-        tags = ["t1", "t2"]
-
-        out = repo.create_citation_with_metadata(
-            entry_type, "kmeta", {"x": 1}, category=category, tags=tags)
-
-        mock_create.assert_called_once()
-        mock_assign_category.assert_called_once_with(99, 5)
-        mock_assign_tags.assert_called_once_with(99, tags)
-        self.assertIsNotNone(out)
-
-    @patch("repositories.citation_repository.create_citation")
     @patch("repositories.citation_repository.get_citation_by_key")
     def test_create_citation_with_metadata_raises_when_create_fails(self, mock_get_by_key, mock_create):
         mock_get_by_key.return_value = None
@@ -520,88 +492,217 @@ class TestCitationRepository(unittest.TestCase):
         with self.assertRaises(ValueError):
             repo.create_citation_with_metadata(entry_type, "dup-key", {})
 
-    @patch("repositories.citation_repository.create_citation")
-    @patch("repositories.citation_repository.assign_tags_to_citation")
-    @patch("repositories.citation_repository.assign_category_to_citation")
     @patch("repositories.citation_repository.get_citation_by_key")
-    def test_create_citation_with_metadata_ignores_tags_when_not_list(self, mock_get_by_key, mock_assign_category, mock_assign_tags, mock_create):
-        # get_citation_by_key returns None, create_citation returns an object
+    @patch("repositories.citation_repository.create_citation")
+    @patch("repositories.citation_repository.assign_metadata_to_citation")
+    def test_create_citation_with_metadata_success(self, mock_assign, mock_create, mock_get_by_key):
         mock_get_by_key.return_value = None
-        mock_create.return_value = SimpleNamespace(id=9)
+        created = SimpleNamespace(
+            id=999, entry_type="book", citation_key="newkey", fields={})
+        mock_create.return_value = created
 
-        # call with tags that are not a list and no category -> neither assign fn should be called
-        out = repo.create_citation_with_metadata(SimpleNamespace(
-            id=4), "ck2", {"b": 2}, category=None, tags='not-a-list')
+        entry_type = SimpleNamespace(id=5)
+        out = repo.create_citation_with_metadata(entry_type, "newkey", {}, categories=[
+                                                 SimpleNamespace(id=1)], tags=[SimpleNamespace(id=2)])
 
-        mock_create.assert_called_once()
-        mock_assign_category.assert_not_called()
-        mock_assign_tags.assert_not_called()
-        self.assertIsNotNone(out)
-
-    @patch("repositories.citation_repository.db")
-    @patch("repositories.citation_repository.update_citation")
-    @patch("repositories.citation_repository.assign_tags_to_citation")
-    @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_update_citation_with_metadata_assigns_category_and_tags(self, mock_assign_category, mock_assign_tags, mock_update, mock_db):
-        citation_id = 77
-
-        category = SimpleNamespace(id=5)
-        tags = ["tag1", "tag2"]
-
-        repo.update_citation_with_metadata(
-            citation_id,
-            citation_key="k-upd",
-            fields={"title": "X"},
-            category=category,
-            tags=tags,
-        )
-
-        mock_update.assert_called_once_with(
-            citation_id=citation_id, citation_key="k-upd", fields={"title": "X"})
-        mock_assign_category.assert_called_once_with(citation_id, 5)
-        mock_assign_tags.assert_called_once_with(citation_id, tags)
+        self.assertEqual(out.id, 999)
+        mock_assign.assert_called_once()
 
     @patch("repositories.citation_repository.db")
+    def test_validate_citation_raises_when_missing(self, mock_db):
+        # get_citation_by_id will raise; ensure validate_citation propagates
+        with patch("repositories.citation_repository.get_citation_by_id") as mock_get:
+            mock_get.side_effect = repo.CitationNotFoundError if hasattr(
+                repo, 'CitationNotFoundError') else Exception
+            with self.assertRaises(Exception):
+                repo.validate_citation(12345)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_by_ids_and_keys_empty_and_present(self, mock_db):
+        # empty inputs should return []
+        self.assertEqual(repo.get_citations_by_ids([]), [])
+        self.assertEqual(repo.get_citations_by_keys([]), [])
+
+        # now simulate db returning rows
+        mock_row = SimpleNamespace(
+            id=2, entry_type="book", citation_key="k2", fields={"t": "v"})
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = [mock_row]
+        mock_db.session.execute.return_value = mock_result
+
+        out_ids = repo.get_citations_by_ids([2])
+        out_keys = repo.get_citations_by_keys(["k2"])
+
+        self.assertEqual(len(out_ids), 1)
+        self.assertEqual(len(out_keys), 1)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citation_by_id_raises_not_found(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = None
+        mock_db.session.execute.return_value = mock_result
+
+        with self.assertRaises(CitationNotFoundError):
+            repo.get_citation_by_id(9999)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_by_ids_skips_falsey_rows(self, mock_db):
+        # simulate a result list with one falsy row
+        mock_row = SimpleNamespace(
+            id=3, entry_type="book", citation_key="k3", fields={})
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = [None, mock_row]
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.get_citations_by_ids([1, 3])
+        self.assertEqual(len(out), 1)
+
+    @patch("repositories.citation_repository.db")
+    def test_update_citation_with_metadata_executes_deletes_and_assigns(self, mock_db):
+        # ensure the deletion SQLs are executed and assign functions are called
+        mock_db.session.execute.return_value = MagicMock()
+        with patch("repositories.citation_repository.assign_categories_to_citation") as mock_assign_cats, \
+                patch("repositories.citation_repository.assign_tags_to_citation") as mock_assign_tags:
+            repo.update_citation_with_metadata(
+                50, categories=[SimpleNamespace(id=1)], tags=[SimpleNamespace(id=2)])
+
+        # expected two deletes (categories and tags) executed via db.session.execute
+        self.assertTrue(mock_db.session.execute.called)
+        mock_assign_cats.assert_called_once()
+        mock_assign_tags.assert_called_once()
+
+    @patch("repositories.citation_repository.db")
+    def test_delete_citation_handles_empty_cat_tag_lists(self, mock_db):
+        # simulate no cat/tag rows returned -> should still perform deletes and commit
+        mock_select = MagicMock()
+        mock_select.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_select
+
+        repo.delete_citation(77)
+        # multiple executes called for deletion SQLs and commit
+        self.assertTrue(mock_db.session.execute.called)
+        mock_db.session.commit.assert_called_once()
+
+    @patch("repositories.citation_repository.db")
+    def test_search_citations_filters_tags_and_categories(self, mock_db):
+        mock_result = MagicMock()
+        # return empty but ensure execute is called
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        queries = {"tags": ["A", "B"], "categories": ["X"],
+                   "sort_by": "citation_key", "direction": "DESC"}
+        out = repo.search_citations(queries)
+        self.assertEqual(out, [])
+        args, _ = mock_db.session.execute.call_args
+        sql = str(args[0])
+        self.assertIn("WHERE", sql)
+        self.assertTrue(("t.name = ANY" in sql) or ("cat.name = ANY" in sql))
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_normalizes_page_params(self, mock_db):
+        # pass zero/negative page and per_page to trigger max(page,1) and max(per_page,1)
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.get_citations(page=0, per_page=-5)
+        self.assertEqual(out, [])
+
+        args, _ = mock_db.session.execute.call_args
+        sql = args[0]
+        params = args[1]
+        # normalized per_page should be at least 1
+        self.assertEqual(params.get("limit"), 1)
+        self.assertEqual(params.get("offset"), 0)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_by_keys_skips_falsey_rows(self, mock_db):
+        mock_row = SimpleNamespace(
+            id=4, entry_type="book", citation_key="k4", fields={})
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = [None, mock_row]
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.get_citations_by_keys(["x", "k4"])
+        self.assertEqual(len(out), 1)
+
+    @patch("repositories.citation_repository.db")
+    def test_update_citation_with_metadata_only_categories_or_tags(self, mock_db):
+        # ensure each branch (only categories / only tags) triggers the expected delete+assign
+        mock_db.session.execute.return_value = MagicMock()
+        with patch("repositories.citation_repository.assign_categories_to_citation") as mock_assign_cats:
+            repo.update_citation_with_metadata(
+                60, categories=[SimpleNamespace(id=7)])
+        mock_assign_cats.assert_called_once()
+
+        with patch("repositories.citation_repository.assign_tags_to_citation") as mock_assign_tags:
+            repo.update_citation_with_metadata(
+                61, tags=[SimpleNamespace(id=8)])
+        mock_assign_tags.assert_called_once()
+
+    @patch("repositories.citation_repository.db")
+    def test_delete_citation_multiple_cat_and_tag_ids(self, mock_db):
+        # simulate two category ids and two tag ids returned from initial selects
+        mock_cat = MagicMock()
+        mock_cat.fetchall.return_value = [(1,), (2,)]
+
+        mock_tag = MagicMock()
+        mock_tag.fetchall.return_value = [(10,), (11,)]
+
+        # subsequent deletes return simple mocks
+        mock_del = MagicMock()
+
+        # side_effect sequence: cat_rows, tag_rows, delete ctc, delete ctt, delete citations, delete category 1, delete category 2, delete tag 10, delete tag 11
+        mock_db.session.execute.side_effect = [
+            mock_cat, mock_tag, mock_del, mock_del, mock_del, mock_del, mock_del, mock_del, mock_del]
+
+        repo.delete_citation(123)
+
+        # ensure execute called multiple times and commit invoked
+        self.assertGreaterEqual(mock_db.session.execute.call_count, 9)
+        mock_db.session.commit.assert_called_once()
+
+    @patch("repositories.citation_repository.get_citation_by_id")
+    def test_validate_citation_raises_when_get_returns_none(self, mock_get):
+        # simulate get_citation_by_id returning None so validate_citation raises
+        mock_get.return_value = None
+        with self.assertRaises(CitationNotFoundError):
+            repo.validate_citation(555)
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_by_ids_returns_empty_when_db_returns_empty(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.get_citations_by_ids([1, 2])
+        self.assertEqual(out, [])
+
+    @patch("repositories.citation_repository.db")
+    def test_get_citations_by_keys_returns_empty_when_db_returns_empty(self, mock_db):
+        mock_result = MagicMock()
+        mock_result.fetchall.return_value = []
+        mock_db.session.execute.return_value = mock_result
+
+        out = repo.get_citations_by_keys(["a", "b"])
+        self.assertEqual(out, [])
+
     @patch("repositories.citation_repository.update_citation")
-    @patch("repositories.citation_repository.assign_tags_to_citation")
-    @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_update_citation_with_metadata_assigns_category_only_when_tags_not_list(self, mock_assign_category, mock_assign_tags, mock_update, mock_db):
-        citation_id = 88
+    def test_update_citation_with_metadata_passes_entry_type_id(self, mock_update):
+        # ensure that providing an entry_type_id flows into update_citation
+        repo.update_citation_with_metadata(88, entry_type_id=9)
+        mock_update.assert_called_once()
+        called_kwargs = mock_update.call_args[1]
+        self.assertIn("entry_type_id", called_kwargs)
+        self.assertEqual(called_kwargs["entry_type_id"], 9)
 
-        category = SimpleNamespace(id=6)
-        tags = "not-a-list"
-
-        repo.update_citation_with_metadata(
-            citation_id,
-            citation_key="k-upd2",
-            fields={"title": "Y"},
-            category=category,
-            tags=tags,
-        )
-
-        mock_update.assert_called_once_with(
-            citation_id=citation_id, citation_key="k-upd2", fields={"title": "Y"})
-        mock_assign_category.assert_called_once_with(citation_id, 6)
-        mock_assign_tags.assert_not_called()
-
-    @patch("repositories.citation_repository.update_citation")
-    @patch("repositories.citation_repository.assign_tags_to_citation")
-    @patch("repositories.citation_repository.assign_category_to_citation")
-    def test_update_citation_with_metadata_calls_update_only_when_no_category_or_tags(self, mock_assign_category, mock_assign_tags, mock_update):
-        citation_id = 99
-
-        repo.update_citation_with_metadata(
-            citation_id,
-            citation_key="k-none",
-            fields={"title": "Z"},
-            category=None,
-            tags=None,
-        )
-
-        mock_update.assert_called_once_with(
-            citation_id=citation_id, citation_key="k-none", fields={"title": "Z"})
-        mock_assign_category.assert_not_called()
-        mock_assign_tags.assert_not_called()
+    @patch("repositories.citation_repository.get_citation_by_id")
+    def test_validate_citation_no_raise_when_present(self, mock_get):
+        # when get_citation_by_id returns a citation validate_citation should not raise
+        mock_get.return_value = SimpleNamespace(id=1)
+        # should not raise
+        repo.validate_citation(1)
 
 
 if __name__ == "__main__":

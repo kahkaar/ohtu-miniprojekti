@@ -26,16 +26,6 @@ def validate(value):
     return value
 
 
-def collapse_whitespace(value):
-    """
-    Collapses any whitespace characters into nothing.
-    Used for certain identifiers.
-    """
-    if isinstance(value, str):
-        return "".join(value.strip().split())
-    return value
-
-
 def collapse_to_hyphens(value):
     """
     Replaces spaces with hyphens.
@@ -49,13 +39,20 @@ def collapse_to_hyphens(value):
 def extract_fields(form):
     """Extracts and sanitizes posted fields from a form."""
 
+    def _year_is_valid(value):
+        """Validates that the year is a number between 0 and 9999."""
+        if not value.isdigit():
+            return False
+        year = int(value)
+        return 0 <= year <= 9999
+
     disallowed_keys = {
         "citation_key",
         "entry_type",
-        "category",
-        "category_new",
-        "tags",
-        "tags_new",
+        "category_list",
+        "new_categories",
+        "tag_list",
+        "new_tags",
     }
 
     fields = {}
@@ -63,12 +60,33 @@ def extract_fields(form):
         # Citation key and entry type are handled separately.
         if k in disallowed_keys:
             continue
+        sanitized = sanitize(v)
+        is_valid = validate(sanitized)
 
-        sanitized_value = sanitize(v)
-        if validate(sanitized_value):
-            fields[k] = sanitized_value
+        # Special validation for year field
+        # no need to convert to int here, since saved as string in fields dict
+        if k in ("year") and is_valid and not _year_is_valid(sanitized):
+            raise ValueError("Year must be between 0 and 9999.")
 
-    return fields
+        if is_valid:
+            fields[k] = sanitized
+
+    return fields or {}
+
+
+def extract_data(form):
+    """Extracts fields, categories and tags from the provided form."""
+
+    try:
+        fields = extract_fields(form)
+    except ValueError as ve:
+        raise ve
+
+    meta = extract_metadata(form)
+    category_names = meta.get("categories", [])
+    tag_names = meta.get("tags", [])
+
+    return fields, category_names, tag_names
 
 
 def set_session(key, value):
@@ -86,14 +104,6 @@ def parse_entry_type(entry_type_data):
     if not entry_type_data:
         return None
     return EntryType(entry_type_data.get("id"), entry_type_data.get("name"))
-
-
-def clear_session(key=None):
-    """Clears a value from the session, or the entire session if no key is provided."""
-    if not key:
-        return session.clear()
-    session.pop(key, None)
-    return None
 
 
 def parse_search_queries(args):
@@ -148,50 +158,43 @@ def parse_search_queries(args):
     }
 
 
-def extract_category(form):
-    """Extracts and creates the category from the request form data if needed."""
+def extract_metadata(form):
+    """Extract both tags and categories from the provided form.
 
-    new_category = form.get("category_new")
-    if new_category:
-        sanitized = sanitize(new_category)
-        if sanitized:
-            return sanitized
+    Returns a dict: { 'tags': [...], 'categories': [...] }
+    Both lists are sanitized and deduplicated preserving first-seen order.
+    """
+    def _collect(list_name, new_name):
+        """Collect values from a multi-value input and a comma-separated new field.
 
-    # Category can have spaces, so just sanitize.
-    category = form.get("category")
-    sanitized = sanitize(category)
-    if not sanitized:
-        return None
+        Returns a sanitized, deduplicated list preserving first-seen order.
+        """
+        items = form.getlist(list_name) or []
+        out = []
+        for it in items:
+            v = sanitize(it)
+            if v:
+                out.append(v)
 
-    return sanitized
+        new_val = form.get(new_name)
+        if new_val:
+            for p in [sanitize(p) for p in new_val.split(",")]:
+                if p:
+                    out.append(p)
 
+        seen_local = set()
+        uniq = []
+        for v in out:
+            if v not in seen_local:
+                seen_local.add(v)
+                uniq.append(v)
 
-def extract_tags(form):
-    """Extracts and creates the tags from the request form data if needed."""
+        return uniq
 
-    tag_form_list = form.getlist("tags") or []
-    sanitized = []
-    for tag_name in tag_form_list:
-        # Tags can have spaces, so just sanitize.
-        tag = sanitize(tag_name)
-        if tag:
-            sanitized.append(tag)
+    tags_unique = _collect("tags", "new_tags")
+    cats_unique = _collect("categories", "new_categories")
 
-    tags_new = form.get("tags_new")
-    if tags_new:
-        parts = [sanitize(p) for p in tags_new.split(",")]
-        for p in parts:
-            if p:
-                sanitized.append(p)
-
-    seen = set()
-    unique = []
-    for t in sanitized:
-        if t not in seen:
-            seen.add(t)
-            unique.append(t)
-
-    return unique
+    return {"tags": tags_unique, "categories": cats_unique}
 
 
 def extract_citation_key(form):
@@ -202,7 +205,7 @@ def extract_citation_key(form):
     sanitized = sanitize(citation_key)
     collapsed = collapse_to_hyphens(sanitized)
     if not collapsed:
-        return None
+        raise ValueError("Invalid citation key provided.")
 
     return collapsed
 
