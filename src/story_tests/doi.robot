@@ -54,7 +54,7 @@ Invalid DOI Format Shows Error
     Input Text  doi_input  not-a-doi
     Click Button  doi_fetch
     # invalid DOI won't match extractor and endpoint returns 404-ish message
-    Wait Until Page Contains  Metadata not found for provided DOI.
+    Wait Until Page Contains  Metadata not found for provided DOI.  timeout=5s
 
 Nonexistent DOI Returns Not Found Message
     Go To Home Page
@@ -63,7 +63,7 @@ Nonexistent DOI Returns Not Found Message
     Wait Until Page Contains  Selected entry type 'article'
     Input Text  doi_input  10.9999/this-does-not-exist
     Click Button  doi_fetch
-    Wait Until Page Contains  Metadata not found for provided DOI.
+    Wait Until Page Contains  Metadata not found for provided DOI.  timeout=5s
 
 Successful DOI Fetch Populates Known Fields
     Go To Home Page
