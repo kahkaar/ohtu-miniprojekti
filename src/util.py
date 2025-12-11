@@ -65,7 +65,7 @@ def extract_fields(form):
 
         # Special validation for year field
         # no need to convert to int here, since saved as string in fields dict
-        if k in ("year") and is_valid and not _year_is_valid(sanitized):
+        if k == "year" and is_valid and not _year_is_valid(sanitized):
             raise ValueError("Year must be between 0 and 9999.")
 
         if is_valid:
