@@ -1,10 +1,9 @@
 {% extends "layout.html" %}
 
 {% block title %}Saved Citations{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/citations.css") }} {% endblock %}
 
 {% block body %}
-
-<link rel="stylesheet" href="{{ url_for('static', filename='styles/citations.css') }}">
 
 <div class="citations-container">
   <div class="header">

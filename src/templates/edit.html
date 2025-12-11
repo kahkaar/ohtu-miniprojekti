@@ -1,10 +1,9 @@
 {% extends "layout.html" %}
 
 {% block title %}Edit Citation{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/edit.css") }} {% endblock %}
 
 {% block body %}
-
-<link rel="stylesheet" href="{{ url_for('static', filename='styles/edit.css') }}">
 
 {% if citation %}
 <div class="edit-container">
