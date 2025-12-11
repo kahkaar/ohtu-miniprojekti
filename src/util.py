@@ -191,8 +191,8 @@ def extract_metadata(form):
 
         return uniq
 
-    tags_unique = _collect("tags", "new_tags")
-    cats_unique = _collect("categories", "new_categories")
+    tags_unique = _collect("tag_list", "new_tags")
+    cats_unique = _collect("category_list", "new_categories")
 
     return {"tags": tags_unique, "categories": cats_unique}
 
