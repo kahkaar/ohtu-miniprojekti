@@ -37,6 +37,6 @@ Projektityön lopullinen toteutus meni hyvin, mutta voisi parantaa ajan hallinta
 ## Mitä opimme?
 - Testien teko on hyvä tapa estää bugien tekemistä.
 
-- Olisi hyvä oppia mahdollisuus tehdä enemmän dynaamisia verkkosovelluksia (esim. lomakkeiden automaattinen täyttö ilman n.s. sivunvaihtoa (käyttöliittymä ei päivity (F5 tyylimäisesti), kun näin tekee) -pyyntöä, tai ilman JavaScriptiä).
+- Olisi hyvä oppia mahdollisuus tehdä dynaamisia verkkosovelluksia (esim. lomakkeiden automaattinen täyttö ilman n.s. sivunvaihtoa (käyttöliittymä ei päivity näkyvästi) tai JavaScriptiä). (Tämäkin olisi ehkä enemmän `TIKAWE` -kurssiin)
 
 - Myöskin testien teko eri toiminnallisuuksille, jotka mahdollisesti poistuvat käytöstä myöhemmin on epämielyttävää, sillä kirjoittaa koodia kahteen kertaan yhen toiminnallisuuden suhteen.
