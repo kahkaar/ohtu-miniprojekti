@@ -6,6 +6,8 @@
 
 - [Product Backlog](https://helsinkifi-my.sharepoint.com/:x:/g/personal/aaronkah_ad_helsinki_fi/IQATnYMBAMCEQ57iHxkj_qhWAaD1NGwKU3RmEI25Eqsbi7s?e=A2Yyww)
 
+- [Final Report](./final-report.md)
+
 ## Installation Instructions
 
 - Clone the repository
