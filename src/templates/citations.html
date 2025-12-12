@@ -1,30 +1,235 @@
 {% extends "layout.html" %}
 
 {% block title %}Saved Citations{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/citations.css") }} {% endblock %}
 
 {% block body %}
-<h1>Saved Citations</h1>
 
-<p>Search citations <a href="{{ url_for('citations_search') }}" style="font-size:18px;">here</a></p>
-<p>Create new citations <a href="{{ url_for('index') }}" style="font-size:18px;">here</a></p>
+<div class="citations-container">
+  <div class="header">
+    <h1>Saved Citations</h1>
+    <p class="subtitle"><a href="{{ url_for('index') }}" class="link-primary">Add New Citation</a></p>
+  </div>
 
-{% if citations %}
-{% for c in citations %}
-<div class="citation" id="{{ c.id }}-{{c.citation_key}}">
-  <p>@{{ c.entry_type }} &mdash; {{ c.citation_key }}: {{ c.to_human_readable() }}</p>
-  <br>
-  <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">Edit</button>
-  </form>
-  <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit" onclick="return confirm('Are you sure you want to delete this citation?')">Delete</button>
-  </form>
-  <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
-    <button type="submit">View BibTeX</button>
-  </form>
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <!-- Simple Search -->
+    <div class="search-card">
+      <form method="GET" action="{{ url_for('citations_view') }}" class="search-form">
+        <div class="search-input-wrapper">
+          <input type="text" name="q" placeholder="Search citations..." value="{{ request.args.get('q','') }}"
+            class="search-input">
+          <button type="submit" class="btn btn-search">Search</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Advanced Filters Toggle -->
+    <button type="button" id="toggleFilters" class="btn-toggle-filters">
+      {{ '▲ Hide filters' if advanced_open else '▼ More filters' }}
+    </button>
+
+    <!-- Advanced Filters -->
+    <div id="advancedFilters" class="advanced-filters" style="display: {{ 'block' if advanced_open else 'none' }};">
+      <form method="GET" action="{{ url_for('citations_view') }}" class="filters-form">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label class="filter-label">Entry type:</label>
+            <select name="entry_type" class="filter-select">
+              <option value="">Any</option>
+              {% for et in entry_types %}
+              <option value="{{ et.name }}" {% if request.args.get('entry_type')==et.name %}selected{% endif %}>
+                {{ et.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Citation key:</label>
+            <input type="text" name="citation_key" maxlength="50" value="{{ request.args.get('citation_key','') }}"
+              class="filter-input">
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Author:</label>
+            <input type="text" name="author" maxlength="50" value="{{ request.args.get('author','') }}"
+              class="filter-input">
+          </div>
+
+          <div class="filter-group year-range">
+            <label class="filter-label">Year:</label>
+            <div class="year-inputs">
+              <input type="number" name="year_from" min="0" max="9999" value="{{ request.args.get('year_from','') }}"
+                placeholder="From" class="filter-input year-input">
+              <span class="year-separator">to</span>
+              <input type="number" name="year_to" min="0" max="9999" value="{{ request.args.get('year_to','') }}"
+                placeholder="To" class="filter-input year-input">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Sort by:</label>
+            <select name="sort_by" class="filter-select">
+              <option value="">None</option>
+              <option value="year" {% if request.args.get('sort_by')=='year' %}selected{% endif %}>Year</option>
+              <option value="citation_key" {% if request.args.get('sort_by')=='citation_key' %}selected{% endif %}>
+                Citation Key</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Order:</label>
+            <select name="direction" class="filter-select">
+              <option value="ASC" {% if request.args.get('direction', '' ).upper()=='ASC' %}selected{% endif %}>
+                Ascending</option>
+              <option value="DESC" {% if request.args.get('direction', '' ).upper()=='DESC' %}selected{% endif %}>
+                Descending</option>
+            </select>
+          </div>
+        </div>
+
+
+        <div class="filter-group">
+          <label class="filter-label">Tags:</label>
+
+          <div id="selected-tags" class="chip-container">
+            {% for tag in selected_tags %}
+            <div class="chip" data-value="{{ tag }}">
+              {{ tag }} <span class="chip-remove-tag" data-value="{{ tag }}">✕</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <select id="tag-select" class="filter-select">
+            <option value="">+ Add tag</option>
+            {% for tag in tags %}
+            {% if tag.name not in selected_tags %}
+            <option value="{{ tag.name }}">{{ tag.name }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+
+          <div id="tag-hidden-inputs">
+            {% for tag in selected_tags %}
+            <input type="hidden" name="tag_list" value="{{ tag }}">
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Categories:</label>
+
+          <div id="selected-categories" class="chip-container">
+            {% for c in selected_categories %}
+            <div class="chip" data-value="{{ c }}">
+              {{ c }} <span class="chip-remove-category" data-value="{{ c }}">✕</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <select id="category-select" class="filter-select">
+            <option value="">+ Add category</option>
+            {% for cat in categories %}
+            {% if cat.name not in selected_categories %}
+            <option value="{{ cat.name }}">{{ cat.name }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+
+          <div id="category-hidden-inputs">
+            {% for c in selected_categories %}
+            <input type="hidden" name="category_list" value="{{ c }}">
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">Apply filters</button>
+          <a href="{{ url_for('citations_view', advanced='1') }}" class="btn btn-secondary">Clear all</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Citations Display -->
+  {% if citations %}
+  <div class="citations-list">
+    {% for c in citations %}
+    <div class="citation-card" id="{{ c.id }}-{{c.citation_key}}">
+      <div class="citation-header">
+        <div class="citation-type-badge">@{{ c.entry_type }}</div>
+        <div class="citation-key">{{ c.citation_key }}</div>
+      </div>
+
+      <div class="citation-content">
+        <p class="citation-text">{{ c.to_human_readable() }}</p>
+        {% if c.show_category_and_tags() %}
+        <div class="citation-meta">{{ c.show_category_and_tags() }}</div>
+        {% endif %}
+      </div>
+
+      <div class="citation-actions">
+        <div class="action-buttons">
+          <form method="GET" action="{{ url_for('edit_citation', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-edit">Edit</button>
+          </form>
+          <form method="POST" action="{{ url_for('delete_citation', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-delete"
+              onclick="return confirm('Are you sure you want to delete this citation?')">Delete</button>
+          </form>
+          <form method="GET" action="{{ url_for('show_bibtex', citation_id=c.id) }}" style="display:inline;">
+            <button type="submit" class="btn-action btn-view">View BibTeX</button>
+          </form>
+        </div>
+        <label class="export-checkbox">
+          <input type="checkbox" id="{{ c.id }}" name="{{ c.citation_key }}">
+          <span>Select for export</span>
+        </label>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Export Section -->
+  <div class="export-section">
+    <div class="export-card">
+      <h2>Export selected citations as .bib file</h2>
+      <form name="exportform" method="GET" action="{{ url_for('export_bibtex') }}">
+        <button type="button" onclick="export_bibtex()" class="btn btn-export">Export</button>
+      </form>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <p>No saved citations yet.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Add your first citation</a>
+  </div>
+  {% endif %}
 </div>
-{% endfor %}
-{% else %}
-<p>No saved citations yet.</p>
-{% endif %}
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/toggle_filters.js') }}"></script>
+<script src="{{ url_for('static', filename='js/export_bibtex.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/chips.js') }}"></script>
+<script>
+  setupChipInput({
+    selectId: "tag-select",
+    containerId: "selected-tags",
+    hiddenInputsId: "tag-hidden-inputs",
+    inputName: "tag_list",
+    removeClass: "chip-remove-tag",
+  });
+
+  setupChipInput({
+    selectId: "category-select",
+    containerId: "selected-categories",
+    hiddenInputsId: "category-hidden-inputs",
+    inputName: "category_list",
+    removeClass: "chip-remove-category",
+  });
+</script>
+
 {% endblock %}

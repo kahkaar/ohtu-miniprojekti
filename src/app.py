@@ -3,9 +3,12 @@ from flask import redirect, request, url_for
 import routes.bibtex
 import routes.citations
 import routes.delete
+import routes.doi_lookup
 import routes.edit
+import routes.export_bibtex
 import routes.main
 import routes.search
+import routes.select_entry_type
 import routes.testing_env
 from config import app, test_env
 
@@ -26,6 +29,22 @@ if test_env:
     def json_citations():
         return routes.testing_env.json_citations()
 
+    @app.route("/test_env/tags")
+    def json_tags():
+        return routes.testing_env.json_tags()
+
+    @app.route("/test_env/categories")
+    def json_categories():
+        return routes.testing_env.json_categories()
+
+    @app.route("/test_env/c2c")
+    def json_citations_to_categories():
+        return routes.testing_env.json_citations_to_categories()
+
+    @app.route("/test_env/c2t")
+    def json_citations_to_tags():
+        return routes.testing_env.json_citations_to_tags()
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -35,10 +54,16 @@ def index():
     return routes.main.get()
 
 
+@app.route("/select_entry_type", methods=["POST"])
+def select_entry_type():
+    """Handles the selection of an entry type."""
+    return routes.select_entry_type.post()
+
+
 @app.route("/citations", methods=["GET"])
 def citations_view():
     """Renders the citations page showing all saved citations."""
-    return routes.citations.get()
+    return routes.search.get()
 
 
 @app.route("/edit/<int:citation_id>", methods=["GET", "POST"])
@@ -61,6 +86,12 @@ def show_bibtex(citation_id):
     return routes.bibtex.get(citation_id)
 
 
+@app.route("/export_bibtex", methods=["GET"])
+def export_bibtex():
+    """Exports selected citations as a .bib file"""
+    return routes.export_bibtex.get()
+
+
 @app.route("/search", methods=["GET"])
 @app.route("/citations/search", methods=["GET"])
 def citations_search():
@@ -74,3 +105,9 @@ def citations_search():
 def redirect_to_citations():
     """Redirects to the citations page if no citation ID is provided."""
     return redirect(url_for("citations_view"))
+
+
+@app.route("/doi_lookup", methods=["POST"])
+def doi_lookup():
+    """AJAX endpoint to fetch DOI metadata"""
+    return routes.doi_lookup.post()

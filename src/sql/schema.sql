@@ -3,6 +3,10 @@ DROP TABLE IF EXISTS citations;
 DROP TABLE IF EXISTS entry_types;
 DROP TABLE IF EXISTS default_fields;
 DROP TABLE IF EXISTS default_entry_fields;
+DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS citations_to_tags;
+DROP TABLE IF EXISTS citations_to_categories;
 
 
 BEGIN;
@@ -16,7 +20,7 @@ CREATE TABLE entry_types (
 CREATE TABLE citations (
   id SERIAL PRIMARY KEY,
   entry_type_id INTEGER REFERENCES entry_types(id),
-  citation_key TEXT NOT NULL,
+  citation_key TEXT NOT NULL UNIQUE,
   fields JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
@@ -33,6 +37,31 @@ CREATE TABLE default_entry_fields (
   PRIMARY KEY (entry_type_id, default_field_id)
 );
 
+-- This is for storing user-defined tags for citations
+CREATE TABLE tags (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+
+-- This is for storing user-defined categories for citations
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+
+-- This is for linking citations to their tags (many-to-many relationship)
+CREATE TABLE citations_to_tags (
+  citation_id INTEGER REFERENCES citations(id) ON DELETE CASCADE,
+  tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (citation_id, tag_id)
+);
+
+-- This is for linking citations to their categories (many-to-many relationship)
+CREATE TABLE citations_to_categories (
+  citation_id INTEGER REFERENCES citations(id) ON DELETE CASCADE,
+  category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+  PRIMARY KEY (citation_id, category_id)
+);
 
 -- Indices to improve query performance
 -- GIN index for fast jsonb containment queries on citation fields

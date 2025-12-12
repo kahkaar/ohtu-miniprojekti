@@ -4,8 +4,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  {% include "favicons.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/base.css') }}">
+  <link rel="stylesheet" href="{% block style_url %}{% endblock %}">
   <title>{% block title %}{% endblock %}</title>
-  {% include "style.html" %}
 </head>
 
 <body>

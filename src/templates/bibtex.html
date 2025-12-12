@@ -1,26 +1,53 @@
 {% extends "layout.html" %}
 
 {% block title %}Citation in BibTeX format{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/edit.css") }} {% endblock %}
+
 {% block body %}
-
-<h1>Citation in BibTeX format</h1>
-
 {% if citation %}
-<pre id="bibtex">{{ citation.to_bibtex() }}</pre>
-<button onclick="copy_to_clipboard('bibtex')">Copy to Clipboard</button>
+<div class="bibtex-container">
+  <div class="header">
+    <h1>BibTeX Format</h1>
+    <p class="subtitle">Citation in BibTeX format</p>
+  </div>
 
-<script>
-  function copy_to_clipboard(elm_id) {
-    var text = document.getElementById(elm_id).innerHTML;
-    navigator.clipboard.writeText(text);
-  }
-</script>
+  <div class="card">
+    <div class="card-header">
+      <h2>Copy to use in your references</h2>
+    </div>
+    <div class="card-body">
+      <div class="bibtex-code-wrapper">
+        <pre id="bibtex" class="bibtex-code">{{ citation.to_bibtex() }}</pre>
+      </div>
+
+      <div class="bibtex-actions">
+        <button onclick="copy_to_clipboard('bibtex')" class="btn btn-primary">
+          <span class="copy-icon">📋</span> Copy to Clipboard
+        </button>
+      </div>
+
+      <div id="copy-notification" class="copy-notification" style="display: none;">
+        ✓ Copied to clipboard!
+      </div>
+    </div>
+  </div>
+
+  <div class="back-button-wrapper">
+    <a href="/citations" class="btn btn-secondary">Back to Citations</a>
+  </div>
+</div>
+
+<!-- Load external JS for copying BibTeX text to clipboard -->
+<script src="/static/js/copy_bibtex.js"></script>
+
 {% else %}
-<p>No citation found.</p>
+<div class="bibtex-container">
+  <div class="empty-state">
+    <h2>No Citation Found</h2>
+    <p>The citation you're trying to view could not be found.</p>
+    <a href="/citations" class="btn btn-primary">Back to Citations</a>
+  </div>
+</div>
 {% endif %}
-
-<form action="/citations" method="get" style="display:inline; margin-top:10px;">
-  <button type="submit">Back</button>
-</form>
 
 {% endblock %}

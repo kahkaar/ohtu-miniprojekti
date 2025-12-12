@@ -1,14 +1,7 @@
 from sqlalchemy import text
 
 from config import db
-from entities.entry_type import EntryType
-
-
-def _to_entry_type(row):
-    return EntryType(
-        row.id,
-        row.name,
-    )
+from util import to_entry_type
 
 
 def get_entry_types():
@@ -27,7 +20,7 @@ def get_entry_types():
     if not result:
         return []
 
-    return [_to_entry_type(row) for row in result]
+    return [to_entry_type(row) for row in result]
 
 
 def get_entry_type(entry_type_id):
@@ -50,7 +43,7 @@ def get_entry_type(entry_type_id):
     if not result:
         return None
 
-    return _to_entry_type(result)
+    return to_entry_type(result)
 
 
 def get_entry_type_by_name(entry_type):
@@ -73,4 +66,4 @@ def get_entry_type_by_name(entry_type):
     if not result:
         return None
 
-    return _to_entry_type(result)
+    return to_entry_type(result)

@@ -1,43 +1,207 @@
 {% extends "layout.html" %}
 
 {% block title %}Add a new Citation{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/index.css") }} {% endblock %}
 
 {% block body %}
-<h1>Add a new Citation</h1>
-<p>or see currently saved citations <a href="{{ url_for('citations_view') }}" style="font-size:18px;">here</a></p>
+<div class="container">
+  <div class="header">
+    <h1>Add a New Citation</h1>
+    <p class="subtitle"><a href="{{ url_for('citations_view') }}" class="link-primary">View Saved Citations</a></p>
+  </div>
 
-<h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
-<form method="post">
-  <label>Entry type:
-    <select name="entry_type" required>
-      <option value="" disabled selected>Select type</option>
-      {% for et in entry_types or [] %}
-      {% if et.id == session.get("entry_type", {}).get("id") %}
-      <option value="{{ et.id }}" selected>{{ et.name }}</option>
-      {% else %}
-      <option value="{{ et.id }}">{{ et.name }}</option>
-      {% endif %}
-      {% endfor %}
-    </select>
-  </label>
-  <button type="submit">Select</button>
-</form>
-<br>
+  <div class="card">
+    <div class="card-header">
+      <h2>Create a new citation by selecting an entry type <b>first</b>.</h2>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('select_entry_type') }}" method="post" class="entry-type-form">
+        <div class="form-group">
+          <label class="form-label">Entry type:</label>
+          <div class="select-wrapper">
+            <select name="entry_type" required class="form-select">
+              <option value="" disabled selected>Select type</option>
+              {% for et in entry_types or [] %}
+              {% if et.id == session.get("entry_type", {}).get("id") %}
+              <option value="{{ et.id }}" selected>{{ et.name }}</option>
+              {% else %}
+              <option value="{{ et.id }}">{{ et.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Select</button>
+      </form>
+    </div>
+  </div>
 
-{% if session.get("entry_type") %}
-<form method="post">
-  <h2>Selected entry type: <b>{{ session.get("entry_type").get("name") }}</b></h2>
-  <h3>Fill in the details:</h3>
-  <label>Citation key:
-    <input type="text" name="citation_key" required>
-    <br>
-    {% for f in fields %}
-    <label>{{ f.replace("_", " ").capitalize() }}:
-      <input type="text" name="{{ f }}">
-    </label>
-    <br>
-    {% endfor %}
-    <button type="submit">Add Citation</button>
-</form>
-{% endif %}
+  {% if session.get("entry_type") %}
+  <div class="card mt-3">
+    <div class="card-header">
+      <h2>Selected entry type: <span class="highlight">{{ session.get("entry_type").get("name") }}</span></h2>
+    </div>
+    <div class="card-body">
+      <form method="post" class="citation-form">
+        <h3>Fill in the details:</h3>
+
+        <div class="form-group">
+          <label class="form-label">Citation key: <span class="required">*</span></label>
+          <input type="text" name="citation_key" required class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Import from DOI (full link or id):</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input"
+              style="flex: 1;">
+            <button type="button" id="doi_fetch" class="btn btn-primary">Fetch DOI</button>
+          </div>
+          <div id="doi_status" style="color: #ff6b6b; margin-top: 8px; font-size: 14px;"></div>
+        </div>
+
+        {% if fields %}
+        {% for f in fields %}
+        <div class="form-group">
+          <label class="form-label">{{ f.replace("_", " ").capitalize() }}:</label>
+          <input type="text" name="{{ f }}" class="form-input">
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if default_fields %}
+        <div class="form-section">
+          <h4>Additional Fields</h4>
+          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be
+            saved as global defaults)</p>
+
+          <div id="extra_fields_container">
+            {# <!-- Existing extra rows will be appended here --> #}
+          </div>
+
+          <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
+
+          {# <!-- Template for a single extra field row --> #}
+          <template id="extra_row_template">
+            <div class="extra-row"
+              style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Field:</label>
+                <select class="extra-select form-select">
+                  <option value="">-- select field --</option>
+                  {% for df in default_fields %}
+                  <option value="{{ df }}">{{ df.replace('_', ' ').capitalize() }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Value:</label>
+                <input type="text" class="extra-input form-input" name="additional_field_value"
+                  placeholder="Value for field">
+              </div>
+              <div style="display: flex; align-items: flex-end;">
+                <button type="button" class="remove-extra btn btn-secondary" style="padding: 12px 20px;">Remove</button>
+              </div>
+            </div>
+          </template>
+
+          {# <!-- extra fields initialized by shared script --> #}
+        </div>
+        {% endif %}
+
+        <div class="form-section">
+          <h4>Categories & Tags</h4>
+
+          <div class="form-group">
+            <label class="form-label">Categories:</label>
+
+            <div id="selected-categories" class="chip-container">
+              {# <!-- no pre-selected categories on add page --> #}
+            </div>
+
+            <select id="category-select" class="form-select">
+              <option value="">+ Add category</option>
+              {% for cat in categories %}
+              <option value="{{ cat.name }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+
+            <div id="category-hidden-inputs">
+              {# <!-- hidden inputs for selected categories will be appended here --> #}
+            </div>
+
+            <input type="text" name="new_categories" placeholder="Computer Science, Chemistry" class="form-input"
+              style="margin-top:10px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags:</label>
+
+            <div id="selected-tags" class="chip-container">
+              {# <!-- no pre-selected tags on add page --> #}
+            </div>
+
+            <select id="tag-select" class="form-select">
+              <option value="">+ Add tag</option>
+              {% for t in tags %}
+              <option value="{{ t.name }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+
+            <div id="tag-hidden-inputs">
+              {# <!-- hidden inputs for selected tags will be appended here --> #}
+            </div>
+
+            <input type="text" name="new_tags" placeholder="OHTU, TINT" class="form-input" style="margin-top:10px;">
+          </div>
+        </div>
+
+        {# <!-- doi fetch initialized by shared script --> #}
+
+        <button type="submit" class="btn btn-success">Add Citation</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{# <!-- include shared chips JS and initialize --> #}
+<script src="{{ url_for('static', filename='js/chips.js') }}"></script>
+<script>
+  // Initialize chip inputs on the add citation page
+  setupChipInput({
+    selectId: "tag-select",
+    containerId: "selected-tags",
+    hiddenInputsId: "tag-hidden-inputs",
+    inputName: "tag_list",
+    removeClass: "chip-remove-tag",
+  });
+
+  setupChipInput({
+    selectId: "category-select",
+    containerId: "selected-categories",
+    hiddenInputsId: "category-hidden-inputs",
+    inputName: "category_list",
+    removeClass: "chip-remove-category",
+  });
+</script>
+
+{# <!-- extra fields shared script --> #}
+<script src="{{ url_for('static', filename='js/extra_fields.js') }}"></script>
+<script>
+  // initialize extra fields on add page; auto-add first row
+  initExtraFields({
+    containerId: 'extra_fields_container',
+    tplId: 'extra_row_template',
+    addBtnId: 'add_extra',
+    defaultFields: {{ default_fields | tojson }},
+    autoAddIfEmpty: true
+  });
+</script>
+<script src="{{ url_for('static', filename='js/doi_fetch.js') }}"></script>
+<script>
+  // initialize DOI fetch
+  if (window.initDoiFetch) initDoiFetch();
+</script>
+
 {% endblock %}

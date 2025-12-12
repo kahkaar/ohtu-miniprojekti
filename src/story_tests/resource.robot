@@ -1,5 +1,6 @@
 *** Settings ***
 Library  SeleniumLibrary
+Library  RequestsLibrary
 
 *** Variables ***
 ${SERVER}     localhost:5001
@@ -42,6 +43,7 @@ Go To Citations Page
 Go To BibTeX Page
     Go To Citations Page
     Click Button  View BibTeX
+    Wait Until Page Contains  @
     Title Should Be  Citation in BibTeX format
 
 Add Example Article Citation
@@ -69,8 +71,3 @@ Add Example Book Citation
     Input Text  year  2020
     Click Button  Add Citation
     Wait Until Page Contains  A new citation was added successfully!
-
-Go To Search Page
-    Go To  ${SEARCH_URL}
-    Title Should Be  Advanced Search
-

@@ -1,10 +1,18 @@
+import json
+import re
+
+import requests
 from flask import session
+
+from entities.category import Category, Tag
+from entities.citation import Citation
+from entities.entry_type import EntryType
 
 
 def sanitize(value):
     """
-    Sanitizes user input by stripping leading/trailing
-    whitespace and collapsing internal whitespace.
+    Sanitizes user input by stripping leading/trailing whitespace
+    and collapsing internal whitespace.
     """
     if isinstance(value, str):
         return " ".join(value.strip().split())
@@ -18,28 +26,63 @@ def validate(value):
     return value
 
 
-def collapse_whitespace(value):
+def collapse_to_hyphens(value):
     """
-    Collapses any whitespace characters into nothing.
+    Replaces spaces with hyphens.
     Used for certain identifiers.
     """
     if isinstance(value, str):
-        return "".join(value.strip().split())
+        return "-".join(value.strip().split())
     return value
 
 
-def get_posted_fields(form):
+def extract_fields(form):
     """Extracts and sanitizes posted fields from a form."""
-    posted_fields = {}
+
+    def _year_is_valid(value):
+        """Validates that the year is a number between 0 and 9999."""
+        if not value.isdigit():
+            return False
+        year = int(value)
+        return 0 <= year <= 9999
+
+    disallowed_keys = {
+        "citation_key",
+        "entry_type",
+        "category_list",
+        "new_categories",
+        "tag_list",
+        "new_tags",
+    }
+
+    fields = {}
     for k, v in form.items():
-        if k in ("citation_key", "entry_type"):
+        # Citation key and entry type are handled separately.
+        if k in disallowed_keys:
             continue
+        sanitized = sanitize(v)
+        is_valid = validate(sanitized)
 
-        sanitized_value = sanitize(v)
-        if validate(sanitized_value):
-            posted_fields[k] = sanitized_value
+        # Special validation for year field
+        # no need to convert to int here, since saved as string in fields dict
+        if k == "year" and is_valid and not _year_is_valid(sanitized):
+            raise ValueError("Year must be between 0 and 9999.")
 
-    return posted_fields
+        if is_valid:
+            fields[k] = sanitized
+
+    return fields or {}
+
+
+def extract_data(form):
+    """Extracts fields, categories and tags from the provided form."""
+
+    fields = extract_fields(form)
+    meta = extract_metadata(form)
+    category_names = meta.get("categories", [])
+    tag_names = meta.get("tags", [])
+
+    return fields, category_names, tag_names
 
 
 def set_session(key, value):
@@ -52,12 +95,11 @@ def get_session(key, default=None):
     return session.get(key, default)
 
 
-def clear_session(key=None):
-    """Clears a value from the session."""
-    if not key:
-        return session.clear()
-    session.pop(key, None)
-    return None
+def parse_entry_type(entry_type_data):
+    """Parses entry type data from session into an EntryType object."""
+    if not entry_type_data:
+        return None
+    return EntryType(entry_type_data.get("id"), entry_type_data.get("name"))
 
 
 def parse_search_queries(args):
@@ -100,6 +142,17 @@ def parse_search_queries(args):
     q_val = args.get("q", "")
     q_sanitized = sanitize(q_val) if q_val is not None else ""
 
+    tag_list = args.get("tag_list", [])
+    if isinstance(tag_list, str):
+        tag_list = [tag_list]
+
+    category_list = args.get("category_list", [])
+    if isinstance(category_list, str):
+        category_list = [category_list]
+
+    tags = [sanitize(t) for t in tag_list if sanitize(t)]
+    categories = [sanitize(c) for c in category_list if sanitize(c)]
+
     return {
         "q": q_sanitized or "",
         "citation_key": _str_lower("citation_key"),
@@ -109,4 +162,253 @@ def parse_search_queries(args):
         "year_to": _int_or_none(args.get("year_to")),
         "sort_by": sort_by,
         "direction": direction,
+        "tags": tags,
+        "categories": categories,
     }
+
+
+def extract_metadata(form):
+    """Extract both tags and categories from the provided form.
+
+    Returns a dict: { 'tags': [...], 'categories': [...] }
+    Both lists are sanitized and deduplicated preserving first-seen order.
+    """
+    def _collect(list_name, new_name):
+        """Collect values from a multi-value input and a comma-separated new field.
+
+        Returns a sanitized, deduplicated list preserving first-seen order.
+        """
+        items = form.getlist(list_name) or []
+        out = []
+        for it in items:
+            v = sanitize(it)
+            if v:
+                out.append(v)
+
+        new_val = form.get(new_name)
+        if new_val:
+            for p in [sanitize(p) for p in new_val.split(",")]:
+                if p:
+                    out.append(p)
+
+        seen_local = set()
+        uniq = []
+        for v in out:
+            if v not in seen_local:
+                seen_local.add(v)
+                uniq.append(v)
+
+        return uniq
+
+    tags_unique = _collect("tag_list", "new_tags")
+    cats_unique = _collect("category_list", "new_categories")
+
+    return {"tags": tags_unique, "categories": cats_unique}
+
+
+def extract_citation_key(form):
+    """Extracts the citation key from the request form data."""
+    citation_key = form.get("citation_key", "")
+
+    # Citation keys cannot have spaces, so sanitize and collapse to hyphens.
+    sanitized = sanitize(citation_key)
+    collapsed = collapse_to_hyphens(sanitized)
+    if not collapsed:
+        raise ValueError("Invalid citation key provided.")
+
+    return collapsed
+
+
+def to_category(row):
+    """Converts a database row to a Category object."""
+    return Category(
+        category_id=row.id,
+        name=row.name,
+    )
+
+
+def to_tag(row):
+    """Converts a database row to a Tag object."""
+    return Tag(
+        tag_id=row.id,
+        name=row.name,
+    )
+
+
+def to_citation(row):
+    """Converts a database row to a Citation object."""
+    if not row:
+        return None
+
+    def _parse_fields(val):
+        if not val:
+            return {}
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                return {}
+        return val
+
+    def _to_list(val):
+        if not val:
+            return []
+        if isinstance(val, (list, tuple)):
+            return list(val)
+        if isinstance(val, str):
+            try:
+                parsed = json.loads(val)
+                return list(parsed)
+            except json.JSONDecodeError:
+                pass
+            return [p.strip() for p in val.split(",") if p.strip()]
+        try:
+            return list(val)
+        except TypeError:
+            return []
+
+    fields = _parse_fields(row.fields)
+    tags = _to_list(getattr(row, "tags", None))
+    categories = _to_list(getattr(row, "categories", None))
+
+    return Citation(
+        row.id,
+        row.entry_type,
+        row.citation_key,
+        fields,
+        metadata={"tags": tags, "categories": categories},
+    )
+
+
+def to_entry_type(row):
+    """Converts a database row to an EntryType object."""
+    return EntryType(
+        entry_type_id=row.id,
+        name=row.name,
+    )
+
+
+def _doi_extract(value):
+    s = str(value).strip()
+    m = re.search(r"10\.\d{4,9}/\S+", s)
+    return m.group(0).rstrip(".") if m else None
+
+
+def _doi_request_json(doi):
+    url = "https://citation.doi.org/metadata"
+    headers = {
+        "Accept": "application/vnd.citationstyles.csl+json, application/json"}
+    resp = requests.get(url, params={"doi": doi}, headers=headers, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _doi_first_of_keys(dct, keys):
+    for k in keys:
+        v = dct.get(k)
+        if v:
+            if isinstance(v, list):
+                return v[0]
+            return v
+    return None
+
+
+def _doi_parse_authors(auth_list):
+    if not isinstance(auth_list, (list, tuple)):
+        return None
+    parts = []
+    for a in auth_list:
+        if isinstance(a, dict):
+            given = a.get("given")
+            family = a.get("family")
+            literal = a.get("literal")
+            if given and family:
+                parts.append(f"{given} {family}")
+            elif literal:
+                parts.append(literal)
+            elif family:
+                parts.append(family)
+        elif isinstance(a, str):
+            parts.append(a)
+    return "; ".join(parts) if parts else None
+
+
+def _doi_parse_year(dct):
+    issued = dct.get("issued") or dct.get("created") or {}
+    if not isinstance(issued, dict):
+        return None
+    dp = issued.get("date-parts") or issued.get("date_parts")
+    if isinstance(dp, list) and dp and isinstance(dp[0], (list, tuple)) and dp[0]:
+        first = dp[0][0]
+        try:
+            return int(first)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def fetch_doi_metadata(doi_input):
+    """Fetch citation metadata for a DOI.
+
+    This function extracts a DOI from the input, queries the DOI metadata
+    endpoint and returns a compact `fields` dict. It delegates parsing tasks
+    to small helpers to keep complexity low (fewer local variables and
+    branches) and avoids catching overly broad exceptions.
+    """
+    # pylint: disable=R0912
+
+    if not doi_input:
+        return None
+
+    doi = _doi_extract(doi_input)
+    if not doi:
+        return None
+
+    try:
+        data = _doi_request_json(doi)
+    except requests.RequestException:
+        return None
+    except ValueError:
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    fields = {}
+
+    title = _doi_first_of_keys(data, ("title",))
+    if title:
+        fields["title"] = title
+
+    author_str = _doi_parse_authors(data.get("author") or data.get("authors"))
+    if author_str:
+        fields["author"] = author_str
+
+    year_val = _doi_parse_year(data)
+    if isinstance(year_val, int) and 0 <= year_val <= 9999:
+        fields["year"] = year_val
+
+    journ = _doi_first_of_keys(
+        data, ("container-title", "container_title", "journaltitle", "journal"))
+    if journ:
+        fields["journaltitle"] = journ
+
+    pub = _doi_first_of_keys(data, ("publisher", "publisher-name"))
+    if pub:
+        fields["publisher"] = pub
+
+    pages = data.get("page") or data.get("pages")
+    if pages:
+        fields["pages"] = pages
+
+    vol = data.get("volume")
+    if vol is not None:
+        fields["volume"] = str(vol)
+
+    num = data.get("issue") or data.get("number")
+    if num is not None:
+        fields["number"] = str(num)
+
+    return fields or None

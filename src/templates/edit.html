@@ -1,30 +1,220 @@
 {% extends "layout.html" %}
 
 {% block title %}Edit Citation{% endblock %}
+{% block style_url %} {{ url_for("static", filename="styles/edit.css") }} {% endblock %}
 
 {% block body %}
 
 {% if citation %}
-<h1>Edit Citation</h1>
-<form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}">
-  <label>Citation key:
-    <input type="text" name="citation_key" value="{{ citation.citation_key }}" required>
-  </label>
-  <br>
-  {% for f, val in citation.fields|dictsort %}
-  <label>{{ f.replace("_", " ").capitalize() }}
-    <input type="text" name="{{ f }}" value="{{ val }}">
-  </label>
-  <br>
-  {% endfor %}
-  <button type="submit">Save Changes</button>
-</form>
+<div class="edit-container">
+  <div class="header">
+    <h1>Edit Citation</h1>
+    <p class="subtitle">Update citation details for <span class="citation-key-badge">{{ citation.citation_key }}</span>
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Citation Details</h2>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('edit_citation', citation_id=citation.id) }}" class="edit-form">
+
+        <div class="form-group">
+          <label class="form-label">Citation key: <span class="required">*</span></label>
+          <input type="text" name="citation_key" value="{{ citation.citation_key }}" required class="form-input">
+        </div>
+
+        {% if entry_types %}
+        <div class="form-group">
+          <label class="form-label">Entry type:</label>
+          <div class="select-wrapper">
+            <select name="entry_type" class="form-select">
+              <option value="">(keep current: {{ citation.entry_type }})</option>
+              {% for et in entry_types %}
+              <option value="{{ et.id }}" {% if et.name==citation.entry_type %}selected{% endif %}>{{ et.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">Import from DOI (full link or id):</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="doi_input" placeholder="https://doi.org/10.x/... or 10.x/..." class="form-input"
+              style="flex: 1;">
+            <button type="button" id="doi_fetch" class="btn btn-primary">Fetch DOI</button>
+          </div>
+          <div id="doi_status" style="color: #ff6b6b; margin-top: 8px; font-size: 14px;"></div>
+        </div>
+
+        {% for f, val in citation.fields|dictsort %}
+        <div class="form-group">
+          <label class="form-label">{{ f.replace("_", " ").capitalize() }}:</label>
+          <input type="text" name="{{ f }}" value="{{ val }}" class="form-input">
+        </div>
+        {% endfor %}
+
+        {% if default_fields %}
+        <div class="form-section">
+          <h4>Additional Fields</h4>
+          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 15px;">Add extra fields for this citation (won't be
+            saved as global defaults)</p>
+
+          <div id="extra_fields_container">
+            {# <!-- Existing extra rows will be appended here --> #}
+          </div>
+
+          <button type="button" id="add_extra" class="btn btn-primary" style="margin-bottom: 20px;">Add field</button>
+
+          <template id="extra_row_template">
+            <div class="extra-row"
+              style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 10px; padding: 10px; background: #0f1419; border-radius: 8px;">
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Field:</label>
+                <select class="extra-select form-select">
+                  <option value="">-- select field --</option>
+                  {% for df in default_fields %}
+                  <option value="{{ df }}">{{ df.replace('_', ' ').capitalize() }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="margin-bottom: 5px;">Value:</label>
+                <input type="text" class="extra-input form-input" name="additional_field_value"
+                  placeholder="Value for field">
+              </div>
+              <div style="display: flex; align-items: flex-end;">
+                <button type="button" class="remove-extra btn btn-secondary" style="padding: 12px 20px;">Remove</button>
+              </div>
+            </div>
+          </template>
+        </div>
+        {% endif %}
+
+        {# include extra_fields script and initialize after template #}
+        <script src="{{ url_for('static', filename='js/extra_fields.js') }}"></script>
+        <script>
+          // initialize extra fields on edit page with existing citation.fields and defaults
+          initExtraFields({
+            containerId: 'extra_fields_container',
+            tplId: 'extra_row_template',
+            addBtnId: 'add_extra',
+            existing: {{ citation.fields | tojson }},
+            defaultFields: {{ default_fields | tojson }},
+            autoAddIfEmpty: false
+          });
+        </script>
+
+        {# <!-- FIXED CHIP SYSTEM --> #}
+        <div class="form-section">
+          <h4>Categories & Tags</h4>
+
+          {# <!-- CATEGORIES --> #}
+          <div class="form-group">
+            <label class="form-label">Categories:</label>
+
+            <div id="selected-categories" class="chip-container">
+              {% for c in citation.categories %}
+              <div class="chip" data-value="{{ c }}">
+                {{ c }} <span id="{{ c }}-cat" class="chip-remove-category" data-value="{{ c }}">✕</span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <select id="category-select" class="form-select">
+              <option value="">+ Add category</option>
+              {% for cat in categories %}
+              {% if cat.name not in citation.categories %}
+              <option value="{{ cat.name }}">{{ cat.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+
+            <div id="category-hidden-inputs">
+              {% for c in citation.categories %}
+              <input type="hidden" name="category_list" value="{{ c }}">
+              {% endfor %}
+            </div>
+
+            <input type="text" name="new_categories" placeholder="Computer Science, Chemistry" class="form-input"
+              style="margin-top:10px;">
+          </div>
+
+          {# <!-- TAGS --> #}
+          <div class="form-group">
+            <label class="form-label">Tags:</label>
+
+            <div id="selected-tags" class="chip-container">
+              {% for t in citation.tags %}
+              <div class="chip" data-value="{{ t }}">
+                {{ t }} <span id="{{ t }}-tag" class="chip-remove-tag" data-value="{{ t }}">✕</span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <select id="tag-select" class="form-select">
+              <option value="">+ Add tag</option>
+              {% for t in tags %}
+              {% if t.name not in citation.tags %}
+              <option value="{{ t.name }}">{{ t.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+
+            <div id="tag-hidden-inputs">
+              {% for t in citation.tags %}
+              <input type="hidden" name="tag_list" value="{{ t }}">
+              {% endfor %}
+            </div>
+
+            <input type="text" name="new_tags" placeholder="OHTU, TINT" class="form-input" style="margin-top:10px;">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+          <a href="{{ url_for('citations_view') }}" class="btn btn-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% else %}
-<p>Citation not found.</p>
+<div class="edit-container">
+  <div class="empty-state">
+    <h2>Citation Not Found</h2>
+    <p>The citation you're trying to edit could not be found.</p>
+    <a href="{{ url_for('citations_view') }}" class="btn btn-primary">Back to Citations</a>
+  </div>
+</div>
 {% endif %}
 
-<form action="/citations" method="get" style="display:inline; margin-top:10px;">
-  <button type="submit">Back</button>
-</form>
+{# <!-- include shared chips JS and initialize --> #}
+<script src="{{ url_for('static', filename='js/chips.js') }}"></script>
+<script>
+  setupChipInput({
+    selectId: "tag-select",
+    containerId: "selected-tags",
+    hiddenInputsId: "tag-hidden-inputs",
+    inputName: "tag_list",
+    removeClass: "chip-remove-tag",
+  });
+
+  setupChipInput({
+    selectId: "category-select",
+    containerId: "selected-categories",
+    hiddenInputsId: "category-hidden-inputs",
+    inputName: "category_list",
+    removeClass: "chip-remove-category",
+  });
+</script>
+{# <!-- extra fields shared script will be included after the form so DOM nodes exist --> #}
+<script src="{{ url_for('static', filename='js/doi_fetch.js') }}"></script>
+<script>
+  // initialize DOI fetch
+  if (window.initDoiFetch) initDoiFetch();
+</script>
 
 {% endblock %}
