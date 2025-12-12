@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import repositories.citation_repository as repo
-import repositories.citation_repository as citation_repository
 from errors import CitationNotFoundError
 
 
